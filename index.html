@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AI赋能营销 · 营销中心-综合管理部</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --brand-deep: #0b1a3b; --brand-blue: #0f2b5c; --brand-teal: #00a884;
+  --blue:   #0f2b5c; --blue-d: #0a1f42; --blue-l: #e6f0fa;
+  --green:  #00a884; --green-l:#e6f7f2;
+  --purple: #5b3fd4; --purple-l:#eee8ff;
+  --orange: #e8710a; --orange-l:#fef3e2;
+  --text:   #1b1f2e; --muted:  #6b7280; --border: #e3e5e8;
+  --border-warm: #e8dcc8; --border-card: #ebe7de;
+  --bg:     #f8f9fb; --white:  #ffffff;
+  --r: 14px; --r-lg: 20px;
+  --shadow: 0 1px 8px rgba(0,0,0,.04);
+  --shadow-lg: 0 6px 28px rgba(0,0,0,.08);
+}
+html { scroll-behavior: smooth; }
+body { font-family: 'PingFang SC','Microsoft YaHei','Inter',-apple-system,sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; overflow-x: hidden; -webkit-font-smoothing:antialiased; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background: #c8cdd5; border-radius: 3px; }
+#prog { position:fixed; top:0; left:0; height:3px; z-index:999; background:linear-gradient(90deg,#3b7fc4,#8b5cf6); transition:width .15s linear; }
+nav { position:fixed; top:0; left:0; right:0; z-index:200; height:58px; background:rgba(255,255,255,.92); backdrop-filter:blur(16px); border-bottom:1px solid var(--border-warm); display:flex; align-items:center; justify-content:space-between; padding:0 32px; box-shadow:0 1px 6px rgba(0,0,0,.03); }
+.nav-brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:15px; color:var(--brand-deep); text-decoration:none; letter-spacing:-.2px; }
+.nav-brand img { height:30px; width:auto; }
+.nav-brand span { color:var(--brand-deep); }
+.nav-tabs { display:flex; gap:2px; }
+.nav-tabs a { padding:7px 16px; border-radius:12px; font-size:17px; font-weight:500; color:var(--muted); text-decoration:none; transition:all .2s; display:flex; align-items:center; gap:5px; letter-spacing:-.1px; }
+.nav-tabs a:hover, .nav-tabs a.active { background:var(--blue-l); color:var(--blue); }
+.nav-right { font-size:12px; font-weight:600; color:var(--muted); background:var(--white); border:1px solid var(--border-warm); padding:5px 14px; border-radius:20px; }
+.hero { min-height:100vh; padding:120px 40px 100px; background:linear-gradient(174deg,#1e3a6e 0%,#144480 22%,#0d3468 48%,#0b264d 72%,#091d3a 100%); display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+.hero-bg-circles { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+.hero-bg-circles::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 60% 42% at 50% 28%, rgba(99,140,230,.15) 0%, transparent 70%); }
+.hero-bg-circles span { position:absolute; border-radius:50%; background:rgba(255,255,255,.04); animation:drift 14s ease-in-out infinite; }
+.hero-bg-circles span:nth-child(1){ width:520px;height:520px;top:-160px;right:-120px;animation-delay:0s; }
+.hero-bg-circles span:nth-child(2){ width:320px;height:320px;bottom:-90px;left:-90px;animation-delay:-5s; }
+.hero-bg-circles span:nth-child(3){ width:220px;height:220px;top:42%;left:8%;background:rgba(139,92,246,.06);animation-delay:-9s; }
+@keyframes drift { 0%,100%{transform:translate(0,0)} 50%{transform:translate(18px,-18px)} }
+.hero-inner { position:relative; z-index:2; max-width:1200px; width:100%; text-align:center; padding:0 60px; }
+.hero-eyebrow { display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15); color:rgba(255,255,255,.78); font-size:12px; font-weight:600; padding:5px 16px; border-radius:20px; margin-bottom:24px; }
+.live-dot { width:7px;height:7px;border-radius:50%;background:#4ade80;animation:pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+.hero h1 { font-size:clamp(32px,5.5vw,56px); font-weight:900; line-height:1.15; color:#fff; margin-bottom:16px; letter-spacing:-.5px; }
+.hero-logo-row { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; margin-bottom:32px; }
+.hero-logo-img { height:52px; width:auto; filter:drop-shadow(0 0 18px rgba(0,168,132,.25)); margin-bottom:6px; }
+.hero-logo-dept { font-size:18px; color:rgba(255,255,255,.5); font-weight:500; letter-spacing:1px; }
+.hero h1 em { color:#5eead4; font-style:normal; }
+.hero-sub { font-size:16px; color:rgba(255,255,255,.55); margin:0 auto 32px; max-width:620px; line-height:1.7; }
+.hero-incentive-divider { width:60px; height:2px; background:rgba(255,255,255,.15); border-radius:1px; margin:40px auto 24px; }
+.hero-incentive-label { text-align:center; font-size:24px; font-weight:900; background:linear-gradient(135deg,#fbbf24,#f59e0b,#fb923c); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:4px; margin-bottom:20px; }
+.hero-incentives-row { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-top:0; }
+.hero-incentive-desc { margin-top:26px; text-align:center; color:rgba(255,255,255,.5); font-size:13px; line-height:1.8; max-width:700px; margin-left:auto; margin-right:auto; }
+.hero-incentive-badge { background:rgba(255,255,255,.1); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,.18); border-radius:16px; padding:16px 22px; color:#fff; text-align:center; transition:all .3s; min-width:160px; }
+.hero-incentive-badge:hover { background:rgba(255,255,255,.18); transform:translateY(-3px); border-color:rgba(99,162,255,.4); }
+a.hero-incentive-badge { text-decoration:none; color:#fff; display:block; position:relative; }
+a.hero-incentive-badge .hb-title { color:#60a5fa; font-weight:800; }
+a.hero-incentive-badge::after { content:'↗'; position:absolute; top:8px; right:14px; font-size:13px; color:rgba(96,165,250,.6); opacity:0; transition:opacity .25s; }
+a.hero-incentive-badge:hover::after { opacity:1; }
+a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.45); }
+.hero-incentive-badge .hb-icon { font-size:22px; margin-bottom:4px; }
+.hero-incentive-badge .hb-title { font-size:14px; font-weight:800; letter-spacing:.5px; }
+.hero-incentive-badge .hb-sub { font-size:11px; color:rgba(255,255,255,.6); margin-top:2px; }
+.hero-incentive-badge .hb-link { font-size:10px; color:rgba(96,165,250,.7); margin-top:5px; letter-spacing:.3px; }
+@media (max-width:768px) { .hero-incentives-row { gap:12px; } .hero-incentive-badge { min-width:0; padding:12px 16px; } }
+.hero-char-cards { display:flex; justify-content:center; gap:18px; flex-wrap:wrap; margin-top:36px; }
+.hero-card { background:linear-gradient(145deg,rgba(15,43,92,.75),rgba(30,79,138,.55)); border:1px solid rgba(255,255,255,.12); border-radius:18px; padding:26px 20px 22px; text-align:center; width:155px; backdrop-filter:blur(6px); transition:all .3s; }
+.hero-card:hover { background:linear-gradient(145deg,rgba(15,43,92,.9),rgba(30,79,138,.7)); transform:translateY(-4px); box-shadow:0 12px 36px rgba(0,0,0,.3); }
+.hero-card .hc-icon { font-size:38px; margin-bottom:10px; }
+.hero-card .hc-name { font-size:15px; font-weight:800; color:#fff; letter-spacing:.5px; margin-bottom:8px; }
+.hero-card .hc-desc { font-size:12px; color:rgba(255,255,255,.55); line-height:1.7; }
+@media (max-width:768px) { .hero-char-cards { gap:12px; } .hero-card { width:135px; padding:20px 14px; } }
+.scene-nav { position:sticky; top:58px; z-index:100; background:rgba(255,255,255,.85); backdrop-filter:blur(12px); border-bottom:1px solid var(--border-warm); padding:10px 0; }
+.scene-nav-inner { max-width:1100px; margin:0 auto; padding:0 28px; display:flex; gap:10px; flex-wrap:wrap; }
+.scene-nav-btn { padding:10px 24px; border-radius:24px; font-size:19px; font-weight:600; border:1px solid var(--border-card); background:var(--white); color:var(--muted); cursor:pointer; transition:all .18s; }
+.scene-nav-btn:hover, .scene-nav-btn.active { background:var(--blue-l); color:var(--blue); border-color:#93b5e0; }
+.scene-nav-hint { font-size:12px; color:#10b981; align-self:center; white-space:nowrap; flex-shrink:0; opacity:.85; letter-spacing:.3px; }
+.scene-section { max-width:1100px; margin:0 auto; padding:60px 28px 80px; }
+.scene-header { display:flex; align-items:center; gap:16px; margin-bottom:48px; }
+.scene-header-ico { width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0; }
+.scene-title { font-size:30px; font-weight:900; color:var(--text); letter-spacing:-.3px; }
+.scene-sub { font-size:14px; color:var(--muted); margin-top:2px; }
+.scene-count { margin-left:auto; padding:4px 16px; border-radius:20px; font-size:12px; font-weight:700; background:var(--white); border:1px solid var(--border-card); color:var(--muted); }
+/* ── 时间线串联（无圆点） ── */
+.scene-timeline { position:relative; max-width:1200px; margin:0 auto; padding:0 28px; }
+.scene-timeline::before { content:''; position:absolute; left:54px; top:0; bottom:0; width:2px; background:linear-gradient(180deg,#3b82f6 0%,#8b5cf6 25%,#10b981 50%,#f59e0b 75%,#ef4444 100%); border-radius:1px; z-index:0; opacity:.4; }
+.scene-timeline-item { position:relative; }
+/* ── 折叠/展开按钮 ── */
+.scene-toggle { width:32px; height:32px; border-radius:8px; background:var(--border-light); border:1px solid var(--border-card); cursor:pointer; font-size:11px; color:var(--muted); display:flex; align-items:center; justify-content:center; transition:all .25s; flex-shrink:0; }
+.scene-toggle:hover { background:#dbeafe; color:#3b82f6; border-color:#93c5fd; }
+.scene-toggle.collapsed { transform:rotate(-90deg); }
+.scene-body { overflow:hidden; transition:max-height .45s ease, opacity .35s ease; max-height:6000px; opacity:1; }
+.scene-body.collapsed { max-height:0; opacity:0; }
+.app-block { background:var(--white); border:1px solid var(--border-card); border-radius:var(--r-lg); overflow:hidden; margin-bottom:32px; box-shadow:var(--shadow); transition:box-shadow .3s; }
+.app-block:hover { box-shadow:var(--shadow-lg); border-color:var(--border-warm); }
+.app-block-header { display:flex; align-items:center; gap:14px; padding:22px 28px; border-bottom:1px solid var(--border-card); background:linear-gradient(180deg,#fbfcfd,#fff); }
+.app-block-header > div:not(.app-num-badge) { min-width:0; flex:1; }
+.app-num-badge { width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;flex-shrink:0; }
+.app-title { font-size:18px; font-weight:800; color:var(--text); letter-spacing:-.2px; }
+.app-subtitle { margin-top:3px; font-size:12px; color:var(--muted); word-break:break-word; }
+.app-content { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; border-bottom:1px solid var(--border-card); }
+.app-col { padding:28px 24px; position:relative; overflow:hidden; border-right:1px solid var(--border-card); }
+.app-col:last-child { border-right:none; }
+.col-label { font-size:12px; font-weight:800; margin-bottom:14px; display:flex; align-items:center; gap:6px; letter-spacing:.2px; }
+.col-label-pain { color:#dc2626; }
+.col-label-solve { color:#00a884; }
+.col-label-how { color:#0f2b5c; }
+.app-col p { font-size:13px; color:var(--text); line-height:1.65; }
+.app-col ul { margin-top:10px; padding-left:16px; font-size:13px; color:var(--text); }
+.app-col li { margin-bottom:4px; }
+.col-emoji-bg { position:absolute; bottom:-8px; right:-4px; font-size:64px; opacity:.05; pointer-events:none; user-select:none; }
+.path-tag { display:inline-block; padding:6px 14px; border-radius:10px; font-size:12px; font-weight:700; background:var(--blue-l); color:var(--blue); margin-top:10px; letter-spacing:.3px; }
+.path-tag .arr { color:var(--muted); margin:0 2px; }
+/* ---- 视频面板（浅色科技风） ---- */
+.app-video-panel { background:#f4f5f8; padding:20px 32px 24px; border-top:1px solid #e3e5e8; }
+.app-video-label { display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; color:#5f6b7a; letter-spacing:.5px; text-transform:uppercase; margin-bottom:12px; }
+.app-video-label .vdot { width:8px;height:8px;border-radius:50%;background:#3b82f6; }
+.video-wrapper { position:relative; width:100%; border-radius:10px; overflow:hidden; background:linear-gradient(135deg,#e8eaef,#dce1e8); box-shadow:0 2px 12px rgba(0,0,0,.06); min-height:280px; display:flex; align-items:center; justify-content:center; }
+.video-wrapper video { width:100%; display:block; max-height:480px; object-fit:contain; background:#0f172a; border-radius:10px; }
+.video-wrapper.loaded { background:#0f172a; min-height:0; }
+.video-wrapper.loaded video { background:transparent; }
+.video-placeholder { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; cursor:pointer; z-index:2; transition:opacity .3s; }
+.video-wrapper.loaded .video-placeholder { opacity:0; pointer-events:none; }
+.vp-icon { width:60px; height:60px; border-radius:50%; background:rgba(30,58,110,.85); color:#fff; font-size:24px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 20px rgba(0,0,0,.25); transition:transform .2s,background .2s; }
+.video-placeholder:hover .vp-icon { transform:scale(1.1); background:rgba(30,58,110,.95); }
+.vp-text { font-size:14px; color:#5f6b7a; font-weight:500; }
+.no-video { background:#f8faff; border-radius:10px; border:2px dashed #c7d2fe; padding:32px; text-align:center; color:#6366f1; }
+.no-video .nv-ico { font-size:32px; margin-bottom:8px; }
+.no-video p { font-size:13px; }
+/* ---- 客户画像预览（浅色科技风） ---- */
+.profile-preview { background:#f4f5f8; border-top:1px solid #e3e5e8; padding:0 32px 24px; }
+.profile-preview-label { display:flex; align-items:center; gap:8px; font-size:12px; font-weight:700; color:#5f6b7a; letter-spacing:.5px; padding:20px 0 12px; }
+.profile-preview-label .pdot { width:8px;height:8px;border-radius:50%;background:#10b981; }
+.profile-preview-label .pbeta { font-size:9px; background:#d1fae5; color:#047857; padding:2px 8px; border-radius:10px; font-weight:800; letter-spacing:1px; text-transform:uppercase; }
+.profile-preview-frame { width:100%; height:560px; border-radius:10px; overflow:hidden; border:1px solid #d4d8e0; background:#fff; }
+.profile-preview-frame iframe { width:100%; height:100%; border:none; }
+@media (max-width:768px) { .profile-preview { padding:0 16px 20px; } .profile-preview-frame { height:420px; } }
+/* ---- 截图画廊（浅色科技风） ---- */
+.img-gallery { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; align-items:start; }
+.img-gallery.col2 { grid-template-columns:repeat(2,1fr); }
+.img-gallery.col1 { grid-template-columns:1fr; }
+.img-gallery figure { background:#f8f9fb; border-radius:10px; overflow:hidden; border:1px solid #e3e5e8; margin:0; display:flex; flex-direction:column; height:100%; }
+.img-gallery img { width:100%; display:block; object-fit:contain; height:260px; background:#f4f5f8; line-height:0; flex-shrink:0; }
+.img-gallery figcaption { padding:10px 14px; font-size:12px; color:#5f6b7a; background:#fff; border-top:1px solid #e3e5e8; }
+.bid-flow-platform { display:flex; gap:16px; align-items:flex-start; margin-bottom:0; }
+.bid-flow-platform .app-video-panel { flex:1; min-width:0; }
+.img-gallery-single { grid-template-columns:1fr; }
+.img-gallery-single figure { max-width:100%; line-height:0; }
+.img-gallery-single img { object-fit:contain; }
+.bid-compare { margin-top:0; background:#fff; border-radius:12px; border:1px solid var(--border-card); overflow:hidden; }
+.bid-compare-title { padding:14px 20px; font-size:16px; font-weight:700; color:#fff; background:linear-gradient(135deg,#1e3a6e,#2a5298); display:flex; align-items:center; gap:8px; }
+.bid-compare-title .ai-dot { width:10px; height:10px; background:#60a5fa; border-radius:50%; box-shadow:0 0 8px #60a5fa; animation:pulse-dot 2s infinite; }
+@keyframes pulse-dot { 0%,100%{opacity:1;} 50%{opacity:.4;} }
+.bid-table { width:100%; border-collapse:collapse; table-layout:fixed; }
+.bid-table thead th { padding:8px 12px; font-size:12px; font-weight:600; color:#5f6b7a; text-align:center; border-bottom:1px solid var(--border-card); background:#fafbfc; }
+.bid-table thead th:first-child { text-align:left; width:140px; }
+.bid-table td { padding:8px 12px; text-align:center; font-size:13px; color:var(--text); border-bottom:1px solid #f0f1f3; vertical-align:middle; }
+.bid-table td:first-child { text-align:left; padding-left:16px; }
+.bid-table td.td-desc { text-align:left; font-size:12px; line-height:1.5; }
+.bid-table .old-row td { background:rgba(248,113,113,.04); }
+.bid-table .new-row td { background:rgba(74,222,128,.04); }
+.bid-ver-tag { display:inline-block; padding:4px 12px; border-radius:10px; font-size:11px; font-weight:600; white-space:nowrap; }
+.bid-ver-tag.old { background:rgba(220,38,38,.1); color:#dc2626; }
+.bid-ver-tag.new { background:rgba(0,168,132,.1); color:#0a7a5a; }
+.bid-num { font-size:15px; font-weight:700; }
+.bid-num.old { color:#dc2626; }
+.bid-num.new { color:#0a7a5a; }
+.bid-pct { font-size:24px; font-weight:900; }
+.bid-pct.old { color:#dc2626; }
+.bid-pct.new { color:#0a7a5a; }
+.bid-note { font-size:11px; color:#5f6b7a; display:block; margin-top:2px; }
+.bid-compare-footer { padding:10px 20px; background:#fafbfc; border-top:1px solid #f0f1f3; font-size:11px; color:#5f6b7a; }
+.bid-compare-footer .boost { color:#0a7a5a; font-weight:700; }
+@media (max-width:768px) { .bid-flow-platform { flex-direction:column; } .bid-table thead th:first-child { width:100px; } }
+.scene-divider { max-width:1100px; margin:0 auto; border:none; border-top:2px solid var(--border); }
+.bg-opp  { background:linear-gradient(180deg,#e6f0fa 0%,#f8f9fb 100%); }
+.bg-visit{ background:linear-gradient(180deg,#e6f7f2 0%,#f8f9fb 100%); }
+.bg-proj { background:linear-gradient(180deg,#eee8ff 0%,#f8f9fb 100%); }
+.bg-bid  { background:linear-gradient(180deg,#fef3e2 0%,#f8f9fb 100%); }
+.bg-knowledge { background:linear-gradient(180deg,#eef0ff 0%,#f8f9fb 100%); }
+.bg-skill { background:linear-gradient(180deg,#e0f4ff 0%,#f8f9fb 100%); }
+.stats-strip { background:linear-gradient(120deg,#0b1a3b,#0f2b5c,#0a1f42); border-radius:16px; padding:28px 40px; display:flex; flex-wrap:wrap; gap:32px; justify-content:space-around; margin:0 0 40px; }
+.app-stats-strip { background:linear-gradient(135deg,#f0f4fa,#e6f0fa); border-radius:12px; padding:18px 28px; display:flex; flex-wrap:wrap; gap:24px; justify-content:space-around; margin:0 28px 20px; border:1px solid #d4e0f0; }
+.app-stats-item { text-align:center; }
+.app-stats-num { font-size:26px; font-weight:900; line-height:1.1; background:linear-gradient(135deg,#0f2b5c,#00a884); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.app-stats-label { font-size:11px; color:var(--muted); font-weight:500; }
+.app-stats-note { text-align:center; font-size:11px; color:var(--muted); margin-top:-8px; margin-bottom:14px; }
+.ss-item { text-align:center; }
+.ss-num { font-size:36px; font-weight:900; line-height:1; background:linear-gradient(90deg,#fbbf24,#fb923c); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.ss-label { font-size:12px; color:rgba(255,255,255,.55); margin-top:4px; }
+footer { text-align:center; padding:36px 24px 60px; border-top:1px solid var(--border); font-size:13px; color:var(--muted); }
+footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); margin-bottom:6px; }
+.view-counter { display:inline-flex; align-items:center; gap:6px; margin-top:10px; padding:8px 20px; background:linear-gradient(135deg,#0f2b5c,#1a3a6a); border-radius:24px; color:#fff; font-size:13px; font-weight:600; letter-spacing:.3px; box-shadow:0 4px 16px rgba(15,43,92,.3); }
+.view-counter .vc-icon { font-size:16px; }
+.view-counter .vc-num { font-size:22px; font-weight:900; background:linear-gradient(90deg,#60a5fa,#a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+
+/* ============ 招投标步骤 ============ */
+.bid-steps-grid { display:grid; grid-template-columns:1fr 40px 1fr 40px 1fr; gap:0; align-items:center; margin-bottom:36px; }
+.bid-step-card { background:#fff; border-radius:14px; border:2px solid; padding:20px; text-align:center; box-shadow:var(--shadow); }
+.bid-step-title { font-weight:800; font-size:14px; margin-bottom:6px; }
+.bid-step-list { font-size:12px; color:var(--muted); text-align:left; padding-left:14px; line-height:1.8; }
+.bid-step-arrow { text-align:center; font-size:20px; color:#cbd5e1; font-weight:700; }
+
+/* ============ 移动端适配 ============ */
+@media (max-width:768px) {
+  nav { height:48px; padding:0 12px; }
+  .nav-brand { font-size:12px; gap:4px; }
+  .nav-brand img { height:22px; }
+  .nav-brand span { display:none; }
+  .nav-tabs { gap:0; }
+  .nav-tabs a { padding:4px 8px; font-size:13px; }
+  .nav-right { display:none; }
+
+  .hero { padding:80px 16px 60px; min-height:auto; }
+  .hero-inner { padding:0 8px; }
+  .hero-logo-img { height:36px; }
+  .hero-logo-dept { font-size:14px; }
+  .hero h1 { font-size:28px; }
+  .hero-sub { font-size:13px; max-width:100%; }
+  .hero-card { width:calc(50% - 8px); padding:16px 10px; }
+  .hero-card .hc-icon { font-size:30px; }
+  .hero-card .hc-name { font-size:13px; }
+  .hero-card .hc-desc { font-size:11px; }
+  .hero-incentive-badge { min-width:0; flex:1; padding:12px 10px; }
+  .hero-incentive-badge .hb-title { font-size:12px; }
+  .hero-incentive-badge .hb-sub { font-size:10px; }
+  .hero-incentive-badge .hb-link { font-size:9px; }
+  .hero-incentive-label { font-size:18px; }
+  .hero-incentive-desc { font-size:11px; }
+
+  .scene-nav { top:48px; padding:6px 0; }
+  .scene-nav-inner { padding:0 12px; gap:6px; overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch; }
+  .scene-nav-btn { padding:8px 14px; font-size:14px; white-space:nowrap; flex-shrink:0; }
+  .scene-nav-hint { display:none; }
+
+  .scene-section { padding:32px 14px 48px; }
+  .scene-header { gap:10px; margin-bottom:28px; flex-wrap:wrap; }
+  .scene-header-ico { width:38px; height:38px; font-size:18px; border-radius:10px; }
+  .scene-title { font-size:20px; }
+  .scene-sub { font-size:12px; }
+  .scene-count { font-size:11px; padding:3px 10px; }
+  .scene-timeline { padding:0 10px; }
+  .scene-timeline::before { left:20px; }
+
+  .app-block { margin-bottom:20px; border-radius:14px; }
+  .app-block-header { padding:14px 16px; gap:10px; flex-wrap:wrap; }
+  .app-num-badge { width:28px; height:28px; font-size:12px; }
+  .app-title { font-size:15px; }
+  .app-subtitle { font-size:11px; }
+
+  .app-content { grid-template-columns:1fr; }
+  .app-col { padding:18px 16px; border-right:none; border-bottom:1px solid var(--border-card); }
+  .app-col:last-child { border-bottom:none; }
+  .app-col p { font-size:12px; }
+  .app-col ul { font-size:12px; }
+  .col-emoji-bg { font-size:44px; }
+
+  .app-stats-strip { padding:14px 16px; gap:14px; margin:0 14px 14px; }
+  .app-stats-num { font-size:20px; }
+  .app-stats-label { font-size:10px; }
+
+  .app-video-panel { padding:14px 14px 18px; }
+  .video-wrapper video { max-height:240px; }
+  .video-wrapper { min-height:180px; }
+  .vp-icon { width:48px; height:48px; font-size:20px; }
+  .img-gallery,.img-gallery.col2,.img-gallery.col1 { grid-template-columns:1fr; gap:10px; }
+  .img-gallery img { max-height:300px; }
+
+  .profile-preview { padding:0 14px 18px; }
+  .profile-preview-frame { height:380px; }
+  .profile-preview-label { font-size:11px; padding:14px 0 8px; }
+
+  .bid-compare-title { font-size:14px; padding:10px 14px; }
+  .bid-table { display:block; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .bid-table thead th { font-size:11px; padding:8px 10px; }
+  .bid-table td { font-size:12px; padding:8px 10px; }
+  .bid-table td.td-desc { font-size:11px; }
+  .bid-pct { font-size:20px; }
+  .bid-compare-footer { font-size:9px; padding:8px 14px; }
+
+  .stats-strip { padding:18px 16px; gap:16px; border-radius:12px; }
+  .ss-num { font-size:26px; }
+
+  .bid-steps-grid { grid-template-columns:1fr !important; gap:8px !important; margin-bottom:24px; }
+  .bid-step-arrow { display:none; }
+  .bid-step-card { padding:14px 14px; }
+  .bid-step-title { font-size:13px; }
+  .bid-step-list { font-size:11px; }
+
+  footer { padding:24px 16px 40px; font-size:12px; }
+  .view-counter { padding:6px 14px; font-size:11px; }
+  .view-counter .vc-num { font-size:16px; }
+}
+/* ── 未来规划（独立模块）── */
+.future-section { max-width:960px; margin:48px auto 0; padding:0 24px; }
+.future-card { background:#fff; border-radius:16px; border:1px solid var(--border-card); overflow:hidden; box-shadow:var(--shadow); }
+.future-header { background:linear-gradient(135deg,#1e3a5f 0%,#2d5a8e 40%,#3b7bc4 100%); padding:32px 36px; color:#fff; position:relative; overflow:hidden; }
+.future-header::before { content:''; position:absolute; top:-30%; right:-10%; width:200px; height:200px; background:rgba(255,255,255,.06); border-radius:50%; }
+.future-header::after { content:''; position:absolute; bottom:-20%; right:15%; width:120px; height:120px; background:rgba(255,255,255,.04); border-radius:50%; }
+.future-header-inner { position:relative;z-index:1; }
+.future-header h2 { font-size:22px;font-weight:700;margin:0 0 6px;letter-spacing:1px; }
+.future-header p { font-size:14px;opacity:.88;margin:0; }
+.future-body { padding:28px 36px 32px; }
+.fp-item { margin-bottom:24px; }
+.fp-item:last-child { margin-bottom:0; }
+.fp-label { display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:#1e3a5f;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #e5e7eb; }
+.fp-item p { font-size:14px;color:#374151;line-height:1.8;margin:6px 0; }
+.fp-item ul { list-style:none;padding:0;margin:8px 0 0;padding-left:4px; }
+.fp-item ul li { font-size:14px;color:#374151;padding:5px 0 5px 18px;position:relative;line-height:1.7; }
+.fp-item ul li::before { content:'•';position:absolute;left:0;color:#3b82f6;font-weight:700;font-size:15px;top:5px; }
+.fp-item strong { color:#1e3a5f;font-weight:700; }
+.fp-path-tag { display:inline-flex;align-items:center;gap:8px;padding:8px 18px;background:#eff6ff;border-radius:8px;border:1px solid #bfdbfe;font-size:13px;color:#1d4ed8;font-weight:600;margin-top:12px; }
+
+@media(max-width:720px){
+  .future-section { margin:32px auto 0; padding:0 16px; }
+  .future-header { padding:24px 20px; }
+  .future-header h2 { font-size:18px; }
+  .future-body { padding:20px 18px; }
+}
+/* 点赞评论模块 */
+.feedback-section { max-width:680px; margin:0 auto; padding:32px 24px 16px; }
+.feedback-card { background:#fff; border-radius:12px; border:1px solid var(--border-card); padding:24px 28px; }
+.feedback-header { text-align:center; margin-bottom:18px; }
+.feedback-header h3 { font-size:18px; font-weight:700; color:var(--text); margin:0 0 4px; }
+.feedback-header p { font-size:13px; color:var(--muted); margin:0; }
+.fb-like-row { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:18px; }
+.fb-like-btn { display:inline-flex; align-items:center; gap:6px; padding:10px 22px; border-radius:24px; border:2px solid #e3e5e8; background:#fff; font-size:15px; font-weight:600; color:var(--text); cursor:pointer; transition:all .2s; user-select:none; }
+.fb-like-btn:hover { border-color:#ef4444; color:#ef4444; }
+.fb-like-btn.liked { border-color:#ef4444; background:#fef2f2; color:#ef4444; }
+.fb-like-count { font-size:14px; color:var(--muted); }
+.fb-comments { border-top:1px solid #f0f1f3; padding-top:16px; }
+.fb-comment-form { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+.fb-comment-form input { flex:0 0 100px; padding:8px 12px; border:1px solid #e3e5e8; border-radius:8px; font-size:13px; outline:none; }
+.fb-comment-form input:focus { border-color:var(--brand-teal); }
+.fb-comment-form textarea { flex:1; min-width:200px; padding:8px 12px; border:1px solid #e3e5e8; border-radius:8px; font-size:13px; resize:vertical; min-height:36px; outline:none; font-family:inherit; }
+.fb-comment-form textarea:focus { border-color:var(--brand-teal); }
+.fb-comment-form button { padding:8px 18px; background:linear-gradient(135deg,#0f2b5c,#1e4f8a); color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; transition:opacity .2s; }
+.fb-comment-form button:hover { opacity:.9; }
+.fb-comment-list { max-height:300px; overflow-y:auto; }
+.fb-comment-item { padding:10px 0; border-bottom:1px solid #f5f6f7; }
+.fb-comment-item:last-child { border-bottom:none; }
+.fb-comment-meta { font-size:11px; color:var(--muted); margin-bottom:3px; display:flex; justify-content:space-between; }
+.fb-comment-meta strong { color:var(--text); font-size:13px; }
+.fb-comment-text { font-size:13px; color:var(--text); line-height:1.5; }
+.fb-comment-del { font-size:11px; color:#ccc; cursor:pointer; background:none; border:none; padding:0 4px; }
+.fb-comment-del:hover { color:#ef4444; }
+.fb-reply-btn { font-size:11px; color:var(--brand-teal); cursor:pointer; background:none; border:none; padding:0 4px; }
+.fb-reply-btn:hover { text-decoration:underline; }
+.fb-reply-area { margin:6px 0 0 0; display:none; }
+.fb-reply-area.show { display:block; }
+.fb-reply-area textarea { width:100%; padding:6px 10px; border:1px solid #e3e5e8; border-radius:6px; font-size:12px; resize:vertical; min-height:30px; outline:none; font-family:inherit; box-sizing:border-box; }
+.fb-reply-area textarea:focus { border-color:var(--brand-teal); }
+.fb-reply-area button { margin-top:4px; padding:4px 12px; background:var(--brand-teal); color:#fff; border:none; border-radius:6px; font-size:12px; cursor:pointer; }
+.fb-reply-area button:hover { opacity:.9; }
+.fb-reply-item { padding:4px 0 4px 14px; margin:2px 0; border-left:2px solid #e3e5e8; font-size:12px; color:var(--text); }
+.fb-reply-item strong { font-size:12px; color:var(--text); }
+.fb-reply-item span { font-size:10px; color:var(--muted); margin-left:4px; }
+.fb-empty { text-align:center; font-size:13px; color:var(--muted); padding:20px 0; }
+.fb-loading { text-align:center; font-size:12px; color:var(--muted); padding:10px; }
+@media (max-width:768px) {
+  .feedback-section { padding:20px 14px 8px; }
+  .feedback-card { padding:16px; }
+  .fb-comment-form { flex-direction:column; }
+  .fb-comment-form input { flex:1; }
+}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+
+<nav>
+  <a class="nav-brand" href="#hero"><img src="media/image2.png" alt="安恒信息"><span>AI赋能营销</span></a>
+  <div class="nav-tabs">
+    <a href="#scene-opp">📈 机会点增量</a>
+    <a href="#scene-visit">🤝 客户拜访</a>
+    <a href="#scene-proj">🚀 项目推进</a>
+    <a href="#scene-bid">📋 招投标</a>
+    <a href="#scene-knowledge">🧠 知识助手</a>
+    <a href="#scene-skill">🛠️ Skill共享平台</a>
+  </div>
+  <div class="nav-right">安恒信息· 营销中心 · 综合管理部</div>
+</nav>
+
+<section class="hero" id="hero">
+  <div class="hero-bg-circles"><span></span><span></span><span></span></div>
+  <div class="hero-inner">
+    <div class="hero-logo-row"><img class="hero-logo-img" src="media/image2.png" alt="安恒信息"><div class="hero-logo-dept">营销中心 · 综合管理部</div></div>
+    <h1>AI赋能营销<br><em>AI用起来，业绩冲上来！</em></h1>
+    <p class="hero-sub">以业务赋能为导向，以AI与数字化为核心，以提质增效为目标</p>
+    <div class="hero-char-cards">
+      <div class="hero-card"><div class="hc-icon">🙋‍♂️</div><div class="hc-name">销售小明</div><div class="hc-desc">每天找资料<br>要花1小时😭</div></div>
+      <div class="hero-card"><div class="hc-icon">👩‍💼</div><div class="hc-name">售前小张</div><div class="hc-desc">客户背景<br>两眼一抹黑😰</div></div>
+      <div class="hero-card"><div class="hc-icon">🧑‍💻</div><div class="hc-name">投标专员小李</div><div class="hc-desc">标书从头写起<br>不知咋下手😩</div></div>
+      <div class="hero-card"><div class="hc-icon">🤖</div><div class="hc-name">AI小助手</div><div class="hc-desc">AI来了！<br>效率翻10倍🎉</div></div>
+    </div>
+    <div class="hero-incentive-divider"></div>
+    <div class="hero-incentive-label">✨ 激励 ✨</div>
+    <div class="hero-incentives-row">
+      <a href="https://ah-marketing-2026.github.io/honor/" target="_blank" class="hero-incentive-badge"><div class="hb-icon">📅</div><div class="hb-title">常态化月度</div><div class="hb-sub">月度AI应用激励</div><div class="hb-link">查看详情 →</div></a>
+      <a href="https://365.kdocs.cn/l/cqQpJWaDnycr" target="_blank" class="hero-incentive-badge"><div class="hb-icon">🏆</div><div class="hb-title">10W专项</div><div class="hb-sub">特别贡献激励</div><div class="hb-link">查看详情 →</div></a>
+      <div class="hero-incentive-badge"><div class="hb-icon">🎯</div><div class="hb-title">年底激励</div><div class="hb-sub">敬请期待</div></div>
+    </div>
+    <div class="hero-incentive-desc">积极使用AI工具，主动反馈优化建议，甚至自建提效Skill——优秀实践可获月度激励、专项大奖及年度荣誉！</div>
+  </div>
+</section>
+
+<div class="scene-nav"><div class="scene-nav-inner">
+    <button class="scene-nav-btn" data-scene="scene-opp"><span class="sn-ico">📈</span>机会点增量</button>
+    <button class="scene-nav-btn" data-scene="scene-visit"><span class="sn-ico">🤝</span>客户拜访</button>
+    <button class="scene-nav-btn" data-scene="scene-proj"><span class="sn-ico">🚀</span>项目推进</button>
+    <button class="scene-nav-btn" data-scene="scene-bid"><span class="sn-ico">📋</span>招投标</button>
+    <button class="scene-nav-btn" data-scene="scene-knowledge"><span class="sn-ico">🧠</span>知识助手</button>
+    <button class="scene-nav-btn" data-scene="scene-skill"><span class="sn-ico">🛠️</span>Skill共享平台</button>
+    <span class="scene-nav-hint">💡 点击按钮快速跳转对应场景</span>
+</div></div>
+
+<div class="scene-timeline">
+
+<div class="scene-timeline-item" id="scene-opp">
+<div class="bg-opp">
+<div class="scene-section">
+  <div class="scene-header">
+    <button class="scene-toggle" data-target="scene-opp-body" aria-label="折叠/展开">▼</button>
+    <div class="scene-header-ico" style="background:linear-gradient(135deg,#0f2b5c,#1e4f8a);color:#fff;">📈</div>
+    <div><div class="scene-title">机会点增量</div><div class="scene-sub">市场空间 · 价值线索 · 精细化运营 · 排兵布阵</div></div>
+    <div class="scene-count">3个应用</div>
+  </div>
+  <div class="scene-body" id="scene-opp-body">
+
+  <div class="app-block">
+    <div class="app-block-header">
+      <div class="app-num-badge" style="background:linear-gradient(135deg,#0f2b5c,#1e4f8a);">1</div>
+      <div><div class="app-title">市场分析平台</div><div class="app-subtitle">简化市场研判工作，仅需2分钟左右，就能完成区域、行业、客户多维度的安全市场分析；无需再耗费大量时间人工收集、整理、治理各类数据，高效满足市场分析需求。</div></div>
+    </div>
+    <div class="app-content">
+      <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div><p><strong>示例场景</strong>：某行业销售收到紧急需求，需要分析本区域电力、油气行业近3年市场情况（地市/客户/中标方等多个维度）。</p>
+        <p><strong>人工处理</strong>：购买数据后，还要整理、治理数据至少半天时间。</p><div class="col-emoji-bg">📊</div></div>
+      <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div><p>收到需求，<strong>怎么在2分钟内</strong>完成多维度安全市场分析（请看如下操作视频）</p>
+        <ul>
+          <li>区域安全市场全景</li>
+          <li>行业安全市场分析</li>
+          <li>客户安全市场画像</li>
+          <li>中标方竞争态势</li>
+          <li>...............</li>
+        </ul><div class="col-emoji-bg">⚡</div></div>
+      <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div><p>登录DASLink ，进入市场情报分析平台就可使用。
+---</p>
+        <div class="path-tag"><span>DASLINK</span> <span class="arr">→</span> <span>帆软</span> <span class="arr">→</span> <span>市场行销部</span> <span class="arr">→</span> <span>市场情报分析</span></div><div class="col-emoji-bg">🗺️</div></div>
+    </div>
+    <div class="app-video-panel">
+      <div class="app-video-label"><span class="vdot"></span>应用演示视频</div>
+      <div class="video-wrapper" data-video-src="media/media1.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1"></video><div class="video-placeholder"><span class="vp-icon">▶</span><span class="vp-text">点击播放演示视频</span></div></div>
+    </div>
+      </div>
+  <div class="app-block">
+    <div class="app-block-header">
+      <div class="app-num-badge" style="background:linear-gradient(135deg,#0284c7,#0891b2);">2</div>
+      <div><div class="app-title">标讯运营</div><div class="app-subtitle">标讯运营全流程线上化、标准化 · 聚焦有效标讯，挖掘增量，助力更多的“产粮”</div></div>
+    </div>
+    <div class="app-content">
+      <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div><p>以往标讯数据的筛选、处理<strong>全部依赖人工</strong>，耗时费力。大量无关数据、非业务数据混杂，真正有价值的标讯很难快速找到。</p><div class="col-emoji-bg">📊</div></div>
+      <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div><p>完成标讯工作<strong>线上化、标准化</strong>升级，搭建完整线上处理流程：</p>
+        <ul>
+          <li>精准过滤无关/非我司业务数据</li>
+          <li>聚焦有效标讯</li>
+          <li>挖掘增量商机</li>
+          <li>助力更多"产粮"</li>
+          <li>........</li>
+        </ul><div class="col-emoji-bg">⚡</div></div>
+      <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div><p>登录LTC-机会点，系统自动推送高价值标讯。</p>
+        <div class="path-tag"><span>LTC</span> <span class="arr">→</span> <span>机会点（如下截图示例主界面）</span></div><div class="col-emoji-bg">🗺️</div></div>
+    </div>
+    <div class="bid-flow-platform">
+      <div class="app-video-panel">
+        <div class="app-video-label"><span class="vdot" style="background:#38bdf8;"></span>业务流</div>
+        <div class="img-gallery img-gallery-single"><figure><img src="media/image18.png" alt=""><figcaption>📌 标讯筛选与处理流程</figcaption></figure></div>
+      </div>
+      <div class="app-video-panel">
+        <div class="app-video-label"><span class="vdot" style="background:#f59e0b;"></span>平台</div>
+        <div class="img-gallery img-gallery-single"><figure><img src="media/image19.png" alt=""><figcaption>📌 标讯运营功能主界面</figcaption></figure></div>
+      </div>
+    </div>
+      <div class="bid-compare">
+        <div class="bid-compare-title"><span class="ai-dot"></span>AI助力高价值标讯</div>
+        <table class="bid-table">
+          <thead><tr><th></th><th>数据治理</th><th>推送数量</th><th>标讯质量</th></tr></thead>
+          <tbody>
+            <tr class="old-row"><td><span class="bid-ver-tag old">V1.0（治理前）</span></td><td class="td-desc">NA客户推送全部标讯，非NA及未匹配推送专项标讯</td><td class="td-desc">1天1~2条</td><td class="td-desc">60%<br>纯安全标讯</td></tr>
+            <tr class="new-row"><td><span class="bid-ver-tag new">V2.0（治理后）</span></td><td class="td-desc">过滤NA客户信息化标讯、测评、友商维保等非我司业务数据</td><td class="td-desc">1天1条</td><td class="td-desc">90%<br>纯安全标讯</td></tr>
+          </tbody>
+        </table>
+        <div class="bid-compare-footer">
+          <span>🎯 数据质量从60%提升至90%，推送更精准，大幅节省处理时间，标讯质量更高更有价值</span>
+        </div>
+      </div>
+      </div>
+  <div class="app-block">
+    <div class="app-block-header">
+      <div class="app-num-badge" style="background:linear-gradient(135deg,#0891b2,#0e7490);">3</div>
+      <div><div class="app-title">内外市场分析报告</div><div class="app-subtitle">整体/地市/行业/客户运营.... · 一键智能化市场报告</div></div>
+    </div>
+    <div class="app-content">
+      <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div><p>需要定期撰写市场研判报告，数据收集分散、格式不统一、撰写耗时，<strong>难以保持报告质量的一致性</strong>，还容易因数据不全导致判断失准。</p><div class="col-emoji-bg">📊</div></div>
+      <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div><p>这份<strong>智能化报告</strong>，为大家开展客户精细化运营、区域市场态势研判提供全面数据支撑：</p>
+        <ul>
+          <li>整体市场研判报告</li>
+          <li>地市市场研判报告</li>
+          <li>行业市场研判报告</li>
+          <li>客户运营专项报告</li>
+          <li>.........</li>
+        </ul><div class="col-emoji-bg">⚡</div></div>
+      <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div><p>进入知识库，选择本区域/战区分析报告。
+---</p>
+        <div class="path-tag"><span>钉钉文档</span> <span class="arr">→</span> <span>市场知识库</span> <span class="arr">→</span> <span>市场分析报告</span></div><div class="col-emoji-bg">🗺️</div></div>
+    </div>
+    <div class="app-video-panel">
+      <div class="app-video-label"><span class="vdot"></span>应用演示视频</div>
+      <div class="video-wrapper" data-video-src="media/media2.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1"></video><div class="video-placeholder"><span class="vp-icon">▶</span><span class="vp-text">点击播放演示视频</span></div></div>
+    </div>
+      </div>
+  </div>
+</div>
+</div>
+</div>
+<div class="scene-timeline-item" id="scene-visit">
+<div class="bg-visit">
+<div class="scene-section">
+  <div class="scene-header">
+    <button class="scene-toggle" data-target="scene-visit-body" aria-label="折叠/展开">▼</button>
+    <div class="scene-header-ico" style="background:linear-gradient(135deg,#00a884,#00b894);color:#fff;">🤝</div>
+    <div><div class="scene-title">客户拜访</div><div class="scene-sub">拜访前充分准备，现场沟通稳定发挥 · **支持移动端 **</div></div>
+    <div class="scene-count">2个应用</div>
+  </div>
+  <div class="scene-body" id="scene-visit-body">
+
+  <div class="app-block">
+    <div class="app-block-header">
+      <div class="app-num-badge" style="background:linear-gradient(135deg,#00a884,#00b894);">1</div>
+      <div><div class="app-title">客户画像 · AI全自动化客户分析</div><div class="app-subtitle">一句话指令 · 3分钟生成全方位客户画像 · 拜访前必备</div></div>
+    </div>
+    <div class="app-content">
+      <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div><p>上门拜访客户前，需要<strong>花大量时间零散查找</strong>客户资料：历年预算、采购记录、组织架构、安全成熟度…… 往往要翻好几个系统，还不完整，拜访效果大打折扣。</p><div class="col-emoji-bg">🔍</div></div>
+      <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div><p>仅需一句话指令，<strong>3分钟</strong>生成全方位完整客户画像：</p>
+        <ul>
+          <li>📅 客户历年预算</li>
+          <li>🛒 客户采购产品/合同</li>
+          <li>🏢 客户组织架构</li>
+          <li>📊 安全成熟度评估</li>
+          <li>💡 客户采购建议</li>
+          <li>🕐 客户建设时间线</li>
+          <li>.........</li>
+        </ul><div class="col-emoji-bg">✨</div></div>
+      <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div><p>钉钉搜营销AI小秘，输入某客户的画像，系统自动生成完整画像报告，有效降低前期准备时间。
+---</p>
+        <div class="path-tag"><span>营销AI小秘</span> <span class="arr">→</span> <span>输入指令</span></div>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px;">📱 支持手机端，随时随地可问</p><div class="col-emoji-bg">🎯</div></div>
+    </div>
+    <div class="app-video-panel">
+      <div class="app-video-label"><span class="vdot"></span>应用演示视频</div>
+      <div class="video-wrapper" data-video-src="media/media3.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1"></video><div class="video-placeholder"><span class="vp-icon">▶</span><span class="vp-text">点击播放演示视频</span></div></div>
+    </div>
+        <div class="profile-preview">
+      <div class="profile-preview-label"><span class="pdot"></span>客户画像 2.0 优化中 <span class="pbeta">NEW</span> — 下滑查看最新画像内容</div>
+      <div class="profile-preview-frame"><iframe src="media/天津大学_安全画像.html" title="天津大学安全画像"></iframe></div>
+    </div>  </div>
+  <div class="app-block">
+    <div class="app-block-header">
+      <div class="app-num-badge" style="background:linear-gradient(135deg,#0284c7,#4f46e5);">2</div>
+      <div><div class="app-title">AI对练 · 智能对练，客户现场完美表现</div><div class="app-subtitle">拜访前模拟演练 · 打磨沟通话术 · **支持移动端**</div></div>
+    </div>
+    <div class="app-content">
+      <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div><p>拜访重要客户前，<strong>不知道客户会提哪些刁钻问题</strong>，产品知识记不牢，面对质疑容易慌乱，沟通话术不够流畅，关键时刻掉链子。</p><div class="col-emoji-bg">🔍</div></div>
+      <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div><p>模拟真实客户角色进行<strong>实战对话演练</strong>，帮助提前打磨话术：</p>
+        <ul>
+          <li>选择对应场景/客户角色</li>
+          <li>与AI客户实战沟通</li>
+          <li>获取学习报告和改进建议</li>
+          <li>提前熟悉各类沟通场景</li>
+          <li>真实拜访中稳定发挥</li>
+          <li>............</li>
+        </ul><div class="col-emoji-bg">✨</div></div>
+      <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div><p>安恒学堂选择AI对练平台，选择拜访场景 → 选择客户角色 → 与AI对话 → 查看分析报告与建议。
+---</p>
+        <div class="path-tag"><span>AI对练平台</span> <span class="arr">→</span> <span>选场景</span> <span class="arr">→</span> <span>开始对练</span> <span class="arr">→</span> <span>分析报告与建议</span></div>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px;">📱 支持手机端，随时随地练习</p><div class="col-emoji-bg">🎯</div></div>
+    </div>
+    <div class="app-video-panel">
+      <div class="app-video-label"><span class="vdot" style="background:#38bdf8;"></span>应用演示截图</div>
+      <div class="img-gallery "><figure><img src="media/image23.jpeg" alt=""><figcaption>进入课程查看演练场景</figcaption></figure>
+<figure><img src="media/image24.jpeg" alt=""><figcaption>与AI客户进行交流</figcaption></figure>
+<figure><img src="media/image22.png" alt=""><figcaption>查看学习报告分析与建议</figcaption></figure></div>
+    </div>
+      </div>
+  </div>
+</div>
+</div>
+</div>
+<div class="scene-timeline-item" id="scene-proj">
+<div class="bg-proj">
+<div class="scene-section">
+  <div class="scene-header">
+    <button class="scene-toggle" data-target="scene-proj-body" aria-label="折叠/展开">▼</button>
+    <div class="scene-header-ico" style="background:linear-gradient(135deg,#0f2b5c,#5b3fd4);color:#fff;">🚀</div>
+    <div><div class="scene-title">项目推进</div><div class="scene-sub"></div></div>
+    <div class="scene-count">2个应用</div>
+  </div>
+  <div class="scene-body" id="scene-proj-body">
+
+  <div class="app-block">
+    <div class="app-block-header">
+      <div class="app-num-badge" style="background:linear-gradient(135deg,#0f2b5c,#5b3fd4);">1</div>
+      <div><div class="app-title">营销AI小秘</div><div class="app-subtitle">多个提效Skill综合能力平台 · 适配项目推进全流程多场景</div></div>
+    </div>
+<div class="app-stats-strip"><div class="app-stats-item"><div class="app-stats-num">1,417</div><div class="app-stats-label">总访问量 (PV)</div></div><div class="app-stats-item"><div class="app-stats-num">575</div><div class="app-stats-label">独立访客 (UV)</div></div><div class="app-stats-item"><div class="app-stats-num">44</div><div class="app-stats-label">日均访问量 (PV)</div></div></div>
+<div class="app-stats-note">统计区间：2026.04.29 - 2026.06.11</div>
+    <div class="app-content">
+      <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div><p>项目推进中需要<strong>跨多个系统查不同信息</strong>：查客户一个系统、找案例另一个、问价格又要登别的平台，效率极低。</p><div class="col-emoji-bg">🔀</div></div>
+      <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div><p><strong>一站式多功能平台</strong>，项目推进全流程都能用（使用TOP5）：</p>
+        <ul>
+          <li>🥇 查客户</li>
+          <li>🥈 找案例扫描件</li>
+          <li>🥉 客户画像分析</li>
+          <li>4️⃣ 查企业</li>
+          <li>5️⃣ 查价格</li>
+        </ul><div class="col-emoji-bg">⚡</div></div>
+      <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div><p>直接钉钉搜索访问营销AI小秘，输入指令，无需跳转其他系统，一个入口搞定所有。
+---</p>
+        <div class="path-tag"><span>钉钉营销</span> <span class="arr">→</span> <span>AI小秘</span> <span class="arr">→</span> <span>输入指令</span></div>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px;">已稳定运行。2026.04.29上线</p><div class="col-emoji-bg">🗝️</div></div>
+    </div>
+    <div class="app-video-panel">
+      <div class="app-video-label"><span class="vdot"></span>应用演示视频</div>
+      <div class="video-wrapper" data-video-src="media/media4.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1"></video><div class="video-placeholder"><span class="vp-icon">▶</span><span class="vp-text">点击播放演示视频</span></div></div>
+    </div>
+      </div>
+  <div class="app-block">
+    <div class="app-block-header">
+      <div class="app-num-badge" style="background:linear-gradient(135deg,#5b3fd4,#e8710a);">2</div>
+      <div><div class="app-title">行销数字员工</div><div class="app-subtitle">专属智能售前专家 · 7×24小时在线 · 全流程问题闭环</div></div>
+    </div>
+<div class="app-stats-strip"><div class="app-stats-item"><div class="app-stats-num">11,447</div><div class="app-stats-label">总访问量 (PV)</div></div><div class="app-stats-item"><div class="app-stats-num">3,552</div><div class="app-stats-label">独立访客 (UV)</div></div><div class="app-stats-item"><div class="app-stats-num">239</div><div class="app-stats-label">日均访问量 (PV)</div></div></div>
+<div class="app-stats-note">统计时间： 2026.04.10 - 2026.06.11</div>
+    <div class="app-content">
+      <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div><p>遇到客户技术问题，<strong>找不到人、找不到资料</strong>。晚上或周末遇到紧急技术询问更是两眼一抹黑，客户等半天，印象分大打折扣。</p><div class="col-emoji-bg">🔀</div></div>
+      <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div><p>专属<strong>智能售前专家</strong>，内置丰富知识，全天候服务：</p>
+        <ul>
+          <li>📚 完善的产品知识库</li>
+          <li>🎯 行业打法与经验</li>
+          <li>📋 公司参与标准</li>
+          <li>⚡ 7×24小时实时响应</li>
+          <li>🔄 问题反馈全流程闭环</li>
+        </ul><div class="col-emoji-bg">⚡</div></div>
+      <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div><p>直接钉钉搜索行销数字员工平台，输入问题即可获得专业解答，支持追问和深入了解，每个模块都有对应负责人确保问题闭环。
+---</p>
+        <div class="path-tag"><span>钉钉</span> <span class="arr">→</span> <span>行销数字员工平台</span> <span class="arr">→</span> <span>直接提问</span></div>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px;">📊 已稳定运行 2026.04.10上线</p><div class="col-emoji-bg">🗝️</div></div>
+    </div>
+    <div class="app-video-panel">
+      <div class="app-video-label"><span class="vdot"></span>应用演示视频</div>
+      <div class="video-wrapper" data-video-src="media/media5.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1"></video><div class="video-placeholder"><span class="vp-icon">▶</span><span class="vp-text">点击播放演示视频</span></div></div>
+    </div>
+      </div>
+  </div>
+</div>
+</div>
+</div>
+<div class="scene-timeline-item" id="scene-bid">
+<div class="bg-bid">
+<div class="scene-section">
+  <div class="scene-header">
+    <button class="scene-toggle" data-target="scene-bid-body" aria-label="折叠/展开">▼</button>
+    <div class="scene-header-ico" style="background:linear-gradient(135deg,#e8710a,#dc2626);color:#fff;">📋</div>
+    <div><div class="scene-title">招投标</div><div class="scene-sub">招标文件解析→生成商务标初版内容→投标前检查全流程AI覆盖。</div></div>
+    <div class="scene-count">3大能力</div>
+  </div>
+  <div class="scene-body" id="scene-bid-body">
+<div class="bid-steps-grid">
+<div class="bid-step-card" style="border-color:#fecdd3">
+<div style="font-size:28px;margin-bottom:6px">📄</div>
+<div class="bid-step-title" style="color:#be123c">PART 1<br>招标文件解析</div>
+<ul class="bid-step-list"><li>项目基础信息</li><li>采购要求提取</li><li>评分项梳理</li><li>废标项预警</li></ul></div>
+<div class="bid-step-arrow">→</div>
+<div class="bid-step-card" style="border-color:#bbf7d0">
+<div style="font-size:28px;margin-bottom:6px">📝</div>
+<div class="bid-step-title" style="color:#15803d">PART 2<br>商务标生成</div>
+<ul class="bid-step-list"><li>生成投标函/委托书</li><li>承诺书等初稿</li><li>资质证书自动插入</li><li>支持在线编辑</li></ul></div>
+<div class="bid-step-arrow">→</div>
+<div class="bid-step-card" style="border-color:#bfdbfe">
+<div style="font-size:28px;margin-bottom:6px">✅</div>
+<div class="bid-step-title" style="color:#1d4ed8">PART 3<br>投标文件检查</div>
+<ul class="bid-step-list"><li>多份文件自动查重</li><li>投标问题自动检查</li><li>废标风险提前预警</li></ul></div></div>
+  <div class="app-block">
+    <div class="app-block-header">
+      <div class="app-num-badge" style="background:linear-gradient(135deg,#e8710a,#dc2626);font-size:13px;">AI</div>
+      <div><div class="app-title">招投标AI全流程支持</div><div class="app-subtitle">招标文件解析 · 商务标书初版生成 · 投标文件检查 · 三步走全搞定</div></div>
+    </div>
+    <div class="app-content">
+      <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div><p>招标文件动辄几百页，<strong>人工阅读分析耗时2-3天</strong>；商务标书格式繁琐，从头写起费时费力；投标前检查点多，容易遗漏导致废标风险。</p><div class="col-emoji-bg">😰</div></div>
+      <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div><p><strong>全流程AI覆盖</strong>，大幅提升招投标效率：</p>
+        <ul>
+          <li>招标解析：几十分钟提取关键信息</li>
+          <li>商务标初版内容：自动生成初稿内容</li>
+          <li>标前检查/查重：标签提效检查</li>
+          <li>全程减少人工重复劳动</li>
+        </ul><div class="col-emoji-bg">🏆</div></div>
+      <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div><p>围绕招投标完整业务流程，配套三项AI应用能力。</p>
+        <div class="path-tag"><span>DASLINK</span> <span class="arr">→</span> <span>应用</span> <span class="arr">→</span> <span>招投标辅助平台</span></div>
+        <div class="path-tag"><span>DASLINK</span> <span class="arr">→</span> <span>内部服务</span> <span class="arr">→</span> <span>招投标协作平台</span></div><div class="col-emoji-bg">🗝️</div></div>
+    </div>
+    <div class="app-video-panel">
+      <div class="app-video-label"><span class="vdot"></span>应用演示视频</div>
+      <div class="video-wrapper" data-video-src="media/media6.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1"></video><div class="video-placeholder"><span class="vp-icon">▶</span><span class="vp-text">点击播放演示视频</span></div></div>
+    </div>
+      </div>
+  </div>
+</div>
+</div>
+</div>
+<div class="scene-timeline-item" id="scene-knowledge">
+<div class="bg-knowledge">
+<div class="scene-section">
+  <div class="scene-header">
+    <button class="scene-toggle" data-target="scene-knowledge-body" aria-label="折叠/展开">▼</button>
+    <div class="scene-header-ico" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;">🧠</div>
+    <div><div class="scene-title">知识助手</div><div class="scene-sub">知识AI助手  20s左右获取答案及资料 效率提升100%</div></div>
+    <div class="scene-count">1个应用</div>
+  </div>
+  <div class="scene-body" id="scene-knowledge-body">
+
+  <div class="app-block">
+    <div class="app-block-header">
+      <div class="app-num-badge" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);font-size:13px;">AI</div>
+      <div><div class="app-title">知识AI助手</div><div class="app-subtitle">AI让知识获取更快更准</div></div>
+    </div>
+<div class="app-stats-strip"><div class="app-stats-item"><div class="app-stats-num">50000+</div><div class="app-stats-label">累计访问量 (PV)</div></div><div class="app-stats-item"><div class="app-stats-num">20s</div><div class="app-stats-label">平均获得答案时间</div></div><div class="app-stats-item"><div class="app-stats-num">100%</div><div class="app-stats-label">效率提升</div></div></div>
+<div class="app-stats-note">2024年9月上线，持续迭代至今</div>
+    <div class="app-content">
+      <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div><p>知识中心是公司内部权威知识库，现有<strong>5W+资料</strong>，是大家最常用的查找知识、文档、资料的平台。但ES检索本身存在缺陷：</p>
+        <ul>
+          <li>检索准确度低，难以找到精准结果</li>
+          <li>大家对文档目录分类认知不一致，按图索骥效率低</li>
+          <li>找到文档后还需研读学习，才能获取所需信息，获取路径冗长</li>
+        </ul><div class="col-emoji-bg">📚</div></div>
+      <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div><p>知识中心接入<strong>恒脑大模型</strong>，推出"知识AI助手"，直接输入问题即可获得精准答案：</p>
+        <ul>
+          <li>📖 输入问题，20s内获得答案</li>
+          <li>📎 自动关联并输出参考文档</li>
+          <li>🎯 效率提升100%，减少对后端产线问题咨询依赖</li>
+          <li>📊 基于真实提问数据，驱动培训和资料持续优化</li>
+        </ul><div class="col-emoji-bg">💡</div></div>
+      <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div><p>进入知识中心，点击右上角"知识助手"即可使用AI问答功能。
+---</p>
+        <div class="path-tag"><span>知识中心</span> <span class="arr">→</span> <span>知识助手</span> <span class="arr">→</span> <span>输入问题</span></div>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px;">🏢 营销中心、服务中心、研发中心等多部门均在使用</p><div class="col-emoji-bg">🔮</div></div>
+    </div>
+    <div class="app-video-panel">
+      <div class="app-video-label"><span class="vdot" style="background:#38bdf8;"></span>应用演示截图</div>
+      <div class="img-gallery "><figure><img src="media/zs_screen1.png" alt=""><figcaption>📌 用户端1：知识中心主搜索框智能问答</figcaption></figure>
+<figure><img src="media/zs_screen2.png" alt=""><figcaption>📌 用户端2：知识中心主界面智能问答</figcaption></figure>
+<figure><img src="media/zs_screen3.png" alt=""><figcaption>📌 用户端3：知识AI助手全屏智能问答</figcaption></figure></div>
+    </div>
+      </div>
+  </div>
+</div>
+</div>
+</div>
+<div class="scene-timeline-item" id="scene-skill">
+<div class="bg-skill">
+<div class="scene-section">
+  <div class="scene-header">
+    <button class="scene-toggle" data-target="scene-skill-body" aria-label="折叠/展开">▼</button>
+    <div class="scene-header-ico" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;">🛠️</div>
+    <div><div class="scene-title">Skill共享平台</div><div class="scene-sub">整合一线AI实战经验 · 沉淀推广优秀Skill · 共建共享营销提效工具箱</div></div>
+    <div class="scene-count">1个应用</div>
+  </div>
+  <div class="scene-body" id="scene-skill-body">
+
+  <div class="app-block">
+    <div class="app-block-header">
+      <div class="app-num-badge" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);">1</div>
+      <div><div class="app-title">行销Skill共享平台</div><div class="app-subtitle">基础Skill + 业务专属Skill · 上传优秀Skill赢大奖</div></div>
+    </div>
+<div class="app-stats-strip"><div class="app-stats-item"><div class="app-stats-num">30+</div><div class="app-stats-label">AI实战大比武案例</div></div><div class="app-stats-item"><div class="app-stats-num">40+</div><div class="app-stats-label">AI提质增效优秀案例</div></div><div class="app-stats-item"><div class="app-stats-num">100%</div><div class="app-stats-label">共建共享</div></div></div>
+<div class="app-stats-note">整合一线AI实战经验，沉淀推广至公司平台</div>
+    <div class="app-content">
+      <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div><ul>
+          <li>一线AI实战大比武产出 <strong>30+ 应用案例</strong></li>
+          <li>AI提质增效产出近 <strong>40个优秀案例</strong></li>
+          <li>一线员工在外部AI应用上的实践技能、能力亟需整合到公司平台，<strong>沉淀推广一线宝贵经验</strong></li>
+        </ul><div class="col-emoji-bg">📊</div></div>
+      <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div><p>建设Skill共享平台，<strong>基础Skill + 业务专属Skill</strong>，欢迎大家上传优秀Skill，更有大奖等你来拿：</p>
+        <ul>
+          <li>🏗️ 构建公司内部统一Skill共享平台</li>
+          <li>📤 一线员工上传实战经验与优秀Skill</li>
+          <li>🏆 激励机制：上传优秀Skill赢大奖</li>
+          <li>🔄 持续沉淀推广，形成营销AI工具箱</li>
+        </ul><div class="col-emoji-bg">⚡</div></div>
+      <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div><p>登录营销AI小秘平台，进入Skill共享平台，选择所需Skill即可使用。
+---</p>
+        <div class="path-tag"><span>营销门户</span> <span class="arr">→</span> <span>Skill共享平台</span></div><div class="col-emoji-bg">🗝️</div></div>
+    </div>
+    <div class="app-video-panel">
+      <div class="app-video-label"><span class="vdot" style="background:#38bdf8;"></span>应用演示截图</div>
+      <div class="img-gallery col1"><figure><img src="media/skill_p10_img_5.png" alt=""><figcaption>📌 Skill共享平台主界面</figcaption></figure></div>
+    </div>
+      </div>
+  </div>
+</div>
+</div>
+</div>
+</div>
+
+<section class="future-section">
+  <div class="future-card">
+    <div class="future-header">
+      <div class="future-header-inner">
+        <h2>🚀 未来规划</h2>
+        <p>统一入口 · 整合资源 · 建设营销AI综合能力平台</p>
+      </div>
+    </div>
+    <div class="future-body">
+      <div class="fp-item">
+        <div class="fp-label">🔍 当前现状</div>
+        <p>各类AI应用分散在不同平台，一线员工在外部AI工具上积累了大量实战经验，亟需统一整合、沉淀推广。</p>
+      </div>
+      <div class="fp-item">
+        <div class="fp-label">✅ 规划方向</div>
+        <p><strong>1. 统一入口 — 营销数字员工</strong></p>
+<p>集成营销各类AI应用，统一入口，实现建设 <strong>营销AI应用综合能力平台</strong>。</p>
+<p><strong>2. 整合资源</strong></p>
+<p>将一线员工在外部AI应用上的实践技能整合到公司平台，形成完整营销AI工具矩阵：</p>
+<ul>
+<li>客户分析</li>
+<li>招投标</li>
+<li>行业专家</li>
+<li>文档编写</li>
+<li>参数分析</li>
+<li>产品选型</li>
+</ul>
+      </div>
+      <div class="fp-item">
+        <div class="fp-label">🎯 推进计划</div>
+        <p>持续迭代升级，打造营销AI综合能力平台，实现所有营销场景的 AI 全覆盖。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="feedback-section">
+  <div class="feedback-card">
+    <div class="feedback-header"><h3>👍 觉得有用吗？</h3><p>您的反馈帮助我们持续改进</p></div>
+    <div class="fb-like-row"><button class="fb-like-btn" id="fb-like-btn"><span id="fb-like-icon">👍</span><span id="fb-like-text">有用</span></button><span class="fb-like-count" id="fb-like-count">0 人觉得很赞</span></div>
+    <div class="fb-comments">
+      <h4 style="font-size:14px;font-weight:600;margin:0 0 10px;color:var(--text)">💬 评论 (<span id="fb-cmt-count">0</span>)</h4>
+      <div class="fb-comment-form"><input type="text" id="fb-name" placeholder="昵称" maxlength="20"><textarea id="fb-text" placeholder="写下您的想法…" rows="2" maxlength="500"></textarea><button id="fb-submit-btn">发布</button></div>
+      <div class="fb-comment-list" id="fb-comment-list"><div class="fb-empty">暂无评论，来坐沙发吧 ☕</div></div>
+      <div class="fb-loading" id="fb-loading" style="display:none">加载中…</div>
+    </div>
+  </div>
+</section><footer><div class="ft-logo"><img src="media/image2.png" alt="安恒信息" style="height:32px;vertical-align:middle;margin-right:6px;">AI赋能营销</div><p>安恒信息· 营销中心 · 综合管理部 · 2026年</p><section class="view-counter"><span class="vc-icon">👁️</span><span>本页已浏览</span><span class="vc-num">99+</span><span>次</span></section></footer>
+
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement.scrollHeight-window.innerHeight;document.getElementById('prog').style.width=(h>0?window.scrollY/h*100:0)+'%'});
+function gotoScene(id){const el=document.getElementById(id);if(!el)return;const top=el.getBoundingClientRect().top+window.scrollY-118;window.scrollTo({top,behavior:'smooth'})}
+// 场景导航按钮 — 用 addEventListener 避免 CSP 拦截 onclick
+document.querySelectorAll('.scene-nav-btn').forEach(function(btn){
+  btn.addEventListener('click',function(){var sid=this.getAttribute('data-scene');if(sid) gotoScene(sid);});
+});
+// 场景折叠/展开 — 点击标题旁 ▼ 按钮收起内容
+document.querySelectorAll('.scene-toggle').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var targetId=this.getAttribute('data-target');
+    var body=document.getElementById(targetId);
+    if(!body) return;
+    var isCollapsed=body.classList.toggle('collapsed');
+    this.classList.toggle('collapsed',isCollapsed);
+  });
+});
+const navLinks=document.querySelectorAll('.nav-tabs a');
+const sceneButtons=document.querySelectorAll('.scene-nav-btn');
+const scenes=[{id:'scene-opp',navIdx:0},{id:'scene-visit',navIdx:1},{id:'scene-proj',navIdx:2},{id:'scene-bid',navIdx:3},{id:'scene-knowledge',navIdx:4}];
+const io=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){const idx=scenes.findIndex(s=>s.id===e.target.id);if(idx===-1)return;navLinks.forEach(a=>a.classList.remove('active'));sceneButtons.forEach(b=>b.classList.remove('active'));if(navLinks[idx])navLinks[idx].classList.add('active');if(sceneButtons[idx])sceneButtons[idx].classList.add('active')}})},{threshold:0.25});
+scenes.forEach(s=>{const el=document.getElementById(s.id);if(el)io.observe(el)});
+
+// 视频懒加载 — 只加载视口附近的视频，避免首屏全部视频同时请求
+var videoObs=new IntersectionObserver(function(entries){
+  entries.forEach(function(e){
+    if(!e.isIntersecting) return;
+    var w=e.target,vid=w.querySelector('video'),src=w.getAttribute('data-video-src');
+    if(!vid||!src||w.classList.contains('loaded')) return;
+    vid.innerHTML='<source src="'+src+'" type="video/mp4">';
+    vid.load(); w.classList.add('loaded');
+    videoObs.unobserve(w);
+  });
+},{rootMargin:'300px'});
+document.querySelectorAll('.video-wrapper').forEach(function(w){videoObs.observe(w);});
+
+// 点击占位符也触发加载
+document.addEventListener('click',function(e){
+  var ph=e.target.closest('.video-placeholder');
+  if(!ph) return;
+  var w=ph.closest('.video-wrapper'),vid=w.querySelector('video'),src=w.getAttribute('data-video-src');
+  if(!vid||!src||w.classList.contains('loaded')) return;
+  vid.innerHTML='<source src="'+src+'" type="video/mp4">';
+  vid.load(); w.classList.add('loaded');
+  videoObs.unobserve(w);
+});
+const cards=document.querySelectorAll('.app-block');
+const cardIO=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)'}})},{threshold:0.06});
+cards.forEach(c=>{c.style.opacity='0';c.style.transform='translateY(24px)';c.style.transition='opacity .45s ease,transform .45s ease,box-shadow .25s';cardIO.observe(c)});
+// 点赞评论模块 — MantleDB云端共享存储，所有人可见可累加
+var FB_URL='https://mantledb.sh/v2/ah-mkt-feedback/data';
+var FB_LIKE_URL='https://mantledb.sh/v2/increment/ah-mkt-feedback/data';
+var fbLikedKey='fb-liked-'+new Date().toISOString().slice(0,10);
+var fbLiked=localStorage.getItem(fbLikedKey)==='1';
+var fbLikes=0,fbComments=[];
+
+function fbGet(){
+  return fetch(FB_URL).then(function(r){return r.json();}).then(function(d){
+    // 兜底：如果MantleDB数据为空，尝试从localStorage恢复
+    if((!d.likes&&!d.comments)||(d.likes===0&&(!d.comments||d.comments.length===0))){
+      var backup=localStorage.getItem('fb-backup');
+      if(backup){try{var b=JSON.parse(backup);if(b.likes||(b.comments&&b.comments.length)){return b;}}catch(e){}}
+    }
+    return d;
+  });
+}
+function fbPut(data){
+  return fetch(FB_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}).then(function(r){return r.json();});
+}
+function fbIncrement(key,by){
+  return fetch(FB_LIKE_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:key,by:by})}).then(function(r){return r.json();});
+}
+
+// 检测用户是否正在输入（避免同步时重绘DOM导致滚动/焦点丢失）
+var fbTyping=false;
+document.addEventListener('focusin',function(e){
+  if(e.target.closest('#fb-name')||e.target.closest('#fb-text')||e.target.closest('.fb-reply-area textarea')) fbTyping=true;
+});
+document.addEventListener('focusout',function(e){
+  if(e.target.closest('#fb-name')||e.target.closest('#fb-text')||e.target.closest('.fb-reply-area textarea')){
+    setTimeout(function(){ fbTyping=false; },200);
+  }
+});
+
+function syncFromCloud(){
+  fbGet().then(function(d){
+    fbLikes=d.likes||0; fbComments=d.comments||[];
+    if(!fbTyping) renderFeedback();
+    // 成功后写入localStorage备份
+    try{localStorage.setItem('fb-backup',JSON.stringify({likes:fbLikes,comments:fbComments}));}catch(e){}
+  }).catch(function(){});
+}
+
+function renderFeedback(){
+  document.getElementById('fb-like-count').textContent=fbLikes+' 人觉得很赞';
+  document.getElementById('fb-cmt-count').textContent=fbComments.length;
+  var btn=document.getElementById('fb-like-btn');
+  if(fbLiked) btn.classList.add('liked'); else btn.classList.remove('liked');
+  var list=document.getElementById('fb-comment-list');
+  if(!fbComments.length){ list.innerHTML='<div class="fb-empty">暂无评论，来坐沙发吧 ☕</div>'; return; }
+  list.innerHTML=fbComments.slice().reverse().map(function(c){
+    var t=new Date(c.time),ts=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')+' '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
+    var rs=(c.replies||[]).map(function(r){var rt=new Date(r.time),rts=rt.getFullYear()+'-'+String(rt.getMonth()+1).padStart(2,'0')+'-'+String(rt.getDate()).padStart(2,'0')+' '+String(rt.getHours()).padStart(2,'0')+':'+String(rt.getMinutes()).padStart(2,'0');return '<div class="fb-reply-item"><strong>'+esc(r.name)+'</strong><span>'+rts+'</span>：'+esc(r.text)+'</div>';}).join('');
+    return '<div class="fb-comment-item" data-cid="'+c.id+'"><div class="fb-comment-meta"><strong>'+esc(c.name)+'</strong><span>'+ts+'<button class="fb-reply-btn" data-cid="'+c.id+'" title="回复">💬 回复</button><button class="fb-comment-del" data-cid="'+c.id+'" title="删除">✕</button></span></div><div class="fb-comment-text">'+esc(c.text)+'</div>'+rs+'<div class="fb-reply-area" id="reply-area-'+c.id+'"><textarea id="reply-text-'+c.id+'" placeholder="写下回复…" rows="2" maxlength="200"></textarea><button data-cid="'+c.id+'" class="fb-reply-submit">回复</button></div></div>';
+  }).join('');
+}
+function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+// 点赞按钮 — 原子递增，并发安全
+document.getElementById('fb-like-btn').addEventListener('click',function(){
+  if(fbLiked) return;
+  fbLiked=true; fbLikes++;
+  localStorage.setItem(fbLikedKey,'1');
+  renderFeedback();
+  fbIncrement('likes',1).then(function(d){
+    if(d&&d.likes!==undefined) fbLikes=d.likes;
+    renderFeedback();
+    try{localStorage.setItem('fb-backup',JSON.stringify({likes:fbLikes,comments:fbComments}));}catch(e){}
+  }).catch(function(){ syncFromCloud(); });
+});
+
+// 初始加载 + 15秒定时同步
+syncFromCloud();
+setInterval(syncFromCloud,15000);
+
+function submitComment(){
+  var nameEl=document.getElementById('fb-name'),textEl=document.getElementById('fb-text');
+  var name=nameEl.value.trim(),text=textEl.value.trim();
+  if(!name||!text){alert('请填写昵称和评论内容');return}
+  if(name.length>20||text.length>500){alert('昵称或内容超出限制');return}
+  var c={id:'c_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),name:name,text:text,time:new Date().toISOString(),replies:[]};
+  // 乐观更新 + 云端同步 + localStorage备份
+  fbComments.push(c); renderFeedback();
+  nameEl.value=''; textEl.value=''; fbTyping=false;
+  var data={likes:fbLikes,comments:fbComments};
+  fbPut(data).then(function(){
+    try{localStorage.setItem('fb-backup',JSON.stringify({likes:fbLikes,comments:fbComments}));}catch(e){}
+  }).catch(function(){ syncFromCloud(); });
+}
+document.getElementById('fb-submit-btn').addEventListener('click',submitComment);
+
+function delComment(id){
+  if(!confirm('确定删除这条评论吗？')) return;
+  fbComments=fbComments.filter(function(c){return c.id!==id});
+  renderFeedback();
+  var data={likes:fbLikes,comments:fbComments};
+  fbPut(data).then(function(){
+    try{localStorage.setItem('fb-backup',JSON.stringify({likes:fbLikes,comments:fbComments}));}catch(e){}
+  }).catch(function(){ syncFromCloud(); });
+}
+
+// 评论列表事件代理
+document.getElementById('fb-comment-list').addEventListener('click',function(e){
+  var delBtn=e.target.closest('.fb-comment-del');
+  if(delBtn){ var cid=delBtn.getAttribute('data-cid'); if(cid) delComment(cid); return; }
+  var replyBtn=e.target.closest('.fb-reply-btn');
+  if(replyBtn){ var cid=replyBtn.getAttribute('data-cid'); if(cid) toggleReply(cid); return; }
+  var replySubmit=e.target.closest('.fb-reply-submit');
+  if(replySubmit){ var cid=replySubmit.getAttribute('data-cid'); if(cid) submitReply(cid); return; }
+});
+
+function toggleReply(cid){
+  var area=document.getElementById('reply-area-'+cid);
+  if(!area) return;
+  area.classList.toggle('show');
+  if(area.classList.contains('show')){ var ta=document.getElementById('reply-text-'+cid); if(ta) setTimeout(function(){ta.focus()},100); }
+}
+function submitReply(cid){
+  var ta=document.getElementById('reply-text-'+cid);
+  if(!ta) return;
+  var text=ta.value.trim();
+  if(!text){alert('请输入回复内容');return}
+  if(text.length>200){alert('回复不能超过200字');return}
+  var cmt=fbComments.find(function(c){return c.id===cid});
+  if(!cmt) return;
+  if(!cmt.replies) cmt.replies=[];
+  var r={id:'r_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),name:'网友',text:text,time:new Date().toISOString()};
+  cmt.replies.push(r); renderFeedback(); fbTyping=false;
+  var data={likes:fbLikes,comments:fbComments};
+  fbPut(data).then(function(){
+    try{localStorage.setItem('fb-backup',JSON.stringify({likes:fbLikes,comments:fbComments}));}catch(e){}
+  }).catch(function(){ syncFromCloud(); });
+}
+</script>
+</body>
+</html>
