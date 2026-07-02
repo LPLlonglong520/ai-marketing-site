@@ -508,8 +508,9 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   .nav-brand { font-size:12px; gap:4px; }
   .nav-brand img { height:22px; }
   .nav-brand span { display:none; }
-  .nav-tabs { gap:0; }
-  .nav-tabs a { padding:5px 8px; font-size:13px; border-radius:14px; }
+  .nav-tabs { gap:2px; overflow-x:auto; flex-wrap:nowrap; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+  .nav-tabs::-webkit-scrollbar { display:none; }
+  .nav-tabs a { padding:5px 8px; font-size:12px; border-radius:14px; white-space:nowrap; flex-shrink:0; }
   .nav-right { display:none; }
 
   .hero { padding:84px 16px 64px; min-height:auto; }
