@@ -669,6 +669,62 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   .fb-comment-form { flex-direction:column; }
   .fb-comment-form input { flex:1; }
 }
+/* ═══════════ 首页卡片网格（Landing Cards）═══════════ */
+.landing-section { background: linear-gradient(180deg, #070e2a 0%, #0a1638 40%, #0d1f52 100%); padding: 80px 28px 100px; position: relative; overflow: hidden; }
+.landing-section::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse 60% 50% at 50% 20%, rgba(59,130,246,.06) 0%, transparent 70%); pointer-events:none; }
+.landing-inner { max-width: 1120px; margin: 0 auto; position: relative; z-index: 1; }
+.landing-title { text-align: center; font-size: 32px; font-weight: 900; color: #fff; margin-bottom: 8px; letter-spacing: -.3px; }
+.landing-title em { background: linear-gradient(135deg, #5eead4, #818cf8, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-style: normal; }
+.landing-sub { text-align: center; font-size: 15px; color: rgba(255,255,255,.5); margin-bottom: 48px; }
+.cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+@media (max-width: 900px) { .cards-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .cards-grid { grid-template-columns: 1fr; } }
+
+.card-item { background: linear-gradient(145deg, rgba(15,43,92,.92), rgba(26,58,118,.78)); border: 1px solid rgba(255,255,255,.08); border-radius: 20px; padding: 28px; color: #fff; text-decoration: none; transition: all var(--transition); display: block; position: relative; overflow: hidden; cursor: pointer; }
+.card-item:hover { transform: translateY(-6px); border-color: rgba(99,162,255,.3); box-shadow: 0 20px 56px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.06); }
+.card-item::before { content:''; position: absolute; top: 0; right: 0; width: 140px; height: 140px; background: rgba(255,255,255,.04); border-radius: 50%; transform: translate(40%, -40%); transition: all var(--transition); }
+.card-item:hover::before { transform: translate(30%, -30%) scale(1.1); background: rgba(255,255,255,.07); }
+.card-icon-wrap { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.card-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+.card-title-group { min-width: 0; }
+.card-title { font-size: 18px; font-weight: 800; margin-bottom: 3px; letter-spacing: -.2px; }
+.card-en { font-size: 11px; color: rgba(255,255,255,.4); font-weight: 500; letter-spacing: 1px; text-transform: uppercase; }
+.card-desc { font-size: 13px; color: rgba(255,255,255,.55); line-height: 1.7; margin-bottom: 16px; min-height: 36px; }
+.card-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.card-tag { padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; background: rgba(255,255,255,.07); color: rgba(255,255,255,.65); border: 1px solid rgba(255,255,255,.06); transition: all .2s; }
+.card-item:hover .card-tag { background: rgba(255,255,255,.12); color: rgba(255,255,255,.85); }
+.card-arrow { position: absolute; bottom: 20px; right: 20px; font-size: 18px; color: rgba(255,255,255,.2); transition: all var(--transition); }
+.card-item:hover .card-arrow { color: rgba(255,255,255,.6); transform: translateX(3px); }
+
+/* ═══════════ 详情页导航栏 ═══════════ */
+.scene-detail-nav { display: flex; align-items: center; gap: 16px; padding: 20px 28px; background: linear-gradient(135deg, #0d2550, #1a3d6e); color: #fff; border-radius: 0 0 16px 16px; margin-bottom: 24px; }
+.scene-detail-nav .back-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 10px; background: rgba(255,255,255,.1); color: rgba(255,255,255,.8); font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid rgba(255,255,255,.1); transition: all var(--transition); }
+.scene-detail-nav .back-btn:hover { background: rgba(255,255,255,.18); color: #fff; }
+.scene-detail-nav .nav-title { font-size: 18px; font-weight: 700; flex: 1; text-align: center; }
+.scene-detail-nav .nav-pager { display: flex; gap: 10px; }
+.scene-detail-nav .pager-btn { padding: 8px 14px; border-radius: 10px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.7); font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid rgba(255,255,255,.08); transition: all var(--transition); }
+.scene-detail-nav .pager-btn:hover { background: rgba(255,255,255,.15); color: #fff; }
+.scene-detail-nav .pager-btn.disabled { opacity: .3; pointer-events: none; }
+
+/* 详情页容器 */
+.detail-wrap { max-width: 1120px; margin: 0 auto; padding: 0 28px 60px; }
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .landing-section { padding: 48px 16px 64px; }
+  .landing-title { font-size: 24px; }
+  .landing-sub { font-size: 13px; margin-bottom: 32px; }
+  .card-item { padding: 20px; border-radius: 16px; }
+  .card-icon { width: 40px; height: 40px; font-size: 20px; border-radius: 12px; }
+  .card-title { font-size: 16px; }
+  .card-desc { font-size: 12px; margin-bottom: 12px; }
+  .card-tag { font-size: 11px; padding: 4px 10px; }
+  .scene-detail-nav { padding: 14px 16px; gap: 10px; flex-wrap: wrap; }
+  .scene-detail-nav .nav-title { font-size: 15px; order: -1; width: 100%; text-align: left; margin-bottom: 4px; }
+  .scene-detail-nav .back-btn { font-size: 12px; padding: 6px 12px; }
+  .scene-detail-nav .pager-btn { font-size: 12px; padding: 6px 10px; }
+  .detail-wrap { padding: 0 14px 40px; }
+}
 </style>'''
 
 
@@ -944,8 +1000,8 @@ def build_bid_compare(bid_compare_data):
       </div>'''
 
 
-def build(data):
-    g = data['global']
+def render_scene(data, scene):
+    """渲染单个场景为 HTML 字符串（详情页用）"""
     scene_id_map = {1:'scene-opp',2:'scene-visit',3:'scene-proj',4:'scene-bid',5:'scene-knowledge',6:'scene-skill'}
     bg_map = {1:'bg-opp',2:'bg-visit',3:'bg-proj',4:'bg-bid',5:'bg-knowledge',6:'bg-skill'}
     icon_colors = ["linear-gradient(135deg,#0f2b5c,#1e4f8a)","linear-gradient(135deg,#00a884,#00b894)","linear-gradient(135deg,#0f2b5c,#5b3fd4)","linear-gradient(135deg,#e8710a,#dc2626)","linear-gradient(135deg,#6366f1,#8b5cf6)","linear-gradient(135deg,#0ea5e9,#0284c7)"]
@@ -960,134 +1016,73 @@ def build(data):
     pain_emojis = {1:'📊',2:'🔍',3:'🔀',4:'😰',5:'📚'}
     solve_emojis = {1:'⚡',2:'✨',3:'⚡',4:'🏆',5:'💡'}
     how_emojis = {1:'🗺️',2:'🎯',3:'🗝️',4:'🗝️',5:'🔮'}
-    char_colors = ["linear-gradient(135deg,#dbeafe,#93c5fd)","linear-gradient(135deg,#fce7f3,#f9a8d4)","linear-gradient(135deg,#fef9c3,#fde047)","linear-gradient(135deg,#dcfce7,#4ade80)"]
-    
+
     profile_preview = '''    <div class="profile-preview">
       <div class="profile-preview-label"><span class="pdot"></span>客户画像 2.0 优化中 <span class="pbeta">NEW</span> — 下滑查看最新画像内容</div>
       <div class="profile-preview-frame"><iframe src="media/天津大学_安全画像.html" title="天津大学安全画像"></iframe></div>
     </div>'''
-    
-    # -- NAV --
-    nav_links = []
-    scene_btns = []
-    for s in data['scenes']:
-        idx = s['num']-1
-        sid = scene_id_map.get(s['num'], f'scene-{s["num"]}')
-        icon = s.get('icon','🎯')
-        name = s.get('title',s.get('name',''))
-        nav_links.append(f'    <a href="#{sid}">{icon} {name}</a>')
-        scene_btns.append(f'    <button class="scene-nav-btn" data-scene="{sid}"><span class="sn-ico">{icon}</span>{name}</button>')
-    
-    # -- CHIPS (removed per user request, keep chips list empty for compat) --
-    # -- HERO --
-    
-    nav = f'''<nav>
-  <a class="nav-brand" href="#hero"><img src="media/image2.png" alt="安恒信息"><span>AI赋能营销</span></a>
-  <div class="nav-tabs">\n{chr(10).join(nav_links)}\n  </div>
-  <div class="nav-right">{g.get('页脚部门','营销中心综合管理部')}</div>
-</nav>'''
-    
-    # -- HERO --
-    chips = []
-    for s in data['scenes']:
-        chips.append(f'      <div class="hero-chip"><span class="ci">{s.get("icon","🎯")}</span>{s.get("title","")}</div>')
-    chips.append('      <div class="hero-chip"><span class="ci">⚡</span>10+ AI工具</div>')
-    
-    heroes_chars = ''
-    for idx, h in enumerate(data['heroes']):
-        heroes_chars += f'      <div class="hero-card"><div class="hc-icon">{h["avatar"]}</div><div class="hc-name">{h["name"]}</div><div class="hc-desc">{h["bubble"].replace("\\n","<br>")}</div></div>\n'
-    
-    hero = f'''<section class="hero" id="hero">
-  <div class="hero-bg-circles"><span></span><span></span><span></span></div>
-  <div class="hero-inner">
-    <div class="hero-logo-row"><img class="hero-logo-img" src="media/image2.png" alt="安恒信息"><div class="hero-logo-dept">营销中心 · 综合管理部</div></div>
-    <h1>{g.get('Hero大标题','AI赋能营销')}<br><em>{g.get('Hero副标题','让每一线都更强')}</em></h1>
-    <p class="hero-sub">{g.get('Hero描述','')}</p>
-    <div class="hero-char-cards">\n{heroes_chars}    </div>
-    <div class="hero-incentive-divider"></div>
-    <div class="hero-incentive-label">✨ 激励 ✨</div>
-    <div class="hero-incentives-row">
-      <a href="https://ah-marketing-2026.github.io/honor/" target="_blank" class="hero-incentive-badge"><div class="hb-icon">📅</div><div class="hb-title">常态化月度</div><div class="hb-sub">月度AI应用激励</div><div class="hb-link">查看详情 →</div></a>
-      <a href="https://365.kdocs.cn/l/cqQpJWaDnycr" target="_blank" class="hero-incentive-badge"><div class="hb-icon">🏆</div><div class="hb-title">10W专项</div><div class="hb-sub">特别贡献激励</div><div class="hb-link">查看详情 →</div></a>
-      <div class="hero-incentive-badge"><div class="hb-icon">🎯</div><div class="hb-title">年底激励</div><div class="hb-sub">敬请期待</div></div>
-    </div>
-    <div class="hero-incentive-desc">积极使用AI工具，主动反馈优化建议，甚至自建提效Skill——优秀实践可获月度激励、专项大奖及年度荣誉！</div>
-  </div>
-</section>'''
-    
-    scene_nav = f'<div class="scene-nav"><div class="scene-nav-inner">\n{chr(10).join(scene_btns)}\n    <span class="scene-nav-hint">💡 点击按钮快速跳转对应场景</span>\n</div></div>'
-    
-    # -- SCENES --
-    scenes_html = ''
-    for s in data['scenes']:
-        snum = s['num']
-        sid = scene_id_map.get(snum, f'scene-{snum}')
-        bg = bg_map.get(snum,'')
-        icon = s.get('icon','🎯')
-        title = s.get('title','')
-        subtitle = s.get('subtitle','')
-        icon_color = icon_colors[min(snum-1, len(icon_colors)-1)]
-        count = f'{len(s["apps"])}个应用' if snum not in (4,) else '3大能力'
-        
-        # Stats
-        stats = ''
-        if s.get('stats'):
-            items = [f'<div class="ss-item"><div class="ss-num">{st["num"]}</div><div class="ss-label">{st["label"]}</div></div>' for st in s['stats']]
-            stats = f'\n<div class="stats-strip">{"".join(items)}</div>\n'
-        
-        # 招投标三步流程（动态从content.md读取；兼容旧版：若应用无bid_steps则用场景默认）
-        bid_steps = ''
-        if snum == 4:
-            bid_app = next((a for a in s['apps'] if a.get('bid_steps')), None)
-            bid_steps = build_bid_steps(bid_app['bid_steps']) if bid_app else ''
-        
-        # Apps
-        apps_html = ''
-        for ai, app in enumerate(s['apps']):
-            bc = badge_maps.get(snum, [])
-            badge_style, badge_num = bc[ai] if ai < len(bc) else bc[0]
-            
-            pain = md_to_html(app.get('pain',''))
-            solve = md_to_html(app.get('solve',''))
-            
-            # How
-            how_parts = []
-            if app.get('how'):
-                how_parts.append(f'<p>{re.sub(r"\*\*(.+?)\*\*",r"<strong>\\1</strong>",app["how"])}</p>')
-            for p in app.get('paths', []):
-                tag_html = ' <span class="arr">→</span> '.join(f'<span>{tp.strip()}</span>' for tp in p.split('→'))
-                how_parts.append(f'<div class="path-tag">{tag_html}</div>')
-            for e in app.get('extra_info', []):
-                if isinstance(e,tuple) and e[0]=='path_title':
-                    how_parts.append(f'<p style="font-weight:700;margin:10px 0 4px;">{e[1]}</p>')
-                else:
-                    how_parts.append(f'<p style="font-size:12px;color:var(--muted);margin-top:8px;">{e}</p>')
-            how_html = '\n        '.join(how_parts)
-            
-            pe = pain_emojis.get(snum,'📊')
-            se = solve_emojis.get(snum,'⚡')
-            he = how_emojis.get(snum,'🗝️')
-            
-            # App stats strip
-            app_stats_html = ''
-            if app.get('stats'):
-                stats_items = [f'<div class="app-stats-item"><div class="app-stats-num">{st["num"]}</div><div class="app-stats-label">{st["label"]}</div></div>' for st in app['stats']]
-                note = f'<div class="app-stats-note">{app["stats_note"]}</div>' if app.get('stats_note') else ''
-                app_stats_html = f'\n<div class="app-stats-strip">{"".join(stats_items)}</div>\n{note}'
-            
-            # Video panel
-            video_panel = ''
-            if app.get('placeholder'):
-                video_panel = f'''    <div class="app-video-panel">
+
+    snum = scene['num']
+    sid = scene_id_map.get(snum, f'scene-{snum}')
+    bg = bg_map.get(snum,'')
+    icon = scene.get('icon','🎯')
+    title = scene.get('title','')
+    subtitle = scene.get('subtitle','')
+    icon_color = icon_colors[min(snum-1, len(icon_colors)-1)]
+    count = f'{len(scene["apps"])}个应用' if snum not in (4,) else '3大能力'
+
+    stats = ''
+    if scene.get('stats'):
+        items = [f'<div class="ss-item"><div class="ss-num">{st["num"]}</div><div class="ss-label">{st["label"]}</div></div>' for st in scene['stats']]
+        stats = f'\n<div class="stats-strip">{"" .join(items)}</div>\n'
+
+    bid_steps = ''
+    if snum == 4:
+        bid_app = next((a for a in scene['apps'] if a.get('bid_steps')), None)
+        bid_steps = build_bid_steps(bid_app['bid_steps']) if bid_app else ''
+
+    apps_html = ''
+    for ai, app in enumerate(scene['apps']):
+        bc = badge_maps.get(snum, [])
+        badge_style, badge_num = bc[ai] if ai < len(bc) else bc[0] if bc else ('linear-gradient(135deg,#0f2b5c,#1e4f8a)','1')
+
+        pain = md_to_html(app.get('pain',''))
+        solve = md_to_html(app.get('solve',''))
+
+        how_parts = []
+        if app.get('how'):
+            how_parts.append(f'<p>{re.sub(r"\*\*(.+?)\*\*",r"<strong>\1</strong>",app["how"])}</p>')
+        for p in app.get('paths', []):
+            tag_html = ' <span class="arr">→</span> '.join(f'<span>{tp.strip()}</span>' for tp in p.split('→'))
+            how_parts.append(f'<div class="path-tag">{tag_html}</div>')
+        for e in app.get('extra_info', []):
+            if isinstance(e,tuple) and e[0]=='path_title':
+                how_parts.append(f'<p style="font-weight:700;margin:10px 0 4px;">{e[1]}</p>')
+            else:
+                how_parts.append(f'<p style="font-size:12px;color:var(--muted);margin-top:8px;">{e}</p>')
+        how_html = '\n        '.join(how_parts)
+
+        pe = pain_emojis.get(snum,'📊')
+        se = solve_emojis.get(snum,'⚡')
+        he = how_emojis.get(snum,'🗝️')
+
+        app_stats_html = ''
+        if app.get('stats'):
+            stats_items = [f'<div class="app-stats-item"><div class="app-stats-num">{st["num"]}</div><div class="app-stats-label">{st["label"]}</div></div>' for st in app['stats']]
+            note = f'<div class="app-stats-note">{app["stats_note"]}</div>' if app.get('stats_note') else ''
+            app_stats_html = f'\n<div class="app-stats-strip">{"" .join(stats_items)}</div>\n{note}'
+
+        video_panel = ''
+        if app.get('placeholder'):
+            video_panel = f'''    <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot"></span>应用演示视频（移动端演示）</div>
       <div class="no-video"><div class="nv-ico">{app.get('placeholder_icon','📱')}</div><p>{app.get('placeholder_text','')}</p></div>
     </div>'''
-            elif app.get('images'):
-                imgs = app['images']
-                _bid = build_bid_compare(app.get('bid_compare'))
-                if _bid and len(imgs) >= 2:
-                    # 标讯运营：业务流 + 平台 并排，表格在下方
-                    video_panel = f'''    <div class="bid-flow-platform">
+        elif app.get('images'):
+            imgs = app['images']
+            _bid = build_bid_compare(app.get('bid_compare'))
+            if _bid and len(imgs) >= 2:
+                video_panel = f'''    <div class="bid-flow-platform">
       <div class="app-video-panel">
         <div class="app-video-label"><span class="vdot" style="background:#38bdf8;"></span>业务流</div>
         <div class="img-gallery img-gallery-single"><figure><img src="{imgs[0]["src"]}" alt=""><figcaption>{imgs[0].get("caption","")}</figcaption></figure></div>
@@ -1097,23 +1092,22 @@ def build(data):
         <div class="img-gallery img-gallery-single"><figure><img src="{imgs[1]["src"]}" alt=""><figcaption>{imgs[1].get("caption","")}</figcaption></figure></div>
       </div>
     </div>'''
-                    if _bid:
-                        video_panel += '\n' + _bid
-                else:
-                    figs = [f'<figure><img src="{img["src"]}" alt="">{"<figcaption>"+img.get("caption","")+"</figcaption>" if img.get("caption","") else ""}</figure>' for img in imgs]
-                    n = len(imgs)
-                    gcol = 'col1' if n==1 else ('col2' if n==2 else '')
-                    video_panel = f'''    <div class="app-video-panel">
+                if _bid: video_panel += '\n' + _bid
+            else:
+                figs = [f'<figure><img src="{img["src"]}" alt="">{"<figcaption>"+img.get("caption","")+"</figcaption>" if img.get("caption","") else ""}</figure>' for img in imgs]
+                n = len(imgs)
+                gcol = 'col1' if n==1 else ('col2' if n==2 else '')
+                video_panel = f'''    <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot" style="background:#38bdf8;"></span>应用演示截图</div>
       <div class="img-gallery {gcol}">{chr(10).join(figs)}</div>
     </div>'''
-            elif app.get('video'):
-                video_panel = f'''    <div class="app-video-panel">
+        elif app.get('video'):
+            video_panel = f'''    <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot"></span>应用演示视频</div>
       <div class="video-wrapper" data-video-src="media/{app['video']}"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'><rect fill='%230a0d14' width='16' height='9'/></svg>"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
     </div>'''
-            
-            apps_html += f'''
+
+        apps_html += f'''
   <div class="app-block">
     <div class="app-block-header">
       <div class="app-num-badge" style="background:{badge_style};{'font-size:13px;' if badge_num=='AI' else ''}">{badge_num}</div>
@@ -1126,37 +1120,167 @@ def build(data):
     </div>
 {video_panel}
     {profile_preview if snum==2 and ai==0 else ''}  </div>'''
-        
-        scenes_html += f'\n<div class="scene-timeline-item" id="{sid}">\n<div class="{bg}">\n<div class="scene-section">\n  <div class="scene-header">\n    <button class="scene-toggle" data-target="{sid}-body" aria-label="折叠/展开">▼</button>\n    <div class="scene-header-ico" style="background:{icon_color};color:#fff;">{icon}</div>\n    <div><div class="scene-title">{title}</div><div class="scene-sub">{subtitle}</div></div>\n    <div class="scene-count">{count}</div>\n  </div>\n  <div class="scene-body" id="{sid}-body">\n{stats}{bid_steps}{apps_html}\n  </div>\n</div>\n</div>\n</div>'
-    
-    # Future plan module（独立展示，不用场景模板）
+
+    return f'''<div class="scene-timeline-item" id="{sid}">
+<div class="{bg}">
+<div class="scene-section">
+  <div class="scene-header">
+    <div class="scene-header-ico" style="background:{icon_color};color:#fff;">{icon}</div>
+    <div><div class="scene-title">{title}</div><div class="scene-sub">{subtitle}</div></div>
+    <div class="scene-count">{count}</div>
+  </div>
+  <div class="scene-body">
+{stats}{bid_steps}{apps_html}
+  </div>
+</div>
+</div>
+</div>'''
+
+
+def build_home(data):
+    """生成首页 index.html — Hero + 卡片网格"""
+    g = data['global']
+
+    nav = f'''<nav>
+  <a class="nav-brand" href="index.html"><img src="media/image2.png" alt="安恒信息"><span>AI赋能营销</span></a>
+  <div class="nav-right">{g.get('页脚部门','营销中心综合管理部')}</div>
+</nav>'''
+
+    heroes_chars = ''
+    for h in data['heroes']:
+        heroes_chars += f'      <div class="hero-card"><div class="hc-icon">{h["avatar"]}</div><div class="hc-name">{h["name"]}</div><div class="hc-desc">{h["bubble"].replace("\\n","<br>")}</div></div>\n'
+
+    hero = f'''<section class="hero" id="hero" style="min-height:auto;padding:120px 40px 80px;">
+  <div class="hero-bg-circles"><span></span><span></span><span></span></div>
+  <div class="hero-inner">
+    <div class="hero-logo-row"><img class="hero-logo-img" src="media/image2.png" alt="安恒信息"><div class="hero-logo-dept">营销中心 · 综合管理部</div></div>
+    <h1>{g.get('Hero大标题','AI赋能营销')}<br><em>{g.get('Hero副标题','让每一线都更强')}</em></h1>
+    <p class="hero-sub">{g.get('Hero描述','')}</p>
+    <div class="hero-char-cards">
+{heroes_chars}
+    </div>
+    <div class="hero-incentive-divider"></div>
+    <div class="hero-incentive-label">✨ 激励 ✨</div>
+    <div class="hero-incentives-row">
+      <a href="https://ah-marketing-2026.github.io/honor/" target="_blank" class="hero-incentive-badge"><div class="hb-icon">📅</div><div class="hb-title">常态化月度</div><div class="hb-sub">月度AI应用激励</div><div class="hb-link">查看详情 →</div></a>
+      <a href="https://365.kdocs.cn/l/cqQpJWaDnycr" target="_blank" class="hero-incentive-badge"><div class="hb-icon">🏆</div><div class="hb-title">10W专项</div><div class="hb-sub">特别贡献激励</div><div class="hb-link">查看详情 →</div></a>
+      <div class="hero-incentive-badge"><div class="hb-icon">🎯</div><div class="hb-title">年底激励</div><div class="hb-sub">敬请期待</div></div>
+    </div>
+    <div class="hero-incentive-desc">积极使用AI工具，主动反馈优化建议，甚至自建提效Skill——优秀实践可获月度激励、专项大奖及年度荣誉！</div>
+  </div>
+</section>'''
+
+    cards_data = [
+        ('scene-1.html','📈','机会点增量','Opportunity Growth','市场空间 · 价值线索 · 精细化运营',['市场分析','标讯运营','市场报告'],'linear-gradient(135deg,#0f2b5c,#1e4f8a)'),
+        ('scene-2.html','🤝','客户拜访','Customer Visit','拜访前充分准备，现场沟通稳定发挥',['客户画像','AI对练','支持移动端'],'linear-gradient(135deg,#00a884,#00b894)'),
+        ('scene-3.html','🚀','项目推进','Project Delivery','7×24h智能支持，适配项目推进全流程',['营销AI小秘','行销数字员工','7×24h在线'],'linear-gradient(135deg,#0f2b5c,#5b3fd4)'),
+        ('scene-4.html','📋','招投标','Bidding','招标文件解析→商务标生成→投标检查',['招标解析','商务标生成','投标检查'],'linear-gradient(135deg,#e8710a,#dc2626)'),
+        ('scene-5.html','🧠','知识助手','Knowledge AI','20s获答，效率提升100%',['5万+文档','20s获答','效率提升100%'],'linear-gradient(135deg,#6366f1,#8b5cf6)'),
+        ('scene-6.html','🛠️','Skill共享','Skill Sharing','整合一线实战经验，共建共享工具箱',['30+大比武','40+提质增效','共建共享'],'linear-gradient(135deg,#0ea5e9,#0284c7)'),
+        ('future.html','🚀','未来规划','Future Plan','统一入口 · 整合资源 · 建设AI综合能力平台',['统一入口','整合资源','持续迭代'],'linear-gradient(135deg,#0d2550,#2a5599)'),
+    ]
+
+    cards_html = ''
+    for href, icon, title, en, desc, tags, grad in cards_data:
+        tags_html = ''.join(f'<span class="card-tag">{t}</span>' for t in tags)
+        cards_html += (
+            '    <a href="' + href + '" class="card-item">\n'
+            '      <div class="card-icon-wrap">\n'
+            '        <div class="card-icon" style="background:' + grad + ';">' + icon + '</div>\n'
+            '        <div class="card-title-group">\n'
+            '          <div class="card-title">' + title + '</div>\n'
+            '          <div class="card-en">' + en + '</div>\n'
+            '        </div>\n'
+            '      </div>\n'
+            '      <div class="card-desc">' + desc + '</div>\n'
+            '      <div class="card-tags">' + tags_html + '</div>\n'
+            '      <div class="card-arrow">→</div>\n'
+            '    </a>\n'
+        )
+
+    cards_section = (
+        '<section class="landing-section">\n'
+        '  <div class="landing-inner">\n'
+        '    <div class="landing-title">六大场景，<em>全面覆盖</em></div>\n'
+        '    <div class="landing-sub">点击卡片深入了解每个场景的具体应用与操作</div>\n'
+        '    <div class="cards-grid">\n'
+        + cards_html +
+        '    </div>\n'
+        '  </div>\n'
+        '</section>'
+    )
+
+    footer = (
+        '<footer style="background:linear-gradient(180deg,#0a1638,#070e2a);border-top:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.4);">\n'
+        '  <div class="ft-logo" style="color:rgba(255,255,255,.8);"><img src="media/image2.png" alt="安恒信息" style="height:32px;vertical-align:middle;margin-right:6px;filter:brightness(1.2);">AI赋能营销</div>\n'
+        '  <p>' + g.get("页脚部门","营销中心") + ' · ' + g.get("页脚日期","2026年") + '</p>\n'
+        '  <section class="view-counter" style="margin-top:12px;"><span class="vc-icon">👁️</span><span>本页已浏览</span><span class="vc-num">99+</span><span>次</span></section>\n'
+        '</footer>'
+    )
+
+    title = g.get('页面标题','AI赋能营销 · 营销中心综合管理部')
+    return '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1.0">\n<title>' + title + '</title>\n' + CSS + '\n</head>\n<body>\n<div id="prog"></div>\n\n' + nav + '\n\n' + hero + '\n\n' + cards_section + '\n\n' + footer + '\n\n<script>window.addEventListener(\'scroll\',()=>{const h=document.documentElement.scrollHeight-window.innerHeight;document.getElementById(\'prog\').style.width=(h>0?window.scrollY/h*100:0)+\'%\'});</script>\n</body>\n</html>'
+
+
+def build_scene_page(data, scene, prev_scene=None, next_scene=None):
+    """生成单个场景详情页"""
+    g = data['global']
+
+    prev_link = f'<a href="scene-{prev_scene["num"]}.html" class="pager-btn">← 上一场景</a>' if prev_scene else '<span class="pager-btn disabled">← 上一场景</span>'
+    next_link = f'<a href="scene-{next_scene["num"]}.html" class="pager-btn">下一场景 →</a>' if next_scene else '<span class="pager-btn disabled">下一场景 →</span>'
+
+    detail_nav = f'''<div class="scene-detail-nav">
+  <a href="index.html" class="back-btn">← 返回首页</a>
+  <div class="nav-title">{scene.get("icon","")} {scene.get("title","")}</div>
+  <div class="nav-pager">{prev_link}{next_link}</div>
+</div>'''
+
+    scene_html = render_scene(data, scene)
+
+    footer = f'''<footer style="border-top:1px solid rgba(0,0,0,.05);">
+  <div class="ft-logo"><img src="media/image2.png" alt="安恒信息" style="height:32px;vertical-align:middle;margin-right:6px;">AI赋能营销</div>
+  <p>{g.get("页脚部门","营销中心")} · {g.get("页脚日期","2026年")}</p>
+</footer>'''
+
+    title = f'{scene.get("title","")} — AI赋能营销'
+    return f'''<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1.0">\n<title>{title}</title>\n{CSS}\n</head>\n<body>\n<div id="prog"></div>\n\n{detail_nav}\n\n<div class="detail-wrap">\n{scene_html}\n</div>\n\n{footer}\n\n{JS}\n</body>\n</html>'''
+
+
+def build_future_page(data):
+    """生成未来规划详情页"""
+    g = data['global']
+
+    detail_nav = f'''<div class="scene-detail-nav">
+  <a href="index.html" class="back-btn">← 返回首页</a>
+  <div class="nav-title">🚀 未来规划</div>
+  <div class="nav-pager"><a href="scene-6.html" class="pager-btn">← 上一场景</a><span class="pager-btn disabled">下一场景 →</span></div>
+</div>'''
+
     fp = data.get('future_plan', {})
-    if fp.get('directions') or fp.get('status'):
-        import html as _html_mod
-        # 简单markdown→HTML：**bold** → <strong>，- 列表 → <li>
-        def md2html(txt):
-            if not txt: return ''
-            r = _html_mod.escape(txt)
-            r = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', r)
-            lines = r.split('\n')
-            out = []
-            in_ul = False
-            for line in lines:
-                s = line.strip()
-                if s.startswith('- '):
-                    if not in_ul: out.append('<ul>'); in_ul = True
-                    out.append(f'<li>{s[2:]}</li>')
-                else:
-                    if in_ul: out.append('</ul>'); in_ul = False
-                    if s: out.append(f'<p>{s}</p>')
-            if in_ul: out.append('</ul>')
-            return '\n'.join(out)
+    import html as _html_mod
+    def md2html(txt):
+        if not txt: return ''
+        r = _html_mod.escape(txt)
+        r = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', r)
+        lines = r.split('\n')
+        out = []
+        in_ul = False
+        for line in lines:
+            s = line.strip()
+            if s.startswith('- '):
+                if not in_ul: out.append('<ul>'); in_ul = True
+                out.append(f'<li>{s[2:]}</li>')
+            else:
+                if in_ul: out.append('</ul>'); in_ul = False
+                if s: out.append(f'<p>{s}</p>')
+        if in_ul: out.append('</ul>')
+        return '\n'.join(out)
 
-        status_html = md2html(fp.get('status',''))
-        dirs_html = md2html(fp.get('directions',''))
-        plan_html = md2html(fp.get('plan',''))
+    status_html = md2html(fp.get('status',''))
+    dirs_html = md2html(fp.get('directions',''))
+    plan_html = md2html(fp.get('plan',''))
 
-        future_html = f'''<section class="future-section">
+    future_html = f'''<section class="future-section" style="margin-top:0;">
   <div class="future-card">
     <div class="future-header">
       <div class="future-header-inner">
@@ -1180,29 +1304,19 @@ def build(data):
     </div>
   </div>
 </section>'''
-    else:
-        future_html = ''
-    
-    # Feedback module
-    fb = data.get('feedback', {})
-    feedback_html = f'''<section class="feedback-section">
-  <div class="feedback-card">
-    <div class="feedback-header"><h3>{fb.get("标题","👍 觉得有用吗？")}</h3><p>{fb.get("副标题","您的反馈帮助我们持续改进")}</p></div>
-    <div class="fb-like-row"><button class="fb-like-btn" id="fb-like-btn"><span id="fb-like-icon">👍</span><span id="fb-like-text">有用</span></button><span class="fb-like-count" id="fb-like-count">0 人觉得很赞</span></div>
-    <div class="fb-comments">
-      <h4 style="font-size:14px;font-weight:600;margin:0 0 10px;color:var(--text)">💬 评论 (<span id="fb-cmt-count">0</span>)</h4>
-      <div class="fb-comment-form"><input type="text" id="fb-name" placeholder="昵称" maxlength="20"><textarea id="fb-text" placeholder="写下您的想法…" rows="2" maxlength="500"></textarea><button id="fb-submit-btn">发布</button></div>
-      <div class="fb-comment-list" id="fb-comment-list"><div class="fb-empty">暂无评论，来坐沙发吧 ☕</div></div>
-      <div class="fb-loading" id="fb-loading" style="display:none">加载中…</div>
-    </div>
-  </div>
-</section>'''
-    
-    # Footer
-    footer = feedback_html + f'<footer><div class="ft-logo"><img src="media/image2.png" alt="安恒信息" style="height:32px;vertical-align:middle;margin-right:6px;">AI赋能营销</div><p>{g.get("页脚部门","营销中心")} · {g.get("页脚日期","2026年6月")}</p><section class="view-counter"><span class="vc-icon">👁️</span><span>本页已浏览</span><span class="vc-num">99+</span><span>次</span></section></footer>'
-    
-    title = g.get('页面标题','AI赋能营销 · 营销中心综合管理部')
-    return f'<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1.0">\n<title>{title}</title>\n{CSS}\n</head>\n<body>\n<div id="prog"></div>\n\n{nav}\n\n{hero}\n\n{scene_nav}\n\n<div class="scene-timeline">\n{scenes_html}\n</div>\n\n{future_html}\n\n{footer}\n\n{JS}\n</body>\n</html>'
+
+    footer = f'''<footer style="border-top:1px solid rgba(0,0,0,.05);">
+  <div class="ft-logo"><img src="media/image2.png" alt="安恒信息" style="height:32px;vertical-align:middle;margin-right:6px;">AI赋能营销</div>
+  <p>{g.get("页脚部门","营销中心")} · {g.get("页脚日期","2026年")}</p>
+</footer>'''
+
+    title = '未来规划 — AI赋能营销'
+    return f'''<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1.0">\n<title>{title}</title>\n{CSS}\n</head>\n<body>\n<div id="prog"></div>\n\n{detail_nav}\n\n<div class="detail-wrap">\n{future_html}\n</div>\n\n{footer}\n\n{JS}\n</body>\n</html>'''
+
+
+def build(data):
+    """保留旧版单页生成（兼容用）"""
+    return build_home(data)
 
 
 def main():
@@ -1212,15 +1326,33 @@ def main():
     print(f'  读取文件：content.md')
     print('='*50)
     data = parse_content('content.md')
-    html = build(data)
+
+    # 1. 首页
+    home_html = build_home(data)
     with open('index.html', 'w', encoding='utf-8') as f:
-        f.write(html)
-    print(f'\n✅ 生成成功！index.html ({len(html):,} 字节)')
-    print(f'  Scenes: {len(data["scenes"])}  Apps: {sum(len(s["apps"]) for s in data["scenes"])}  Heroes: {len(data["heroes"])}')
+        f.write(home_html)
+    print(f'\n✅ 首页生成成功！index.html ({len(home_html):,} 字节)')
+
+    # 2. 场景详情页
+    scenes = data['scenes']
+    for i, s in enumerate(scenes):
+        prev = scenes[i-1] if i > 0 else None
+        next_s = scenes[i+1] if i < len(scenes)-1 else None
+        scene_html = build_scene_page(data, s, prev, next_s)
+        fname = f'scene-{s["num"]}.html'
+        with open(fname, 'w', encoding='utf-8') as f:
+            f.write(scene_html)
+        print(f'  ✅ {fname} ({len(scene_html):,} 字节) — {s.get("title","?")}')
+
+    # 3. 未来规划页
+    future_html = build_future_page(data)
+    with open('future.html', 'w', encoding='utf-8') as f:
+        f.write(future_html)
+    print(f'  ✅ future.html ({len(future_html):,} 字节) — 未来规划')
+
+    print(f'\n总计：{1 + len(scenes) + 1} 个文件')
     for s in data['scenes']:
         print(f'  Scene {s["num"]}: {s.get("title","?")} ({len(s["apps"])} apps)')
-        for a in s['apps']:
-            print(f'    {a.get("title","?")} [video={a.get("video","")} images={len(a.get("images",[]))}]')
 
 
 if __name__ == '__main__':
