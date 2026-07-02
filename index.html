@@ -136,16 +136,29 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .app-video-panel { background:#f6f8fc; padding:24px 32px 28px; border-top:1px solid rgba(0,0,0,.05); }
 .app-video-label { display:flex; align-items:center; gap:10px; font-size:12px; font-weight:700; color:#5f6b7a; letter-spacing:.6px; text-transform:uppercase; margin-bottom:14px; }
 .app-video-label .vdot { width:9px;height:9px;border-radius:50%;background:#3b82f6; box-shadow:0 0 6px rgba(59,130,246,.4); }
-.video-wrapper { position:relative; width:100%; border-radius:12px; overflow:hidden; background:linear-gradient(135deg,#e8eaef,#dce1e8); box-shadow:0 3px 16px rgba(0,0,0,.06); min-height:280px; display:flex; align-items:center; justify-content:center; transition:all var(--transition); }
-.video-wrapper:hover { box-shadow:0 4px 24px rgba(0,0,0,.1); }
+.video-wrapper { position:relative; width:100%; border-radius:12px; overflow:hidden; background:#0a0d14; box-shadow:0 3px 16px rgba(0,0,0,.06); transition:all var(--transition); }
 .video-wrapper video { width:100%; display:block; max-height:480px; object-fit:contain; background:#0a0d14; border-radius:12px; }
-.video-wrapper.loaded { background:#0a0d14; min-height:0; }
-.video-wrapper.loaded video { background:transparent; }
-.video-placeholder { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; cursor:pointer; z-index:2; transition:opacity var(--transition); background:linear-gradient(135deg,rgba(13,37,80,.04),rgba(13,37,80,.02)); }
-.video-wrapper.loaded .video-placeholder { opacity:0; pointer-events:none; }
+.video-placeholder { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; cursor:pointer; z-index:2; transition:opacity var(--transition); background:linear-gradient(135deg,rgba(13,37,80,.06),rgba(13,37,80,.02)); }
+.video-wrapper.playing .video-placeholder { opacity:0; pointer-events:none; }
 .vp-icon { width:64px; height:64px; border-radius:50%; background:rgba(13,37,80,.85); color:#fff; font-size:26px; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 24px rgba(0,0,0,.25); transition:all var(--transition); }
 .video-placeholder:hover .vp-icon { transform:scale(1.12); background:rgba(13,37,80,.95); box-shadow:0 8px 32px rgba(0,0,0,.35); }
 .vp-text { font-size:14px; color:#5f6b7a; font-weight:500; }
+/* 视频加载进度 */
+.vp-loading { display:none; flex-direction:column; align-items:center; gap:12px; position:absolute; z-index:3; }
+.video-wrapper.loading .vp-loading { display:flex; }
+.video-wrapper.loading .vp-icon-wrap { display:none; }
+.vp-spinner { width:48px; height:48px; border:3px solid rgba(255,255,255,.15); border-top-color:#60a5fa; border-radius:50%; animation:vpSpin .8s linear infinite; }
+@keyframes vpSpin { to{transform:rotate(360deg)} }
+.vp-progress { font-size:13px; color:#94a3b8; font-weight:500; text-align:center; }
+.vp-error { display:none; flex-direction:column; align-items:center; gap:8px; color:#f87171; font-size:13px; }
+.video-wrapper.error .vp-error { display:flex; }
+.video-wrapper.error .vp-icon-wrap,.video-wrapper.error .vp-loading { display:none; }
+.vp-retry { margin-top:4px; padding:6px 18px; border-radius:20px; background:rgba(248,113,113,.15); color:#f87171; border:1px solid rgba(248,113,113,.3); font-size:12px; font-weight:600; cursor:pointer; transition:all .2s; }
+.vp-retry:hover { background:rgba(248,113,113,.25); }
+@media (max-width:768px) {
+  .vp-icon { width:56px; height:56px; font-size:22px; }
+  .vp-text { font-size:13px; }
+}
 .no-video { background:#fafbff; border-radius:12px; border:2px dashed #c7d2fe; padding:36px; text-align:center; color:#6366f1; }
 .no-video .nv-ico { font-size:36px; margin-bottom:10px; }
 .no-video p { font-size:14px; }
@@ -477,7 +490,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
     </div>
     <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot"></span>应用演示视频</div>
-      <div class="video-wrapper" data-video-src="media/media1.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1"></video><div class="video-placeholder"><span class="vp-icon">▶</span><span class="vp-text">点击播放演示视频</span></div></div>
+      <div class="video-wrapper" data-video-src="media/media1.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'><rect fill='%230a0d14' width='16' height='9'/></svg>"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span><span class="vp-text">点击播放演示视频</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
     </div>
       </div>
   <div class="app-block">
@@ -543,7 +556,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
     </div>
     <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot"></span>应用演示视频</div>
-      <div class="video-wrapper" data-video-src="media/media2.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1"></video><div class="video-placeholder"><span class="vp-icon">▶</span><span class="vp-text">点击播放演示视频</span></div></div>
+      <div class="video-wrapper" data-video-src="media/media2.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'><rect fill='%230a0d14' width='16' height='9'/></svg>"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span><span class="vp-text">点击播放演示视频</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
     </div>
       </div>
   </div>
@@ -585,7 +598,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
     </div>
     <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot"></span>应用演示视频</div>
-      <div class="video-wrapper" data-video-src="media/media3.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1"></video><div class="video-placeholder"><span class="vp-icon">▶</span><span class="vp-text">点击播放演示视频</span></div></div>
+      <div class="video-wrapper" data-video-src="media/media3.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'><rect fill='%230a0d14' width='16' height='9'/></svg>"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span><span class="vp-text">点击播放演示视频</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
     </div>
         <div class="profile-preview">
       <div class="profile-preview-label"><span class="pdot"></span>客户画像 2.0 优化中 <span class="pbeta">NEW</span> — 下滑查看最新画像内容</div>
@@ -658,7 +671,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
     </div>
     <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot"></span>应用演示视频</div>
-      <div class="video-wrapper" data-video-src="media/media4.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1"></video><div class="video-placeholder"><span class="vp-icon">▶</span><span class="vp-text">点击播放演示视频</span></div></div>
+      <div class="video-wrapper" data-video-src="media/media4.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'><rect fill='%230a0d14' width='16' height='9'/></svg>"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span><span class="vp-text">点击播放演示视频</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
     </div>
       </div>
   <div class="app-block">
@@ -685,7 +698,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
     </div>
     <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot"></span>应用演示视频</div>
-      <div class="video-wrapper" data-video-src="media/media5.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1"></video><div class="video-placeholder"><span class="vp-icon">▶</span><span class="vp-text">点击播放演示视频</span></div></div>
+      <div class="video-wrapper" data-video-src="media/media5.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'><rect fill='%230a0d14' width='16' height='9'/></svg>"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span><span class="vp-text">点击播放演示视频</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
     </div>
       </div>
   </div>
@@ -737,7 +750,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
     </div>
     <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot"></span>应用演示视频</div>
-      <div class="video-wrapper" data-video-src="media/media6.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1"></video><div class="video-placeholder"><span class="vp-icon">▶</span><span class="vp-text">点击播放演示视频</span></div></div>
+      <div class="video-wrapper" data-video-src="media/media6.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'><rect fill='%230a0d14' width='16' height='9'/></svg>"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span><span class="vp-text">点击播放演示视频</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
     </div>
       </div>
   </div>
@@ -911,28 +924,63 @@ const scenes=[{id:'scene-opp',navIdx:0},{id:'scene-visit',navIdx:1},{id:'scene-p
 const io=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){const idx=scenes.findIndex(s=>s.id===e.target.id);if(idx===-1)return;navLinks.forEach(a=>a.classList.remove('active'));sceneButtons.forEach(b=>b.classList.remove('active'));if(navLinks[idx])navLinks[idx].classList.add('active');if(sceneButtons[idx])sceneButtons[idx].classList.add('active')}})},{threshold:0.25});
 scenes.forEach(s=>{const el=document.getElementById(s.id);if(el)io.observe(el)});
 
-// 视频懒加载 — 只加载视口附近的视频，避免首屏全部视频同时请求
+// 视频懒加载 + 进度指示 + 移动端友好
+function loadVideo(wrapper){
+  if(wrapper.dataset.loading==='1') return; // 防止重复触发
+  var vid=wrapper.querySelector('video'),src=wrapper.getAttribute('data-video-src');
+  if(!vid||!src) return;
+  wrapper.dataset.loading='1';
+  wrapper.classList.add('loading');
+  wrapper.classList.remove('error');
+  // 设置 source
+  vid.innerHTML='<source src="'+src+'" type="video/mp4">';
+  vid.load();
+  // 超时检测（15s）
+  var timeout=setTimeout(function(){
+    wrapper.classList.remove('loading');wrapper.classList.add('error');
+    wrapper.dataset.loading='0';
+  },15000);
+  vid.addEventListener('canplay',function(){
+    clearTimeout(timeout);
+    wrapper.classList.remove('loading');
+    wrapper.classList.add('playing');
+    vid.play().catch(function(){}); // 移动端可能需要用户手势，静默失败
+  },{once:true});
+  vid.addEventListener('error',function(){
+    clearTimeout(timeout);
+    wrapper.classList.remove('loading');wrapper.classList.add('error');
+    wrapper.dataset.loading='0';
+  },{once:true});
+}
+// 进入视口附近时触发加载
 var videoObs=new IntersectionObserver(function(entries){
-  entries.forEach(function(e){
-    if(!e.isIntersecting) return;
-    var w=e.target,vid=w.querySelector('video'),src=w.getAttribute('data-video-src');
-    if(!vid||!src||w.classList.contains('loaded')) return;
-    vid.innerHTML='<source src="'+src+'" type="video/mp4">';
-    vid.load(); w.classList.add('loaded');
-    videoObs.unobserve(w);
-  });
-},{rootMargin:'300px'});
+  entries.forEach(function(e){ if(e.isIntersecting) loadVideo(e.target); });
+},{rootMargin:'400px'});
 document.querySelectorAll('.video-wrapper').forEach(function(w){videoObs.observe(w);});
-
-// 点击占位符也触发加载
+// 点击占位区域触发加载 + 播放
 document.addEventListener('click',function(e){
   var ph=e.target.closest('.video-placeholder');
   if(!ph) return;
-  var w=ph.closest('.video-wrapper'),vid=w.querySelector('video'),src=w.getAttribute('data-video-src');
-  if(!vid||!src||w.classList.contains('loaded')) return;
-  vid.innerHTML='<source src="'+src+'" type="video/mp4">';
-  vid.load(); w.classList.add('loaded');
-  videoObs.unobserve(w);
+  var w=ph.closest('.video-wrapper');
+  if(!w||w.dataset.loading==='1') return;
+  // 点击重试按钮
+  if(e.target.classList.contains('vp-retry')){ loadVideo(w); return; }
+  // 点击播放按钮或占位区域
+  loadVideo(w);
+  e.preventDefault();
+});
+// 移动端 touch 事件也触发
+document.addEventListener('touchend',function(e){
+  var ph=e.target.closest('.video-placeholder');
+  if(!ph) return;
+  var w=ph.closest('.video-wrapper');
+  if(!w||w.dataset.loading==='1') return;
+  if(e.target.classList.contains('vp-retry')){ loadVideo(w); return; }
+  loadVideo(w);
+  e.preventDefault();
+  // 移动端手动触发 play
+  var vid=w.querySelector('video');
+  setTimeout(function(){ vid.play().catch(function(){}); },200);
 });
 const cards=document.querySelectorAll('.app-block');
 const cardIO=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)'}})},{threshold:0.06});
