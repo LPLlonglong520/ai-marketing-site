@@ -12,6 +12,20 @@ if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
 
+def media_path(path):
+    """Auto-upgrade image paths to .webp if a compressed version exists."""
+    if not path or not path.startswith('media/'):
+        return path
+    full = os.path.join(os.path.dirname(os.path.abspath(__file__)), path)
+    base, ext = os.path.splitext(path)
+    if ext.lower() in ('.png', '.jpeg', '.jpg'):
+        webp_path = base + '.webp'
+        webp_full = os.path.join(os.path.dirname(os.path.abspath(__file__)), webp_path)
+        if os.path.exists(webp_full):
+            return webp_path
+    return path
+
+
 def parse_content(path):
     with open(path, 'r', encoding='utf-8') as f:
         text = f.read()
@@ -207,7 +221,7 @@ def parse_content(path):
             app['bid_steps'] = bid_steps_data if bid_steps_data else None
             
             if img_srcs:
-                app['images'] = [{'src': s, 'caption': img_caps[i] if i < len(img_caps) else ''} 
+                app['images'] = [{'src': media_path(s), 'caption': img_caps[i] if i < len(img_caps) else ''} 
                                  for i, s in enumerate(img_srcs)]
             
             if app.get('placeholder') and not isinstance(app['placeholder'], bool):
