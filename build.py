@@ -719,6 +719,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .card-title-group { min-width: 0; }
 .card-title { font-size: 18px; font-weight: 800; margin-bottom: 3px; letter-spacing: -.2px; }
 .card-en { font-size: 11px; color: rgba(255,255,255,.4); font-weight: 500; letter-spacing: 1px; text-transform: uppercase; }
+.card-count { display: inline-block; margin-left: 8px; padding: 2px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; background: rgba(99,162,255,.15); color: #60a5fa; border: 1px solid rgba(99,162,255,.2); vertical-align: middle; }
 .card-desc { font-size: 13px; color: rgba(255,255,255,.55); line-height: 1.7; margin-bottom: 16px; min-height: 36px; }
 .card-tags { display: flex; flex-wrap: wrap; gap: 8px; }
 .card-tag { padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; background: rgba(255,255,255,.07); color: rgba(255,255,255,.65); border: 1px solid rgba(255,255,255,.06); transition: all .2s; }
@@ -882,11 +883,13 @@ function syncFromCloud(){
 }
 
 function renderFeedback(){
-  document.getElementById('fb-like-count').textContent=fbLikes+' 人觉得很赞';
+  var lc=document.getElementById('fb-like-count'); if(!lc) return;
+  lc.textContent=fbLikes+' 人觉得很赞';
   document.getElementById('fb-cmt-count').textContent=fbComments.length;
   var btn=document.getElementById('fb-like-btn');
-  if(fbLiked) btn.classList.add('liked'); else btn.classList.remove('liked');
+  if(btn){ if(fbLiked) btn.classList.add('liked'); else btn.classList.remove('liked'); }
   var list=document.getElementById('fb-comment-list');
+  if(!list) return;
   if(!fbComments.length){ list.innerHTML='<div class="fb-empty">暂无评论，来坐沙发吧 ☕</div>'; return; }
   list.innerHTML=fbComments.slice().reverse().map(function(c){
     var t=new Date(c.time),ts=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')+' '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
@@ -897,7 +900,8 @@ function renderFeedback(){
 function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
 
 // 点赞按钮 — 原子递增，并发安全
-document.getElementById('fb-like-btn').addEventListener('click',function(){
+var _fbLikeBtn=document.getElementById('fb-like-btn');
+if(_fbLikeBtn) _fbLikeBtn.addEventListener('click',function(){
   if(fbLiked) return;
   fbLiked=true; fbLikes++;
   localStorage.setItem(fbLikedKey,'1');
@@ -909,9 +913,8 @@ document.getElementById('fb-like-btn').addEventListener('click',function(){
   }).catch(function(){ syncFromCloud(); });
 });
 
-// 初始加载 + 15秒定时同步
-syncFromCloud();
-setInterval(syncFromCloud,15000);
+// 初始加载 + 15秒定时同步（仅在反馈模块存在时）
+if(document.getElementById('fb-like-btn')){ syncFromCloud(); setInterval(syncFromCloud,15000); }
 
 function submitComment(){
   var nameEl=document.getElementById('fb-name'),textEl=document.getElementById('fb-text');
@@ -927,7 +930,8 @@ function submitComment(){
     try{localStorage.setItem('fb-backup',JSON.stringify({likes:fbLikes,comments:fbComments}));}catch(e){}
   }).catch(function(){ syncFromCloud(); });
 }
-document.getElementById('fb-submit-btn').addEventListener('click',submitComment);
+var _fbSubmitBtn=document.getElementById('fb-submit-btn');
+if(_fbSubmitBtn) _fbSubmitBtn.addEventListener('click',submitComment);
 
 function delComment(id){
   if(!confirm('确定删除这条评论吗？')) return;
@@ -940,7 +944,8 @@ function delComment(id){
 }
 
 // 评论列表事件代理
-document.getElementById('fb-comment-list').addEventListener('click',function(e){
+var _fbCmtList=document.getElementById('fb-comment-list');
+if(_fbCmtList) _fbCmtList.addEventListener('click',function(e){
   var delBtn=e.target.closest('.fb-comment-del');
   if(delBtn){ var cid=delBtn.getAttribute('data-cid'); if(cid) delComment(cid); return; }
   var replyBtn=e.target.closest('.fb-reply-btn');
@@ -1235,24 +1240,25 @@ def build_home(data):
 </section>'''
 
     cards_data = [
-        ('scene-1.html','📈','机会点增量','Opportunity Growth','市场空间 · 价值线索 · 精细化运营',['市场分析','标讯运营','市场报告','标讯AI分析'],'linear-gradient(135deg,#0f2b5c,#1e4f8a)'),
-        ('scene-2.html','🤝','客户拜访','Customer Visit','拜访前充分准备，现场沟通稳定发挥',['客户画像','AI对练','支持移动端'],'linear-gradient(135deg,#00a884,#00b894)'),
-        ('scene-3.html','🚀','项目推进','Project Delivery','7×24h智能支持，适配项目推进全流程',['营销AI小秘','行销数字员工','渠道专版'],'linear-gradient(135deg,#0f2b5c,#5b3fd4)'),
-        ('scene-4.html','📋','招投标','Bidding','招标文件解析→商务标生成→投标检查',['招标解析','商务标生成','投标检查'],'linear-gradient(135deg,#e8710a,#dc2626)'),
-        ('scene-5.html','🧠','知识助手','Knowledge AI','20s获答，效率提升100%',['5万+文档','20s获答','效率提升100%'],'linear-gradient(135deg,#6366f1,#8b5cf6)'),
-        ('scene-6.html','🛠️','Skill共享','Skill Sharing','整合一线实战经验，共建共享工具箱',['30+大比武','40+提质增效','共建共享'],'linear-gradient(135deg,#0ea5e9,#0284c7)'),
-        ('future.html','🚀','未来规划','Future Plan','统一入口 · 整合资源 · 建设AI综合能力平台',['统一入口','整合资源','持续迭代'],'linear-gradient(135deg,#0d2550,#2a5599)'),
+        ('scene-1.html','📈','机会点增量','Opportunity Growth','市场空间 · 价值线索 · 精细化运营','4个AI应用',['市场分析','标讯运营','市场报告','标讯AI分析'],'linear-gradient(135deg,#0f2b5c,#1e4f8a)'),
+        ('scene-2.html','🤝','客户拜访','Customer Visit','拜访前充分准备，现场沟通稳定发挥','2个AI应用',['客户画像','AI对练','支持移动端'],'linear-gradient(135deg,#00a884,#00b894)'),
+        ('scene-3.html','🚀','项目推进','Project Delivery','7×24h智能支持，适配项目推进全流程','3个AI应用',['营销AI小秘','行销数字员工','渠道专版'],'linear-gradient(135deg,#0f2b5c,#5b3fd4)'),
+        ('scene-4.html','📋','招投标','Bidding','招标文件解析→商务标生成→投标检查','3大AI能力',['招标解析','商务标生成','投标检查'],'linear-gradient(135deg,#e8710a,#dc2626)'),
+        ('scene-5.html','🧠','知识助手','Knowledge AI','20s获答，效率提升100%','1个AI应用',['5万+文档','20s获答','效率提升100%'],'linear-gradient(135deg,#6366f1,#8b5cf6)'),
+        ('scene-6.html','🛠️','Skill共享','Skill Sharing','整合一线实战经验，共建共享工具箱','2个AI应用',['30+大比武','40+提质增效','共建共享'],'linear-gradient(135deg,#0ea5e9,#0284c7)'),
+        ('future.html','🚀','未来规划','Future Plan','统一入口 · 整合资源 · 建设AI综合能力平台','', ['统一入口','整合资源','持续迭代'], 'linear-gradient(135deg,#0d2550,#2a5599)'),
     ]
 
     cards_html = ''
-    for href, icon, title, en, desc, tags, grad in cards_data:
+    for href, icon, title, en, desc, app_count, tags, grad in cards_data:
         tags_html = ''.join(f'<span class="card-tag">{t}</span>' for t in tags)
+        count_badge = f'<span class="card-count">{app_count}</span>' if app_count else ''
         cards_html += (
             '    <a href="' + href + '" class="card-item">\n'
             '      <div class="card-icon-wrap">\n'
             '        <div class="card-icon" style="background:' + grad + ';">' + icon + '</div>\n'
             '        <div class="card-title-group">\n'
-            '          <div class="card-title">' + title + '</div>\n'
+            '          <div class="card-title">' + title + count_badge + '</div>\n'
             '          <div class="card-en">' + en + '</div>\n'
             '        </div>\n'
             '      </div>\n'

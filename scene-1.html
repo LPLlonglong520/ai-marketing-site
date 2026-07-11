@@ -436,6 +436,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .card-title-group { min-width: 0; }
 .card-title { font-size: 18px; font-weight: 800; margin-bottom: 3px; letter-spacing: -.2px; }
 .card-en { font-size: 11px; color: rgba(255,255,255,.4); font-weight: 500; letter-spacing: 1px; text-transform: uppercase; }
+.card-count { display: inline-block; margin-left: 8px; padding: 2px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; background: rgba(99,162,255,.15); color: #60a5fa; border: 1px solid rgba(99,162,255,.2); vertical-align: middle; }
 .card-desc { font-size: 13px; color: rgba(255,255,255,.55); line-height: 1.7; margin-bottom: 16px; min-height: 36px; }
 .card-tags { display: flex; flex-wrap: wrap; gap: 8px; }
 .card-tag { padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; background: rgba(255,255,255,.07); color: rgba(255,255,255,.65); border: 1px solid rgba(255,255,255,.06); transition: all .2s; }
@@ -592,12 +593,10 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
     </div>
     <div class="app-content">
       <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div><p>标讯数据量大但利用率低，市场空间分析和标讯运营缺乏统一工具；个性化分析需求难以满足，依赖人工整理，效率低且维度有限。</p><div class="col-emoji-bg">📊</div></div>
-      <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div><p>综合管理部利用WorkBuddy等AI平台<strong>自研AI分析平台</strong>，提供双重能力：</p>
+      <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div><p><strong>平台提供两大分析能力：</strong></p>
         <ul>
           <li>📊 标准维度分析：市场空间分析、标讯运营等多维度数据洞察</li>
           <li>🤖 AI智能分析：个性化维度定制，AI驱动的深度分析</li>
-          <li>📥 数据导入：支持标讯数据快速导入</li>
-          <li>💡 智能洞察：自动生成分析报告与决策建议</li>
         </ul><div class="col-emoji-bg">⚡</div></div>
       <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div><p>点击下方文字直接进入安恒标讯AI分析系统。
 ---</p>
@@ -729,11 +728,13 @@ function syncFromCloud(){
 }
 
 function renderFeedback(){
-  document.getElementById('fb-like-count').textContent=fbLikes+' 人觉得很赞';
+  var lc=document.getElementById('fb-like-count'); if(!lc) return;
+  lc.textContent=fbLikes+' 人觉得很赞';
   document.getElementById('fb-cmt-count').textContent=fbComments.length;
   var btn=document.getElementById('fb-like-btn');
-  if(fbLiked) btn.classList.add('liked'); else btn.classList.remove('liked');
+  if(btn){ if(fbLiked) btn.classList.add('liked'); else btn.classList.remove('liked'); }
   var list=document.getElementById('fb-comment-list');
+  if(!list) return;
   if(!fbComments.length){ list.innerHTML='<div class="fb-empty">暂无评论，来坐沙发吧 ☕</div>'; return; }
   list.innerHTML=fbComments.slice().reverse().map(function(c){
     var t=new Date(c.time),ts=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')+' '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
@@ -744,7 +745,8 @@ function renderFeedback(){
 function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
 
 // 点赞按钮 — 原子递增，并发安全
-document.getElementById('fb-like-btn').addEventListener('click',function(){
+var _fbLikeBtn=document.getElementById('fb-like-btn');
+if(_fbLikeBtn) _fbLikeBtn.addEventListener('click',function(){
   if(fbLiked) return;
   fbLiked=true; fbLikes++;
   localStorage.setItem(fbLikedKey,'1');
@@ -756,9 +758,8 @@ document.getElementById('fb-like-btn').addEventListener('click',function(){
   }).catch(function(){ syncFromCloud(); });
 });
 
-// 初始加载 + 15秒定时同步
-syncFromCloud();
-setInterval(syncFromCloud,15000);
+// 初始加载 + 15秒定时同步（仅在反馈模块存在时）
+if(document.getElementById('fb-like-btn')){ syncFromCloud(); setInterval(syncFromCloud,15000); }
 
 function submitComment(){
   var nameEl=document.getElementById('fb-name'),textEl=document.getElementById('fb-text');
@@ -774,7 +775,8 @@ function submitComment(){
     try{localStorage.setItem('fb-backup',JSON.stringify({likes:fbLikes,comments:fbComments}));}catch(e){}
   }).catch(function(){ syncFromCloud(); });
 }
-document.getElementById('fb-submit-btn').addEventListener('click',submitComment);
+var _fbSubmitBtn=document.getElementById('fb-submit-btn');
+if(_fbSubmitBtn) _fbSubmitBtn.addEventListener('click',submitComment);
 
 function delComment(id){
   if(!confirm('确定删除这条评论吗？')) return;
@@ -787,7 +789,8 @@ function delComment(id){
 }
 
 // 评论列表事件代理
-document.getElementById('fb-comment-list').addEventListener('click',function(e){
+var _fbCmtList=document.getElementById('fb-comment-list');
+if(_fbCmtList) _fbCmtList.addEventListener('click',function(e){
   var delBtn=e.target.closest('.fb-comment-del');
   if(delBtn){ var cid=delBtn.getAttribute('data-cid'); if(cid) delComment(cid); return; }
   var replyBtn=e.target.closest('.fb-reply-btn');
