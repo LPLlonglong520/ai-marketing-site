@@ -183,6 +183,16 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .img-gallery-single { grid-template-columns:1fr; }
 .img-gallery-single figure { max-width:100%; line-height:0; }
 .img-gallery-single img { object-fit:contain; }
+/* ---- 图片点击放大 Lightbox ---- */
+.img-gallery figure { cursor:zoom-in; position:relative; }
+.img-gallery figure::after { content:'🔍'; position:absolute; top:8px; right:10px; font-size:14px; background:rgba(255,255,255,.85); border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity var(--transition); pointer-events:none; box-shadow:0 1px 4px rgba(0,0,0,.1); }
+.img-gallery figure:hover::after { opacity:1; }
+.lightbox-overlay { position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.92); display:flex; align-items:center; justify-content:center; padding:40px; opacity:0; visibility:hidden; transition:opacity .3s,visibility .3s; }
+.lightbox-overlay.active { opacity:1; visibility:visible; }
+.lightbox-overlay img { max-width:95%; max-height:90vh; object-fit:contain; border-radius:8px; box-shadow:0 8px 40px rgba(0,0,0,.5); }
+.lightbox-overlay .lb-close { position:absolute; top:20px; right:30px; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,.12); color:#fff; font-size:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background .2s; border:none; }
+.lightbox-overlay .lb-close:hover { background:rgba(255,255,255,.25); }
+.lightbox-overlay .lb-caption { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); color:rgba(255,255,255,.7); font-size:14px; max-width:80%; text-align:center; }
 .bid-compare { margin-top:0; background:#fff; border-radius:14px; border:1px solid rgba(0,0,0,.05); overflow:hidden; box-shadow:var(--shadow); }
 .bid-compare-title { padding:16px 22px; font-size:17px; font-weight:700; color:#fff; background:linear-gradient(135deg,#0d2550,#1a3d6e,#235491); display:flex; align-items:center; gap:10px; }
 .bid-compare-title .ai-dot { width:10px; height:10px; background:#60a5fa; border-radius:50%; box-shadow:0 0 10px #60a5fa,0 0 4px #60a5fa; animation:pulse-dot 2s infinite; }
@@ -480,7 +490,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   <div class="scene-header">
     <div class="scene-header-ico" style="background:linear-gradient(135deg,#0f2b5c,#5b3fd4);color:#fff;">🚀</div>
     <div><div class="scene-title">项目推进</div><div class="scene-sub"></div></div>
-    <div class="scene-count">2个应用</div>
+    <div class="scene-count">3个应用</div>
   </div>
   <div class="scene-body">
 
@@ -489,7 +499,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
       <div class="app-num-badge" style="background:linear-gradient(135deg,#0f2b5c,#5b3fd4);">1</div>
       <div><div class="app-title">营销AI小秘</div><div class="app-subtitle">多个提效Skill综合能力平台 · 适配项目推进全流程多场景</div></div>
     </div>
-<div class="app-stats-strip"><div class="app-stats-item"><div class="app-stats-num">2,182</div><div class="app-stats-label">总访问量 (PV)</div></div><div class="app-stats-item"><div class="app-stats-num">874</div><div class="app-stats-label">独立访客 (UV)</div></div><div class="app-stats-item"><div class="app-stats-num">51</div><div class="app-stats-label">日均访问量 (PV)</div></div></div>
+<div class="app-stats-strip"><div class="app-stats-item"><div class="app-stats-num">2,182</div><div class="app-stats-label">总访问量 (PV)</div></div><div class="app-stats-item"><div class="app-stats-num">874</div><div class="app-stats-label">总独立访客 (每日UV累加)</div></div><div class="app-stats-item"><div class="app-stats-num">51</div><div class="app-stats-label">工作日日均访问量 (PV)</div></div></div>
 <div class="app-stats-note">统计区间：2026.05.06 - 2026.06.26</div>
     <div class="app-content">
       <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div><p>项目推进中需要<strong>跨多个系统查不同信息</strong>：查客户一个系统、找案例另一个、问价格又要登别的平台，效率极低。</p><div class="col-emoji-bg">🔀</div></div>
@@ -516,7 +526,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
       <div class="app-num-badge" style="background:linear-gradient(135deg,#5b3fd4,#e8710a);">2</div>
       <div><div class="app-title">行销数字员工</div><div class="app-subtitle">专属智能售前专家 · 7×24小时在线 · 全流程问题闭环</div></div>
     </div>
-<div class="app-stats-strip"><div class="app-stats-item"><div class="app-stats-num">13,290</div><div class="app-stats-label">总访问量 (PV)</div></div><div class="app-stats-item"><div class="app-stats-num">4,369</div><div class="app-stats-label">独立访客 (UV)</div></div><div class="app-stats-item"><div class="app-stats-num">261</div><div class="app-stats-label">日均访问量 (PV)</div></div></div>
+<div class="app-stats-strip"><div class="app-stats-item"><div class="app-stats-num">13,290</div><div class="app-stats-label">总访问量 (PV)</div></div><div class="app-stats-item"><div class="app-stats-num">4,369</div><div class="app-stats-label">总独立访客 (每日UV累加)</div></div><div class="app-stats-item"><div class="app-stats-num">261</div><div class="app-stats-label">工作日日均访问量 (PV)</div></div></div>
 <div class="app-stats-note">统计时间： 2026.04.10 - 2026.06.25</div>
     <div class="app-content">
       <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div><p>遇到客户技术问题，<strong>找不到人、找不到资料</strong>。晚上或周末遇到紧急技术询问更是两眼一抹黑，客户等半天，印象分大打折扣。</p><div class="col-emoji-bg">🔀</div></div>
@@ -536,6 +546,31 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
     <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot"></span>应用演示视频</div>
       <div class="video-wrapper" data-video-src="media/media5.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'><rect fill='%230a0d14' width='16' height='9'/></svg>"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
+    </div>
+      </div>
+  <div class="app-block">
+    <div class="app-block-header">
+      <div class="app-num-badge" style="background:linear-gradient(135deg,#e8710a,#dc2626);">3</div>
+      <div><div class="app-title">行销数字员工-渠道专版</div><div class="app-subtitle">渠道专属智能售前专家 · 7×24小时在线 · 全流程问题闭环</div></div>
+    </div>
+    <div class="app-content">
+      <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div><p>渠道伙伴遇到技术问题时，<strong>同样找不到人、找不到资料</strong>。晚上或周末遇到紧急技术询问更是两眼一抹黑，渠道伙伴等半天，合作体验大打折扣。</p><div class="col-emoji-bg">🔀</div></div>
+      <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div><p>专为<strong>渠道伙伴</strong>打造的专属智能售前专家，内置丰富知识，全天候服务：</p>
+        <ul>
+          <li>📚 完善的产品知识库（渠道适配版）</li>
+          <li>🎯 行业打法与经验</li>
+          <li>📋 公司参与标准</li>
+          <li>⚡ 7×24小时实时响应</li>
+          <li>🔄 问题反馈全流程闭环</li>
+        </ul><div class="col-emoji-bg">⚡</div></div>
+      <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div><p>钉钉搜索行销数字员工-渠道专版，输入问题即可获得专业解答。
+---</p>
+        <div class="path-tag"><span>钉钉</span> <span class="arr">→</span> <span>行销数字员工-渠道专版</span> <span class="arr">→</span> <span>直接提问</span></div>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px;">📅 8月上线 · 敬请期待</p><div class="col-emoji-bg">🗝️</div></div>
+    </div>
+    <div class="app-video-panel">
+      <div class="app-video-label"><span class="vdot"></span>应用演示视频（移动端演示）</div>
+      <div class="no-video"><div class="nv-ico">🔧</div><p>📅 8月上线 · 敬请期待</p></div>
     </div>
       </div>
   </div>
@@ -744,8 +779,38 @@ function submitReply(cid){
   var data={likes:fbLikes,comments:fbComments};
   fbPut(data).then(function(){
     try{localStorage.setItem('fb-backup',JSON.stringify({likes:fbLikes,comments:fbComments}));}catch(e){}
-  }).catch(function(){ syncFromCloud(); });
+  }).catch(function(){ syncFromCloud();   });
 }
+// ---- 图片点击放大 Lightbox ----
+(function(){
+  var overlay=document.createElement('div');
+  overlay.className='lightbox-overlay';
+  overlay.innerHTML='<button class="lb-close" type="button">&times;</button><img src="" alt=""><div class="lb-caption"></div>';
+  document.body.appendChild(overlay);
+  var lbImg=overlay.querySelector('img');
+  var lbCap=overlay.querySelector('.lb-caption');
+  var lbClose=overlay.querySelector('.lb-close');
+  function open(src,cap){
+    lbImg.src=src; lbCap.textContent=cap||'';
+    overlay.classList.add('active');
+    document.body.style.overflow='hidden';
+  }
+  function close(){
+    overlay.classList.remove('active');
+    document.body.style.overflow='';
+    lbImg.src='';
+  }
+  overlay.addEventListener('click',function(e){ if(e.target===overlay||e.target===lbClose) close(); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+  document.addEventListener('click',function(e){
+    var fig=e.target.closest('.img-gallery figure');
+    if(!fig) return;
+    var img=fig.querySelector('img');
+    if(!img) return;
+    var cap=fig.querySelector('figcaption');
+    open(img.src, cap?cap.textContent:'');
+  });
+})();
 </script>
 </body>
 </html>

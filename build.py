@@ -164,7 +164,7 @@ def parse_content(path):
             bid_compare_data = None
             bid_steps_data = []
             for line in ab.split('\n'):
-                m = re.match(r'\|\s*(标题|副标题|演示视频|截图(\d+)|截图(\d+)说明|演示类型|占位图标|占位文字)\s*\|\s*(.+?)\s*\|', line)
+                m = re.match(r'\|\s*(标题|副标题|演示视频|截图(\d+)|截图(\d+)说明|演示类型|占位图标|占位文字|入口文字|入口链接|画像预览)\s*\|\s*(.+?)\s*\|', line)
                 if m:
                     k = m.group(1)
                     v = m.group(4) if m.group(4) else ''
@@ -180,6 +180,12 @@ def parse_content(path):
                         app['placeholder_icon'] = v
                     elif k == '占位文字':
                         app['placeholder_text'] = v
+                    elif k == '入口文字':
+                        app['entry_text'] = v
+                    elif k == '入口链接':
+                        app['entry_link'] = v
+                    elif k == '画像预览':
+                        app['profile_preview'] = v
                     elif k.startswith('截图') and k.endswith('说明'):
                         img_caps.append(v)
                     elif k.startswith('截图'):
@@ -460,6 +466,16 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .img-gallery-single { grid-template-columns:1fr; }
 .img-gallery-single figure { max-width:100%; line-height:0; }
 .img-gallery-single img { object-fit:contain; }
+/* ---- 图片点击放大 Lightbox ---- */
+.img-gallery figure { cursor:zoom-in; position:relative; }
+.img-gallery figure::after { content:'🔍'; position:absolute; top:8px; right:10px; font-size:14px; background:rgba(255,255,255,.85); border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity var(--transition); pointer-events:none; box-shadow:0 1px 4px rgba(0,0,0,.1); }
+.img-gallery figure:hover::after { opacity:1; }
+.lightbox-overlay { position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.92); display:flex; align-items:center; justify-content:center; padding:40px; opacity:0; visibility:hidden; transition:opacity .3s,visibility .3s; }
+.lightbox-overlay.active { opacity:1; visibility:visible; }
+.lightbox-overlay img { max-width:95%; max-height:90vh; object-fit:contain; border-radius:8px; box-shadow:0 8px 40px rgba(0,0,0,.5); }
+.lightbox-overlay .lb-close { position:absolute; top:20px; right:30px; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,.12); color:#fff; font-size:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background .2s; border:none; }
+.lightbox-overlay .lb-close:hover { background:rgba(255,255,255,.25); }
+.lightbox-overlay .lb-caption { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); color:rgba(255,255,255,.7); font-size:14px; max-width:80%; text-align:center; }
 .bid-compare { margin-top:0; background:#fff; border-radius:14px; border:1px solid rgba(0,0,0,.05); overflow:hidden; box-shadow:var(--shadow); }
 .bid-compare-title { padding:16px 22px; font-size:17px; font-weight:700; color:#fff; background:linear-gradient(135deg,#0d2550,#1a3d6e,#235491); display:flex; align-items:center; gap:10px; }
 .bid-compare-title .ai-dot { width:10px; height:10px; background:#60a5fa; border-radius:50%; box-shadow:0 0 10px #60a5fa,0 0 4px #60a5fa; animation:pulse-dot 2s infinite; }
@@ -953,8 +969,38 @@ function submitReply(cid){
   var data={likes:fbLikes,comments:fbComments};
   fbPut(data).then(function(){
     try{localStorage.setItem('fb-backup',JSON.stringify({likes:fbLikes,comments:fbComments}));}catch(e){}
-  }).catch(function(){ syncFromCloud(); });
+  }).catch(function(){ syncFromCloud();   });
 }
+// ---- 图片点击放大 Lightbox ----
+(function(){
+  var overlay=document.createElement('div');
+  overlay.className='lightbox-overlay';
+  overlay.innerHTML='<button class="lb-close" type="button">&times;</button><img src="" alt=""><div class="lb-caption"></div>';
+  document.body.appendChild(overlay);
+  var lbImg=overlay.querySelector('img');
+  var lbCap=overlay.querySelector('.lb-caption');
+  var lbClose=overlay.querySelector('.lb-close');
+  function open(src,cap){
+    lbImg.src=src; lbCap.textContent=cap||'';
+    overlay.classList.add('active');
+    document.body.style.overflow='hidden';
+  }
+  function close(){
+    overlay.classList.remove('active');
+    document.body.style.overflow='';
+    lbImg.src='';
+  }
+  overlay.addEventListener('click',function(e){ if(e.target===overlay||e.target===lbClose) close(); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+  document.addEventListener('click',function(e){
+    var fig=e.target.closest('.img-gallery figure');
+    if(!fig) return;
+    var img=fig.querySelector('img');
+    if(!img) return;
+    var cap=fig.querySelector('figcaption');
+    open(img.src, cap?cap.textContent:'');
+  });
+})();
 </script>'''
 
 
@@ -1020,9 +1066,9 @@ def render_scene(data, scene):
     bg_map = {1:'bg-opp',2:'bg-visit',3:'bg-proj',4:'bg-bid',5:'bg-knowledge',6:'bg-skill'}
     icon_colors = ["linear-gradient(135deg,#0f2b5c,#1e4f8a)","linear-gradient(135deg,#00a884,#00b894)","linear-gradient(135deg,#0f2b5c,#5b3fd4)","linear-gradient(135deg,#e8710a,#dc2626)","linear-gradient(135deg,#6366f1,#8b5cf6)","linear-gradient(135deg,#0ea5e9,#0284c7)"]
     badge_maps = {
-        1: [("linear-gradient(135deg,#0f2b5c,#1e4f8a)","1"),("linear-gradient(135deg,#0284c7,#0891b2)","2"),("linear-gradient(135deg,#0891b2,#0e7490)","3")],
+        1: [("linear-gradient(135deg,#0f2b5c,#1e4f8a)","1"),("linear-gradient(135deg,#0284c7,#0891b2)","2"),("linear-gradient(135deg,#0891b2,#0e7490)","3"),("linear-gradient(135deg,#0e7490,#059669)","4")],
         2: [("linear-gradient(135deg,#00a884,#00b894)","1"),("linear-gradient(135deg,#0284c7,#4f46e5)","2")],
-        3: [("linear-gradient(135deg,#0f2b5c,#5b3fd4)","1"),("linear-gradient(135deg,#5b3fd4,#e8710a)","2")],
+        3: [("linear-gradient(135deg,#0f2b5c,#5b3fd4)","1"),("linear-gradient(135deg,#5b3fd4,#e8710a)","2"),("linear-gradient(135deg,#e8710a,#dc2626)","3")],
         4: [("linear-gradient(135deg,#e8710a,#dc2626)","AI")],
         5: [("linear-gradient(135deg,#6366f1,#8b5cf6)","AI")],
         6: [("linear-gradient(135deg,#0ea5e9,#0284c7)","1"),("linear-gradient(135deg,#0284c7,#0891b2)","2")]
@@ -1033,7 +1079,7 @@ def render_scene(data, scene):
 
     profile_preview = '''    <div class="profile-preview">
       <div class="profile-preview-label"><span class="pdot"></span>客户画像 2.0 优化中 <span class="pbeta">NEW</span> — 下滑查看最新画像内容</div>
-      <div class="profile-preview-frame"><iframe src="media/天津大学_安全画像.html" title="天津大学安全画像"></iframe></div>
+      <div class="profile-preview-frame"><iframe src="{profile_src}" title="客户安全画像"></iframe></div>
     </div>'''
 
     snum = scene['num']
@@ -1074,6 +1120,9 @@ def render_scene(data, scene):
                 how_parts.append(f'<p style="font-weight:700;margin:10px 0 4px;">{e[1]}</p>')
             else:
                 how_parts.append(f'<p style="font-size:12px;color:var(--muted);margin-top:8px;">{e}</p>')
+        # 入口链接（可点击跳转）
+        if app.get('entry_link') and app.get('entry_text'):
+            how_parts.append(f'<a href="{app["entry_link"]}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:10px 20px;background:linear-gradient(135deg,#0d2550,#1a3d6e);color:#fff;border-radius:10px;font-weight:600;font-size:14px;text-decoration:none;transition:all .28s;">{app["entry_text"]} <span style="font-size:12px;">↗</span></a>')
         how_html = '\n        '.join(how_parts)
 
         pe = pain_emojis.get(snum,'📊')
@@ -1133,7 +1182,7 @@ def render_scene(data, scene):
       <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div>{how_html}<div class="col-emoji-bg">{he}</div></div>
     </div>
 {video_panel}
-    {profile_preview if snum==2 and ai==0 else ''}  </div>'''
+    {profile_preview.format(profile_src=app.get('profile_preview','media/天津大学_安全画像.html')) if (snum==2 and ai==0 and app.get('profile_preview')) else ''}  </div>'''
 
     return f'''<div class="scene-timeline-item" id="{sid}">
 <div class="{bg}">
@@ -1154,9 +1203,10 @@ def render_scene(data, scene):
 def build_home(data):
     """生成首页 index.html — Hero + 卡片网格"""
     g = data['global']
+    logo = media_path(g.get('Logo图片', 'media/image2.png'))
 
     nav = f'''<nav>
-  <a class="nav-brand" href="index.html"><img src="media/image2.png" alt="安恒信息"><span>AI赋能营销</span></a>
+  <a class="nav-brand" href="index.html"><img src="{logo}" alt="安恒信息"><span>AI赋能营销</span></a>
   <div class="nav-right">{g.get('页脚部门','营销中心综合管理部')}</div>
 </nav>'''
 
@@ -1167,7 +1217,7 @@ def build_home(data):
     hero = f'''<section class="hero" id="hero" style="min-height:auto;padding:120px 40px 80px;">
   <div class="hero-bg-circles"><span></span><span></span><span></span></div>
   <div class="hero-inner">
-    <div class="hero-logo-row"><img class="hero-logo-img" src="media/image2.png" alt="安恒信息"><div class="hero-logo-dept">营销中心 · 综合管理部</div></div>
+    <div class="hero-logo-row"><img class="hero-logo-img" src="{logo}" alt="安恒信息"><div class="hero-logo-dept">营销中心 · 综合管理部</div></div>
     <h1>{g.get('Hero大标题','AI赋能营销')}<br><em>{g.get('Hero副标题','让每一线都更强')}</em></h1>
     <p class="hero-sub">{g.get('Hero描述','')}</p>
     <div class="hero-char-cards">
@@ -1185,9 +1235,9 @@ def build_home(data):
 </section>'''
 
     cards_data = [
-        ('scene-1.html','📈','机会点增量','Opportunity Growth','市场空间 · 价值线索 · 精细化运营',['市场分析','标讯运营','市场报告'],'linear-gradient(135deg,#0f2b5c,#1e4f8a)'),
+        ('scene-1.html','📈','机会点增量','Opportunity Growth','市场空间 · 价值线索 · 精细化运营',['市场分析','标讯运营','市场报告','标讯AI分析'],'linear-gradient(135deg,#0f2b5c,#1e4f8a)'),
         ('scene-2.html','🤝','客户拜访','Customer Visit','拜访前充分准备，现场沟通稳定发挥',['客户画像','AI对练','支持移动端'],'linear-gradient(135deg,#00a884,#00b894)'),
-        ('scene-3.html','🚀','项目推进','Project Delivery','7×24h智能支持，适配项目推进全流程',['营销AI小秘','行销数字员工','7×24h在线'],'linear-gradient(135deg,#0f2b5c,#5b3fd4)'),
+        ('scene-3.html','🚀','项目推进','Project Delivery','7×24h智能支持，适配项目推进全流程',['营销AI小秘','行销数字员工','渠道专版'],'linear-gradient(135deg,#0f2b5c,#5b3fd4)'),
         ('scene-4.html','📋','招投标','Bidding','招标文件解析→商务标生成→投标检查',['招标解析','商务标生成','投标检查'],'linear-gradient(135deg,#e8710a,#dc2626)'),
         ('scene-5.html','🧠','知识助手','Knowledge AI','20s获答，效率提升100%',['5万+文档','20s获答','效率提升100%'],'linear-gradient(135deg,#6366f1,#8b5cf6)'),
         ('scene-6.html','🛠️','Skill共享','Skill Sharing','整合一线实战经验，共建共享工具箱',['30+大比武','40+提质增效','共建共享'],'linear-gradient(135deg,#0ea5e9,#0284c7)'),
@@ -1226,7 +1276,7 @@ def build_home(data):
 
     footer = (
         '<footer style="background:linear-gradient(180deg,#0a1638,#070e2a);border-top:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.4);">\n'
-        '  <div class="ft-logo" style="color:rgba(255,255,255,.8);"><img src="media/image2.png" alt="安恒信息" style="height:32px;vertical-align:middle;margin-right:6px;filter:brightness(1.2);">AI赋能营销</div>\n'
+        '  <div class="ft-logo" style="color:rgba(255,255,255,.8);"><img src="' + logo + '" alt="安恒信息" style="height:32px;vertical-align:middle;margin-right:6px;filter:brightness(1.2);">AI赋能营销</div>\n'
         '  <p>' + g.get("页脚部门","营销中心") + ' · ' + g.get("页脚日期","2026年") + '</p>\n'
         '  <section class="view-counter" style="margin-top:12px;"><span class="vc-icon">👁️</span><span>本页已浏览</span><span class="vc-num">99+</span><span>次</span></section>\n'
         '</footer>'
@@ -1239,6 +1289,7 @@ def build_home(data):
 def build_scene_page(data, scene, prev_scene=None, next_scene=None):
     """生成单个场景详情页"""
     g = data['global']
+    logo = media_path(g.get('Logo图片', 'media/image2.png'))
 
     prev_link = f'<a href="scene-{prev_scene["num"]}.html" class="pager-btn">← 上一场景</a>' if prev_scene else '<span class="pager-btn disabled">← 上一场景</span>'
     next_link = f'<a href="scene-{next_scene["num"]}.html" class="pager-btn">下一场景 →</a>' if next_scene else '<span class="pager-btn disabled">下一场景 →</span>'
@@ -1252,7 +1303,7 @@ def build_scene_page(data, scene, prev_scene=None, next_scene=None):
     scene_html = render_scene(data, scene)
 
     footer = f'''<footer style="border-top:1px solid rgba(0,0,0,.05);">
-  <div class="ft-logo"><img src="media/image2.png" alt="安恒信息" style="height:32px;vertical-align:middle;margin-right:6px;">AI赋能营销</div>
+  <div class="ft-logo"><img src="{logo}" alt="安恒信息" style="height:32px;vertical-align:middle;margin-right:6px;">AI赋能营销</div>
   <p>{g.get("页脚部门","营销中心")} · {g.get("页脚日期","2026年")}</p>
 </footer>'''
 
@@ -1263,6 +1314,7 @@ def build_scene_page(data, scene, prev_scene=None, next_scene=None):
 def build_future_page(data):
     """生成未来规划详情页"""
     g = data['global']
+    logo = media_path(g.get('Logo图片', 'media/image2.png'))
 
     detail_nav = f'''<div class="scene-detail-nav">
   <a href="index.html" class="back-btn">← 返回首页</a>
@@ -1320,7 +1372,7 @@ def build_future_page(data):
 </section>'''
 
     footer = f'''<footer style="border-top:1px solid rgba(0,0,0,.05);">
-  <div class="ft-logo"><img src="media/image2.png" alt="安恒信息" style="height:32px;vertical-align:middle;margin-right:6px;">AI赋能营销</div>
+  <div class="ft-logo"><img src="{logo}" alt="安恒信息" style="height:32px;vertical-align:middle;margin-right:6px;">AI赋能营销</div>
   <p>{g.get("页脚部门","营销中心")} · {g.get("页脚日期","2026年")}</p>
 </footer>'''
 

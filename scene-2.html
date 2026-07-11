@@ -183,6 +183,16 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .img-gallery-single { grid-template-columns:1fr; }
 .img-gallery-single figure { max-width:100%; line-height:0; }
 .img-gallery-single img { object-fit:contain; }
+/* ---- 图片点击放大 Lightbox ---- */
+.img-gallery figure { cursor:zoom-in; position:relative; }
+.img-gallery figure::after { content:'🔍'; position:absolute; top:8px; right:10px; font-size:14px; background:rgba(255,255,255,.85); border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity var(--transition); pointer-events:none; box-shadow:0 1px 4px rgba(0,0,0,.1); }
+.img-gallery figure:hover::after { opacity:1; }
+.lightbox-overlay { position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.92); display:flex; align-items:center; justify-content:center; padding:40px; opacity:0; visibility:hidden; transition:opacity .3s,visibility .3s; }
+.lightbox-overlay.active { opacity:1; visibility:visible; }
+.lightbox-overlay img { max-width:95%; max-height:90vh; object-fit:contain; border-radius:8px; box-shadow:0 8px 40px rgba(0,0,0,.5); }
+.lightbox-overlay .lb-close { position:absolute; top:20px; right:30px; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,.12); color:#fff; font-size:24px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background .2s; border:none; }
+.lightbox-overlay .lb-close:hover { background:rgba(255,255,255,.25); }
+.lightbox-overlay .lb-caption { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); color:rgba(255,255,255,.7); font-size:14px; max-width:80%; text-align:center; }
 .bid-compare { margin-top:0; background:#fff; border-radius:14px; border:1px solid rgba(0,0,0,.05); overflow:hidden; box-shadow:var(--shadow); }
 .bid-compare-title { padding:16px 22px; font-size:17px; font-weight:700; color:#fff; background:linear-gradient(135deg,#0d2550,#1a3d6e,#235491); display:flex; align-items:center; gap:10px; }
 .bid-compare-title .ai-dot { width:10px; height:10px; background:#60a5fa; border-radius:50%; box-shadow:0 0 10px #60a5fa,0 0 4px #60a5fa; animation:pulse-dot 2s infinite; }
@@ -512,7 +522,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
     </div>
         <div class="profile-preview">
       <div class="profile-preview-label"><span class="pdot"></span>客户画像 2.0 优化中 <span class="pbeta">NEW</span> — 下滑查看最新画像内容</div>
-      <div class="profile-preview-frame"><iframe src="media/天津大学_安全画像.html" title="天津大学安全画像"></iframe></div>
+      <div class="profile-preview-frame"><iframe src="media/天津大学_安全画像.html" title="客户安全画像"></iframe></div>
     </div>  </div>
   <div class="app-block">
     <div class="app-block-header">
@@ -748,8 +758,38 @@ function submitReply(cid){
   var data={likes:fbLikes,comments:fbComments};
   fbPut(data).then(function(){
     try{localStorage.setItem('fb-backup',JSON.stringify({likes:fbLikes,comments:fbComments}));}catch(e){}
-  }).catch(function(){ syncFromCloud(); });
+  }).catch(function(){ syncFromCloud();   });
 }
+// ---- 图片点击放大 Lightbox ----
+(function(){
+  var overlay=document.createElement('div');
+  overlay.className='lightbox-overlay';
+  overlay.innerHTML='<button class="lb-close" type="button">&times;</button><img src="" alt=""><div class="lb-caption"></div>';
+  document.body.appendChild(overlay);
+  var lbImg=overlay.querySelector('img');
+  var lbCap=overlay.querySelector('.lb-caption');
+  var lbClose=overlay.querySelector('.lb-close');
+  function open(src,cap){
+    lbImg.src=src; lbCap.textContent=cap||'';
+    overlay.classList.add('active');
+    document.body.style.overflow='hidden';
+  }
+  function close(){
+    overlay.classList.remove('active');
+    document.body.style.overflow='';
+    lbImg.src='';
+  }
+  overlay.addEventListener('click',function(e){ if(e.target===overlay||e.target===lbClose) close(); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
+  document.addEventListener('click',function(e){
+    var fig=e.target.closest('.img-gallery figure');
+    if(!fig) return;
+    var img=fig.querySelector('img');
+    if(!img) return;
+    var cap=fig.querySelector('figcaption');
+    open(img.src, cap?cap.textContent:'');
+  });
+})();
 </script>
 </body>
 </html>
