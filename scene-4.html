@@ -475,33 +475,17 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 }
 
 /* ═══════════ 营销+AI 业务架构section ═══════════ */
-.arch-section { background: linear-gradient(180deg, #060f25 0%, #0a1638 60%, #070e2a 100%); padding: 50px 28px 55px; position: relative; overflow: hidden; }
+.arch-section { background: linear-gradient(180deg, #060f25 0%, #0a1638 60%, #070e2a 100%); padding: 40px 28px 55px; position: relative; overflow: hidden; }
 .arch-section::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse 70% 50% at 50% 30%, rgba(91,63,212,.08) 0%, transparent 70%); pointer-events:none; }
 .arch-section::after { content:''; position:absolute; inset:0; background-image: radial-gradient(circle at 1px 1px, rgba(99,140,230,.06) 1px, transparent 0); background-size: 28px 28px; pointer-events:none; }
 .arch-inner { max-width: 1180px; margin: 0 auto; position: relative; z-index: 1; }
 .arch-title { text-align: center; font-size: 38px; font-weight: 900; color: #fff; margin-bottom: 12px; letter-spacing: -.5px; }
 .arch-title .at-pill { display: inline-block; padding: 2px 18px; margin: 0 6px; border-radius: 14px; background: linear-gradient(135deg, #5eead4 0%, #818cf8 50%, #60a5fa 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-.arch-sub { text-align: center; font-size: 15px; color: rgba(255,255,255,.6); margin: 0 auto 32px; line-height: 1.5; max-width: 100%; padding: 0 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.arch-sub { text-align: center; font-size: 15px; color: rgba(255,255,255,.6); margin: 0 auto 18px; line-height: 1.5; max-width: 100%; padding: 0 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .arch-sub strong { color: #5eead4; font-weight: 700; }
-
-/* 中心Hub */
-.arch-hub-wrap { display: flex; justify-content: center; margin-bottom: 50px; position: relative; }
-.arch-hub { position: relative; padding: 28px 56px; border-radius: 28px; background: linear-gradient(135deg, #0d2550 0%, #1a3d6e 100%); border: 1px solid rgba(99,140,230,.35); box-shadow: 0 0 0 1px rgba(94,234,212,.1), 0 12px 56px rgba(13,37,80,.6), 0 0 80px rgba(99,140,230,.15); }
-.arch-hub::before { content: ''; position: absolute; inset: -2px; border-radius: 30px; background: linear-gradient(135deg, rgba(94,234,212,.4), rgba(129,140,248,.4), rgba(96,165,250,.4)); z-index: -1; filter: blur(12px); opacity: .35; }
-.arch-hub-icon { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); width: 56px; height: 56px; border-radius: 16px; background: linear-gradient(135deg, #5eead4 0%, #818cf8 50%, #60a5fa 100%); display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 8px 24px rgba(99,140,230,.4); }
-.arch-hub-text { font-size: 28px; font-weight: 900; color: #fff; letter-spacing: 2px; line-height: 1.2; text-align: center; }
-.arch-hub-sub { font-size: 12px; color: rgba(255,255,255,.55); margin-top: 6px; letter-spacing: 4px; text-align: center; }
-.arch-hub-decor { position: absolute; width: 12px; height: 12px; border-radius: 50%; background: #5eead4; box-shadow: 0 0 12px #5eead4; }
-.arch-hub-decor.d1 { top: 10px; left: -6px; animation: archpulse 2.5s ease-in-out infinite; }
-.arch-hub-decor.d2 { top: 10px; right: -6px; background: #818cf8; box-shadow: 0 0 12px #818cf8; animation: archpulse 2.5s ease-in-out infinite .8s; }
-.arch-hub-decor.d3 { bottom: 10px; left: -6px; background: #60a5fa; box-shadow: 0 0 12px #60a5fa; animation: archpulse 2.5s ease-in-out infinite 1.6s; }
-.arch-hub-decor.d4 { bottom: 10px; right: -6px; background: #c084fc; box-shadow: 0 0 12px #c084fc; animation: archpulse 2.5s ease-in-out infinite 1.2s; }
-@keyframes archpulse { 0%,100% { transform: scale(1); opacity: .7 } 50% { transform: scale(1.4); opacity: 1 } }
 
 /* 4维卡片网格 */
 .arch-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; position: relative; }
-.arch-grid::before { content: ''; position: absolute; top: -28px; left: 12.5%; right: 12.5%; height: 1px; background: linear-gradient(90deg, transparent 0%, rgba(99,140,230,.4) 25%, rgba(99,140,230,.4) 75%, transparent 100%); }
-.arch-grid::after { content: ''; position: absolute; top: -32px; left: 50%; transform: translateX(-50%); width: 12px; height: 12px; border-radius: 50%; background: #5eead4; box-shadow: 0 0 16px #5eead4; }
 .arch-card { background: linear-gradient(165deg, rgba(15,43,92,.85) 0%, rgba(26,58,118,.7) 100%); border: 1px solid rgba(255,255,255,.08); border-radius: 22px; padding: 28px 24px 24px; position: relative; transition: all var(--transition); overflow: hidden; }
 .arch-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
 .arch-card:hover { transform: translateY(-6px); border-color: rgba(99,162,255,.3); box-shadow: 0 20px 56px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,255,.06); }
@@ -533,7 +517,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .arch-card-linkable { display: block; text-decoration: none; color: inherit; cursor: pointer; transition: transform .2s, box-shadow .2s; }
 .arch-card-linkable:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(94,234,212,.2); }
 
-@media (max-width: 900px) { .arch-grid { grid-template-columns: repeat(2, 1fr); } .arch-grid::before { display: none; } .arch-grid::after { display: none; } .arch-title { font-size: 28px; } .arch-sub { font-size: 14px; margin-bottom: 40px; } .arch-hub-text { font-size: 22px; } .arch-hub { padding: 22px 36px; } }
+@media (max-width: 900px) { .arch-grid { grid-template-columns: repeat(2, 1fr); } .arch-title { font-size: 28px; } .arch-sub { font-size: 14px; margin-bottom: 16px; } }
 @media (max-width: 560px) { .arch-grid { grid-template-columns: 1fr; } }
 
 /* ═══════════ 激励section（浅色大卡片）═══════════ */
