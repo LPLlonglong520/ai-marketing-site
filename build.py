@@ -831,7 +831,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .inc-card-title { font-size: 22px; font-weight: 800; margin-bottom: 4px; letter-spacing: -.2px; }
 .inc-card-en { font-size: 11px; color: rgba(255,255,255,.4); font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 14px; }
 .inc-card-desc { font-size: 13px; color: rgba(255,255,255,.65); line-height: 1.75; margin-bottom: 20px; min-height: 50px; }
-.inc-card-stats { display: flex; flex-wrap: wrap; gap: 12px 16px; padding: 14px 0; border-top: 1px solid rgba(255,255,255,.06); border-bottom: 1px solid rgba(255,255,255,.06); margin-bottom: 16px; }
+.inc-card-stats { display: flex; gap: 16px; padding: 14px 0; border-top: 1px solid rgba(255,255,255,.06); border-bottom: 1px solid rgba(255,255,255,.06); margin-bottom: 16px; }
 .inc-stat-num { font-size: 22px; font-weight: 900; line-height: 1.1; }
 .inc-card[data-glow="gold"] .inc-stat-num { color: #fbbf24; }
 .inc-card[data-glow="blue"] .inc-stat-num { color: #60a5fa; }
@@ -1416,14 +1416,14 @@ def build_incentive_section(data=None):
         {
             'glow': 'gold', 'icon': '🏆', 'title': '10W专项激励', 'en': 'SPECIAL AWARD',
             'desc': '针对AI应用有突出贡献的个人/团队，提供10万元专项激励基金，授予年度AI应用先锋荣誉。',
-            'stats': [('10W（专项基金）', ''), ('营销全员（参与范围）', '')],
+            'stats': [('10W', '专项基金'), ('营销全员', '参与范围')],
             'tags': ['突出贡献', '先锋团队', '专项基金'],
             'link': 'https://365.kdocs.cn/l/cqQpJWaDnycr', 'link_text': '查看激励详情'
         },
         {
             'glow': 'blue', 'icon': '📅', 'title': '常态化月度激励', 'en': 'MONTHLY AWARD',
             'desc': '每月评选AI应用之星，月度公示、月度激励，让AI使用习惯持续渗透到每一个一线团队。',
-            'stats': [('月度（评选节奏）', ''), ('全国助理（综合管理部激励）', ''), ('行销部全员（行销激励）', '')],
+            'stats': [('月度', '评选节奏'), ('全国助理', '综合管理部激励'), ('行销部全员', '行销激励')],
             'tags': ['月度之星', '持续激励', '全员覆盖'],
             'link': 'https://ah-marketing-2026.github.io/honor/', 'link_text': '查看荣誉榜单'
         },
@@ -1439,7 +1439,7 @@ def build_incentive_section(data=None):
     cards_html = ''
     for c in cards:
         stats_html = ''.join(
-            f'<div><div class="inc-stat-num">{n}</div>' + (f'<div class="inc-stat-label">{l}</div>' if l else '') + '</div>'
+            f'<div><div class="inc-stat-num">{n}</div><div class="inc-stat-label">{l}</div></div>'
             for n, l in c['stats']
         )
         tags_html = ''.join(
