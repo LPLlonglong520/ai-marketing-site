@@ -844,6 +844,30 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .inc-card-cta::after { content: '→'; }
 
 @media (max-width: 768px) { .inc-section { padding: 30px 16px 35px; } .inc-title { font-size: 24px; } .inc-card { padding: 24px 20px; } .inc-card-title { font-size: 18px; } .arch-sub, .inc-sub { white-space: normal; text-overflow: clip; } .inc-action { white-space: normal; font-size: 12px; } }
+
+/* ═══════════ 未来规划 首页独立模块 ═══════════ */
+.future-home-section { background: linear-gradient(180deg, #060f25 0%, #081530 40%, #050b18 100%); padding: 50px 28px 70px; position: relative; overflow: hidden; }
+.future-home-section::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse 60% 50% at 50% 25%, rgba(94,234,212,.06) 0%, transparent 70%); pointer-events:none; }
+.future-home-inner { max-width: 1180px; margin: 0 auto; position: relative; z-index: 1; }
+.future-home-header { text-align: center; margin-bottom: 36px; }
+.future-home-pill { display: inline-block; padding: 4px 14px; border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: 1.5px; color: #5eead4; background: rgba(94,234,212,.08); border: 1px solid rgba(94,234,212,.25); margin-bottom: 12px; }
+.future-home-title { font-size: 32px; font-weight: 900; color: #fff; margin-bottom: 8px; letter-spacing: -.3px; }
+.future-home-title em { background: linear-gradient(135deg, #5eead4, #818cf8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-style: normal; }
+.future-home-subtitle { font-size: 15px; color: rgba(255,255,255,.55); }
+.future-home-card { display: grid; grid-template-columns: auto 1fr; gap: 40px; align-items: center; background: linear-gradient(135deg, rgba(13,37,80,.85) 0%, rgba(20,50,95,.6) 50%, rgba(13,37,80,.8) 100%); border: 1px solid rgba(99,140,230,.25); border-radius: 28px; padding: 40px 48px; box-shadow: 0 20px 60px rgba(0,0,0,.3), 0 0 0 1px rgba(94,234,212,.08); transition: all .3s ease; text-decoration: none; position: relative; overflow: hidden; }
+.future-home-card:hover { transform: translateY(-6px); box-shadow: 0 28px 80px rgba(0,0,0,.4), 0 0 30px rgba(99,140,230,.15); border-color: rgba(99,140,230,.45); }
+.future-home-card::before { content:''; position:absolute; top:0; left:0; width:100%; height:3px; background: linear-gradient(90deg, #5eead4, #818cf8, #60a5fa); }
+.future-home-icon { width: 100px; height: 100px; border-radius: 28px; background: linear-gradient(135deg, #0d2550 0%, #1a3d6e 50%, #2a5599 100%); border: 1px solid rgba(99,140,230,.3); display: flex; align-items: center; justify-content: center; font-size: 48px; box-shadow: 0 12px 36px rgba(13,37,80,.5); position: relative; }
+.future-home-icon::after { content:''; position:absolute; inset:-2px; border-radius:30px; background: linear-gradient(135deg, #5eead4, #818cf8, #60a5fa); opacity:.25; z-index:-1; filter:blur(12px); }
+.future-home-card-title { font-size: 26px; font-weight: 800; color: #fff; margin-bottom: 12px; }
+.future-home-card-desc { font-size: 15px; color: rgba(255,255,255,.6); line-height: 1.7; margin-bottom: 22px; }
+.future-home-tags { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 22px; }
+.future-home-tag { padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; background: rgba(94,234,212,.08); color: rgba(94,234,212,.9); border: 1px solid rgba(94,234,212,.2); }
+.future-home-cta { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: #5eead4; transition: all .2s; }
+.future-home-card:hover .future-home-cta { gap: 12px; color: #93c5fd; }
+.future-home-cta::after { content: '→'; }
+@media (max-width: 900px) { .future-home-card { grid-template-columns: 1fr; gap: 24px; text-align: center; padding: 32px; } .future-home-icon { width: 80px; height: 80px; font-size: 38px; margin: 0 auto; } .future-home-tags { justify-content: center; } }
+@media (max-width: 768px) { .future-home-section { padding: 30px 16px 45px; } .future-home-title { font-size: 24px; } .future-home-card-title { font-size: 20px; } .future-home-card-desc { font-size: 14px; } }
 </style>'''
 
 
@@ -1452,6 +1476,42 @@ def build_incentive_section(data=None):
     )
 
 
+def build_future_section_home(data):
+    """未来规划 首页独立模块：放在激励模块下方"""
+    g = data['global']
+    fp = data.get('future_plan', {})
+    title = fp.get('标题', '未来规划')
+    subtitle = fp.get('副标题', '统一入口 · 整合资源 · 建设营销AI综合能力平台')
+    status = fp.get('status', '')
+    if not status:
+        status = '当前各类AI应用分散在不同平台，一线员工在外部AI工具上积累了大量实战经验。未来我们将统一整合、沉淀推广，形成完整营销AI工具矩阵。'
+
+    return (
+        '<section class="future-home-section">\n'
+        '  <div class="future-home-inner">\n'
+        '    <div class="future-home-header">\n'
+        '      <div class="future-home-pill">FUTURE PLAN</div>\n'
+        '      <div class="future-home-title">' + title + '</div>\n'
+        '      <div class="future-home-subtitle">' + subtitle + '</div>\n'
+        '    </div>\n'
+        '    <a href="future.html" class="future-home-card">\n'
+        '      <div class="future-home-icon">🚀</div>\n'
+        '      <div class="future-home-card-body">\n'
+        '        <div class="future-home-card-title">建设营销AI综合能力平台</div>\n'
+        '        <div class="future-home-card-desc">' + status + '</div>\n'
+        '        <div class="future-home-tags">\n'
+        '          <span class="future-home-tag">统一入口</span>\n'
+        '          <span class="future-home-tag">整合资源</span>\n'
+        '          <span class="future-home-tag">持续迭代</span>\n'
+        '        </div>\n'
+        '        <div class="future-home-cta">查看未来规划</div>\n'
+        '      </div>\n'
+        '    </a>\n'
+        '  </div>\n'
+        '</section>'
+    )
+
+
 def build_home(data):
     """生成首页 index.html — Hero + 卡片网格"""
     g = data['global']
@@ -1478,7 +1538,6 @@ def build_home(data):
         ('scene-4.html','📋','招投标','Bidding','招标文件解析→商务标生成→投标检查','3大AI能力',['招标解析','商务标生成','投标检查'],'linear-gradient(135deg,#e8710a,#dc2626)'),
         ('scene-5.html','🧠','知识助手','Knowledge AI','20s获答，效率提升100%','1个AI应用',['5万+文档','20s获答','效率提升100%'],'linear-gradient(135deg,#6366f1,#8b5cf6)'),
         ('scene-6.html','🛠️','Skill共享','Skill Sharing','整合一线实战经验，共建共享工具箱','2个AI应用',['30+大比武','40+提质增效','共建共享'],'linear-gradient(135deg,#0ea5e9,#0284c7)'),
-        ('future.html','🚀','未来规划','Future Plan','统一入口 · 整合资源 · 建设AI综合能力平台','', ['统一入口','整合资源','持续迭代'], 'linear-gradient(135deg,#0d2550,#2a5599)'),
     ]
 
     cards_html = ''
@@ -1523,7 +1582,8 @@ def build_home(data):
     title = g.get('页面标题','AI赋能营销 · 营销中心综合管理部')
     arch_section = build_arch_section()
     incentive_section = build_incentive_section(data)
-    return '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1.0">\n<title>' + title + '</title>\n' + CSS + '\n</head>\n<body>\n<div id="prog"></div>\n\n' + nav + '\n\n' + hero + '\n\n' + cards_section + '\n\n' + arch_section + '\n\n' + incentive_section + '\n\n' + footer + '\n\n<script>window.addEventListener(\'scroll\',()=>{const h=document.documentElement.scrollHeight-window.innerHeight;document.getElementById(\'prog\').style.width=(h>0?window.scrollY/h*100:0)+\'%\'});</script>\n</body>\n</html>'
+    future_home_section = build_future_section_home(data)
+    return '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1.0">\n<title>' + title + '</title>\n' + CSS + '\n</head>\n<body>\n<div id="prog"></div>\n\n' + nav + '\n\n' + hero + '\n\n' + cards_section + '\n\n' + arch_section + '\n\n' + incentive_section + '\n\n' + future_home_section + '\n\n' + footer + '\n\n<script>window.addEventListener(\'scroll\',()=>{const h=document.documentElement.scrollHeight-window.innerHeight;document.getElementById(\'prog\').style.width=(h>0?window.scrollY/h*100:0)+\'%\'});</script>\n</body>\n</html>'
 
 
 def build_scene_page(data, scene, prev_scene=None, next_scene=None):
