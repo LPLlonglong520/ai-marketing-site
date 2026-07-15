@@ -811,6 +811,10 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .arch-card[data-color="purple"] .ac-app-dot { background: #c084fc; box-shadow: 0 0 6px #c084fc; }
 .arch-card[data-color="orange"] .ac-app-dot { background: #fb923c; box-shadow: 0 0 6px #fb923c; }
 .arch-card[data-color="teal"] .ac-app-dot { background: #5eead4; box-shadow: 0 0 6px #5eead4; }
+.ac-app-link { color: rgba(255,255,255,.78); text-decoration: none; transition: color .2s; }
+.ac-app-link:hover { color: #5eead4; text-decoration: underline; }
+.arch-card-linkable { display: block; text-decoration: none; color: inherit; cursor: pointer; transition: transform .2s, box-shadow .2s; }
+.arch-card-linkable:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(94,234,212,.2); }
 
 @media (max-width: 900px) { .arch-grid { grid-template-columns: repeat(2, 1fr); } .arch-grid::before { display: none; } .arch-grid::after { display: none; } .arch-title { font-size: 28px; } .arch-sub { font-size: 14px; margin-bottom: 40px; } .arch-hub-text { font-size: 22px; } .arch-hub { padding: 22px 36px; } }
 @media (max-width: 560px) { .arch-grid { grid-template-columns: 1fr; } }
@@ -1273,7 +1277,7 @@ def render_scene(data, scene):
     </div>'''
 
         apps_html += f'''
-  <div class="app-block">
+  <div class="app-block" id="app-s{snum}-{ai+1}">
     <div class="app-block-header">
       <div class="app-num-badge" style="background:{badge_style};{'font-size:13px;' if badge_num=='AI' else ''}">{badge_num}</div>
       <div><div class="app-title">{app['title']}</div><div class="app-subtitle">{app.get('subtitle','')}</div></div>
@@ -1303,59 +1307,85 @@ def render_scene(data, scene):
 
 
 def build_arch_section():
-    """营销+AI 业务架构section：中央Hub + 4个维度分支（按PPT 1:1文案）"""
+    """AI应用矩阵section：中央Hub + 4个维度分支（按PPT 1:1文案，带跳转链接）"""
     dimensions = [
         {
             'color': 'blue', 'icon': '🚀', 'name': '抓增量', 'en': 'GROWTH',
             'desc': '看清市场空间、数据驱动作战',
-            'apps': ['市场空间报告', '标讯推送', '......']
+            'apps': [('市场空间报告', None), ('标讯推送', None), ('......', None)],
+            'card_link': 'scene-1.html'  # 整卡跳转机会点增量
         },
         {
             'color': 'purple', 'icon': '✨', 'name': '抓质量', 'en': 'QUALITY',
             'desc': '提升拜访、招投标方案质量',
-            'apps': ['AI对练', '标书制作及检查', '......']
+            'apps': [('AI对练', 'scene-2.html#app-s2-2'), ('标书制作及检查', 'scene-4.html'), ('......', None)],
+            'card_link': None  # 不整卡跳转，各app独立跳转
         },
         {
             'color': 'orange', 'icon': '⚡', 'name': '提能效', 'en': 'EFFICIENCY',
             'desc': '整合行销能力，全面搜集客户信息',
-            'apps': ['行销数字员工', '客户画像', '......']
+            'apps': [('行销数字员工', 'scene-3.html#app-s3-2'), ('客户画像', 'scene-2.html#app-s2-1'), ('......', None)],
+            'card_link': None  # 不整卡跳转
         },
         {
             'color': 'teal', 'icon': '🛠️', 'name': '助管理', 'en': 'MANAGEMENT',
             'desc': '辅助管理决策、业务关键信息查询',
-            'apps': ['营销AI小秘', '查企业、查价格', '......']
+            'apps': [('营销AI小秘', None), ('查企业、查价格', None), ('......', None)],
+            'card_link': 'scene-3.html#app-s3-1'  # 整卡跳转营销AI小秘
         }
     ]
 
     cards_html = ''
     for d in dimensions:
-        apps_html = ''.join(
-            f'<div class="ac-app"><span class="ac-app-dot"></span>{app}</div>'
-            for app in d['apps']
-        )
-        cards_html += (
-            f'<div class="arch-card" data-color="{d["color"]}">\n'
-            f'  <div class="arch-card-top">\n'
-            f'    <div class="ac-icon">{d["icon"]}</div>\n'
-            f'    <div>\n'
-            f'      <div class="ac-name">{d["name"]}</div>\n'
-            f'      <div class="ac-en">{d["en"]}</div>\n'
-            f'    </div>\n'
-            f'  </div>\n'
-            f'  <div class="ac-desc">{d["desc"]}</div>\n'
-            f'  <div class="ac-divider"></div>\n'
-            f'  <div class="ac-divider-label">AI 应用</div>\n'
-            f'  <div class="ac-apps">\n'
-            f'{apps_html}\n'
-            f'  </div>\n'
-            f'</div>\n'
-        )
+        apps_html = ''
+        for app_name, app_link in d['apps']:
+            if app_link:
+                apps_html += f'<div class="ac-app"><span class="ac-app-dot"></span><a href="{app_link}" class="ac-app-link">{app_name}</a></div>\n'
+            else:
+                apps_html += f'<div class="ac-app"><span class="ac-app-dot"></span>{app_name}</div>\n'
+
+        if d.get('card_link'):
+            cards_html += (
+                f'<a href="{d["card_link"]}" class="arch-card arch-card-linkable" data-color="{d["color"]}">\n'
+                f'  <div class="arch-card-top">\n'
+                f'    <div class="ac-icon">{d["icon"]}</div>\n'
+                f'    <div>\n'
+                f'      <div class="ac-name">{d["name"]}</div>\n'
+                f'      <div class="ac-en">{d["en"]}</div>\n'
+                f'    </div>\n'
+                f'  </div>\n'
+                f'  <div class="ac-desc">{d["desc"]}</div>\n'
+                f'  <div class="ac-divider"></div>\n'
+                f'  <div class="ac-divider-label">AI 应用</div>\n'
+                f'  <div class="ac-apps">\n'
+                f'{apps_html}\n'
+                f'  </div>\n'
+                f'</a>\n'
+            )
+        else:
+            cards_html += (
+                f'<div class="arch-card" data-color="{d["color"]}">\n'
+                f'  <div class="arch-card-top">\n'
+                f'    <div class="ac-icon">{d["icon"]}</div>\n'
+                f'    <div>\n'
+                f'      <div class="ac-name">{d["name"]}</div>\n'
+                f'      <div class="ac-en">{d["en"]}</div>\n'
+                f'    </div>\n'
+                f'  </div>\n'
+                f'  <div class="ac-desc">{d["desc"]}</div>\n'
+                f'  <div class="ac-divider"></div>\n'
+                f'  <div class="ac-divider-label">AI 应用</div>\n'
+                f'  <div class="ac-apps">\n'
+                f'{apps_html}\n'
+                f'  </div>\n'
+                f'</div>\n'
+            )
 
     return (
         '<section class="arch-section">\n'
         '  <div class="arch-inner">\n'
         '    <div class="arch-title">\n'
-        '      <span class="at-pill">营销 + AI</span>\n'
+        '      <span class="at-pill">AI应用矩阵</span>\n'
         '    </div>\n'
         '    <div class="arch-sub">围绕提升<strong>增量、质量、能效、管理</strong>四大目标，设计营销AI应用，<strong>赋能全链路营销业务</strong></div>\n'
         '    <div class="arch-hub-wrap">\n'
@@ -1365,7 +1395,6 @@ def build_arch_section():
         '        <span class="arch-hub-decor d3"></span>\n'
         '        <span class="arch-hub-decor d4"></span>\n'
         '        <div class="arch-hub-icon">🤖</div>\n'
-        '        <div class="arch-hub-text">营销 AI 应用矩阵</div>\n'
         '        <div class="arch-hub-sub">MARKETING × AI</div>\n'
         '      </div>\n'
         '    </div>\n'

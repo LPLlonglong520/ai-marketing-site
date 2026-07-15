@@ -528,6 +528,10 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .arch-card[data-color="purple"] .ac-app-dot { background: #c084fc; box-shadow: 0 0 6px #c084fc; }
 .arch-card[data-color="orange"] .ac-app-dot { background: #fb923c; box-shadow: 0 0 6px #fb923c; }
 .arch-card[data-color="teal"] .ac-app-dot { background: #5eead4; box-shadow: 0 0 6px #5eead4; }
+.ac-app-link { color: rgba(255,255,255,.78); text-decoration: none; transition: color .2s; }
+.ac-app-link:hover { color: #5eead4; text-decoration: underline; }
+.arch-card-linkable { display: block; text-decoration: none; color: inherit; cursor: pointer; transition: transform .2s, box-shadow .2s; }
+.arch-card-linkable:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(94,234,212,.2); }
 
 @media (max-width: 900px) { .arch-grid { grid-template-columns: repeat(2, 1fr); } .arch-grid::before { display: none; } .arch-grid::after { display: none; } .arch-title { font-size: 28px; } .arch-sub { font-size: 14px; margin-bottom: 40px; } .arch-hub-text { font-size: 22px; } .arch-hub { padding: 22px 36px; } }
 @media (max-width: 560px) { .arch-grid { grid-template-columns: 1fr; } }
@@ -606,7 +610,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 <div style="font-size:28px;margin-bottom:6px">✅</div>
 <div class="bid-step-title" style="color:#1d4ed8">PART 3<br>投标文件检查</div>
 <ul class="bid-step-list"><li>多份文件自动查重</li><li>投标问题自动检查</li><li>废标风险提前预警</li></ul></div></div>
-  <div class="app-block">
+  <div class="app-block" id="app-s4-1">
     <div class="app-block-header">
       <div class="app-num-badge" style="background:linear-gradient(135deg,#e8710a,#dc2626);font-size:13px;">AI</div>
       <div><div class="app-title">招投标AI全流程支持</div><div class="app-subtitle">招标文件解析 · 商务标书初版生成 · 投标文件检查 · 三步走全搞定</div></div>

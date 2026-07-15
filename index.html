@@ -528,6 +528,10 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .arch-card[data-color="purple"] .ac-app-dot { background: #c084fc; box-shadow: 0 0 6px #c084fc; }
 .arch-card[data-color="orange"] .ac-app-dot { background: #fb923c; box-shadow: 0 0 6px #fb923c; }
 .arch-card[data-color="teal"] .ac-app-dot { background: #5eead4; box-shadow: 0 0 6px #5eead4; }
+.ac-app-link { color: rgba(255,255,255,.78); text-decoration: none; transition: color .2s; }
+.ac-app-link:hover { color: #5eead4; text-decoration: underline; }
+.arch-card-linkable { display: block; text-decoration: none; color: inherit; cursor: pointer; transition: transform .2s, box-shadow .2s; }
+.arch-card-linkable:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(94,234,212,.2); }
 
 @media (max-width: 900px) { .arch-grid { grid-template-columns: repeat(2, 1fr); } .arch-grid::before { display: none; } .arch-grid::after { display: none; } .arch-title { font-size: 28px; } .arch-sub { font-size: 14px; margin-bottom: 40px; } .arch-hub-text { font-size: 22px; } .arch-hub { padding: 22px 36px; } }
 @media (max-width: 560px) { .arch-grid { grid-template-columns: 1fr; } }
@@ -685,7 +689,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 <section class="arch-section">
   <div class="arch-inner">
     <div class="arch-title">
-      <span class="at-pill">营销 + AI</span>
+      <span class="at-pill">AI应用矩阵</span>
     </div>
     <div class="arch-sub">围绕提升<strong>增量、质量、能效、管理</strong>四大目标，设计营销AI应用，<strong>赋能全链路营销业务</strong></div>
     <div class="arch-hub-wrap">
@@ -695,12 +699,11 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
         <span class="arch-hub-decor d3"></span>
         <span class="arch-hub-decor d4"></span>
         <div class="arch-hub-icon">🤖</div>
-        <div class="arch-hub-text">营销 AI 应用矩阵</div>
         <div class="arch-hub-sub">MARKETING × AI</div>
       </div>
     </div>
     <div class="arch-grid">
-<div class="arch-card" data-color="blue">
+<a href="scene-1.html" class="arch-card arch-card-linkable" data-color="blue">
   <div class="arch-card-top">
     <div class="ac-icon">🚀</div>
     <div>
@@ -712,9 +715,12 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   <div class="ac-divider"></div>
   <div class="ac-divider-label">AI 应用</div>
   <div class="ac-apps">
-<div class="ac-app"><span class="ac-app-dot"></span>市场空间报告</div><div class="ac-app"><span class="ac-app-dot"></span>标讯推送</div><div class="ac-app"><span class="ac-app-dot"></span>......</div>
+<div class="ac-app"><span class="ac-app-dot"></span>市场空间报告</div>
+<div class="ac-app"><span class="ac-app-dot"></span>标讯推送</div>
+<div class="ac-app"><span class="ac-app-dot"></span>......</div>
+
   </div>
-</div>
+</a>
 <div class="arch-card" data-color="purple">
   <div class="arch-card-top">
     <div class="ac-icon">✨</div>
@@ -727,7 +733,10 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   <div class="ac-divider"></div>
   <div class="ac-divider-label">AI 应用</div>
   <div class="ac-apps">
-<div class="ac-app"><span class="ac-app-dot"></span>AI对练</div><div class="ac-app"><span class="ac-app-dot"></span>标书制作及检查</div><div class="ac-app"><span class="ac-app-dot"></span>......</div>
+<div class="ac-app"><span class="ac-app-dot"></span><a href="scene-2.html#app-s2-2" class="ac-app-link">AI对练</a></div>
+<div class="ac-app"><span class="ac-app-dot"></span><a href="scene-4.html" class="ac-app-link">标书制作及检查</a></div>
+<div class="ac-app"><span class="ac-app-dot"></span>......</div>
+
   </div>
 </div>
 <div class="arch-card" data-color="orange">
@@ -742,10 +751,13 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   <div class="ac-divider"></div>
   <div class="ac-divider-label">AI 应用</div>
   <div class="ac-apps">
-<div class="ac-app"><span class="ac-app-dot"></span>行销数字员工</div><div class="ac-app"><span class="ac-app-dot"></span>客户画像</div><div class="ac-app"><span class="ac-app-dot"></span>......</div>
+<div class="ac-app"><span class="ac-app-dot"></span><a href="scene-3.html#app-s3-2" class="ac-app-link">行销数字员工</a></div>
+<div class="ac-app"><span class="ac-app-dot"></span><a href="scene-2.html#app-s2-1" class="ac-app-link">客户画像</a></div>
+<div class="ac-app"><span class="ac-app-dot"></span>......</div>
+
   </div>
 </div>
-<div class="arch-card" data-color="teal">
+<a href="scene-3.html#app-s3-1" class="arch-card arch-card-linkable" data-color="teal">
   <div class="arch-card-top">
     <div class="ac-icon">🛠️</div>
     <div>
@@ -757,9 +769,12 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   <div class="ac-divider"></div>
   <div class="ac-divider-label">AI 应用</div>
   <div class="ac-apps">
-<div class="ac-app"><span class="ac-app-dot"></span>营销AI小秘</div><div class="ac-app"><span class="ac-app-dot"></span>查企业、查价格</div><div class="ac-app"><span class="ac-app-dot"></span>......</div>
+<div class="ac-app"><span class="ac-app-dot"></span>营销AI小秘</div>
+<div class="ac-app"><span class="ac-app-dot"></span>查企业、查价格</div>
+<div class="ac-app"><span class="ac-app-dot"></span>......</div>
+
   </div>
-</div>
+</a>
     </div>
   </div>
 </section>

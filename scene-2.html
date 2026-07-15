@@ -528,6 +528,10 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .arch-card[data-color="purple"] .ac-app-dot { background: #c084fc; box-shadow: 0 0 6px #c084fc; }
 .arch-card[data-color="orange"] .ac-app-dot { background: #fb923c; box-shadow: 0 0 6px #fb923c; }
 .arch-card[data-color="teal"] .ac-app-dot { background: #5eead4; box-shadow: 0 0 6px #5eead4; }
+.ac-app-link { color: rgba(255,255,255,.78); text-decoration: none; transition: color .2s; }
+.ac-app-link:hover { color: #5eead4; text-decoration: underline; }
+.arch-card-linkable { display: block; text-decoration: none; color: inherit; cursor: pointer; transition: transform .2s, box-shadow .2s; }
+.arch-card-linkable:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(94,234,212,.2); }
 
 @media (max-width: 900px) { .arch-grid { grid-template-columns: repeat(2, 1fr); } .arch-grid::before { display: none; } .arch-grid::after { display: none; } .arch-title { font-size: 28px; } .arch-sub { font-size: 14px; margin-bottom: 40px; } .arch-hub-text { font-size: 22px; } .arch-hub { padding: 22px 36px; } }
 @media (max-width: 560px) { .arch-grid { grid-template-columns: 1fr; } }
@@ -592,7 +596,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   </div>
   <div class="scene-body">
 
-  <div class="app-block">
+  <div class="app-block" id="app-s2-1">
     <div class="app-block-header">
       <div class="app-num-badge" style="background:linear-gradient(135deg,#00a884,#00b894);">1</div>
       <div><div class="app-title">客户画像 · AI全自动化客户分析</div><div class="app-subtitle">一句话指令 · 3分钟生成全方位客户画像 · 拜访前必备</div></div>
@@ -622,7 +626,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
       <div class="profile-preview-label"><span class="pdot"></span>客户画像 2.0 优化中 <span class="pbeta">NEW</span> — 下滑查看最新画像内容</div>
       <div class="profile-preview-frame"><iframe src="media/天津大学_安全画像.html" title="客户安全画像"></iframe></div>
     </div>  </div>
-  <div class="app-block">
+  <div class="app-block" id="app-s2-2">
     <div class="app-block-header">
       <div class="app-num-badge" style="background:linear-gradient(135deg,#0284c7,#4f46e5);">2</div>
       <div><div class="app-title">AI对练 · 智能对练，客户现场完美表现</div><div class="app-subtitle">拜访前模拟演练 · 打磨沟通话术 · **支持移动端**</div></div>

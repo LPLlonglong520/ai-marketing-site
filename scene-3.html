@@ -528,6 +528,10 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .arch-card[data-color="purple"] .ac-app-dot { background: #c084fc; box-shadow: 0 0 6px #c084fc; }
 .arch-card[data-color="orange"] .ac-app-dot { background: #fb923c; box-shadow: 0 0 6px #fb923c; }
 .arch-card[data-color="teal"] .ac-app-dot { background: #5eead4; box-shadow: 0 0 6px #5eead4; }
+.ac-app-link { color: rgba(255,255,255,.78); text-decoration: none; transition: color .2s; }
+.ac-app-link:hover { color: #5eead4; text-decoration: underline; }
+.arch-card-linkable { display: block; text-decoration: none; color: inherit; cursor: pointer; transition: transform .2s, box-shadow .2s; }
+.arch-card-linkable:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(94,234,212,.2); }
 
 @media (max-width: 900px) { .arch-grid { grid-template-columns: repeat(2, 1fr); } .arch-grid::before { display: none; } .arch-grid::after { display: none; } .arch-title { font-size: 28px; } .arch-sub { font-size: 14px; margin-bottom: 40px; } .arch-hub-text { font-size: 22px; } .arch-hub { padding: 22px 36px; } }
 @media (max-width: 560px) { .arch-grid { grid-template-columns: 1fr; } }
@@ -592,7 +596,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   </div>
   <div class="scene-body">
 
-  <div class="app-block">
+  <div class="app-block" id="app-s3-1">
     <div class="app-block-header">
       <div class="app-num-badge" style="background:linear-gradient(135deg,#0f2b5c,#5b3fd4);">1</div>
       <div><div class="app-title">营销AI小秘</div><div class="app-subtitle">多个提效Skill综合能力平台 · 适配项目推进全流程多场景</div></div>
@@ -619,7 +623,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
       <div class="video-wrapper" data-video-src="media/media4.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'><rect fill='%230a0d14' width='16' height='9'/></svg>"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
     </div>
       </div>
-  <div class="app-block">
+  <div class="app-block" id="app-s3-2">
     <div class="app-block-header">
       <div class="app-num-badge" style="background:linear-gradient(135deg,#5b3fd4,#e8710a);">2</div>
       <div><div class="app-title">行销数字员工</div><div class="app-subtitle">专属智能售前专家 · 7×24小时在线 · 全流程问题闭环</div></div>
@@ -646,7 +650,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
       <div class="video-wrapper" data-video-src="media/media5.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'><rect fill='%230a0d14' width='16' height='9'/></svg>"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
     </div>
       </div>
-  <div class="app-block">
+  <div class="app-block" id="app-s3-3">
     <div class="app-block-header">
       <div class="app-num-badge" style="background:linear-gradient(135deg,#e8710a,#dc2626);">3</div>
       <div><div class="app-title">行销数字员工-渠道专版</div><div class="app-subtitle">渠道专属智能售前专家 · 7×24小时在线 · 全流程问题闭环</div></div>
