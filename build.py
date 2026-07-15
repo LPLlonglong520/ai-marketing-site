@@ -778,6 +778,8 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .scene-detail-nav { display: flex; align-items: center; gap: 16px; padding: 20px 28px; background: linear-gradient(135deg, #0d2550, #1a3d6e); color: #fff; border-radius: 0 0 16px 16px; margin-bottom: 24px; }
 .scene-detail-nav .back-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 10px; background: rgba(255,255,255,.1); color: rgba(255,255,255,.8); font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid rgba(255,255,255,.1); transition: all var(--transition); }
 .scene-detail-nav .back-btn:hover { background: rgba(255,255,255,.18); color: #fff; }
+.scene-detail-nav .back-btn + .back-btn { background: rgba(94,234,212,.1); border-color: rgba(94,234,212,.2); color: #5eead4; }
+.scene-detail-nav .back-btn + .back-btn:hover { background: rgba(94,234,212,.2); color: #fff; }
 .scene-detail-nav .nav-title { font-size: 18px; font-weight: 700; flex: 1; text-align: center; }
 .scene-detail-nav .nav-pager { display: flex; gap: 10px; }
 .scene-detail-nav .pager-btn { padding: 8px 14px; border-radius: 10px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.7); font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid rgba(255,255,255,.08); transition: all var(--transition); }
@@ -887,6 +889,9 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .inc-card-cta { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #60a5fa; transition: all .2s; }
 .inc-card:hover .inc-card-cta { gap: 10px; color: #93c5fd; }
 .inc-card-cta::after { content: '→'; }
+.inc-card-cta.no-arrow { color: rgba(255,255,255,.5); }
+.inc-card-cta.no-arrow::after { display: none; }
+.inc-card:hover .inc-card-cta.no-arrow { color: rgba(255,255,255,.65); }
 
 @media (max-width: 768px) { .inc-section { padding: 30px 16px 35px; } .inc-title { font-size: 24px; } .inc-card { padding: 24px 20px; } .inc-card-title { font-size: 18px; } .arch-sub, .inc-sub { white-space: normal; text-overflow: clip; } .inc-action { white-space: normal; font-size: 12px; } }
 
@@ -1438,7 +1443,7 @@ def build_arch_section():
             )
 
     return (
-        '<section class="arch-section">\n'
+        '<section class="arch-section" id="ai-arch">\n'
         '  <div class="arch-inner">\n'
         '    <div class="arch-title">\n'
         '      <span class="at-pill">AI应用矩阵</span>\n'
@@ -1495,18 +1500,35 @@ def build_incentive_section(data=None):
         tags_html = ''.join(
             f'<span class="inc-card-tag">{t}</span>' for t in c['tags']
         )
-        cta_html = f'<div class="inc-card-cta">{c["link_text"]}</div>'
-        cards_html += (
-            f'<a href="{c["link"]}" target="_blank" class="inc-card" data-glow="{c["glow"]}">\n'
-            f'  <div class="inc-card-icon">{c["icon"]}</div>\n'
-            f'  <div class="inc-card-title">{c["title"]}</div>\n'
-            f'  <div class="inc-card-en">{c["en"]}</div>\n'
-            f'  <div class="inc-card-desc">{c["desc"]}</div>\n'
-            f'  <div class="inc-card-stats">{stats_html}</div>\n'
-            f'  <div class="inc-card-tags">{tags_html}</div>\n'
-            f'  {cta_html}\n'
-            f'</a>\n'
-        )
+        card_link = c.get('link', '') or '#'
+        is_disabled = card_link == '#' or not card_link.strip() or card_link.strip() == '敬请期待'
+        cta_class = 'inc-card-cta no-arrow' if is_disabled else 'inc-card-cta'
+        cta_html = f'<div class="{cta_class}">{c["link_text"]}</div>'
+        if is_disabled:
+            # 无跳转：普通 div 卡片
+            cards_html += (
+                f'<div class="inc-card" data-glow="{c["glow"]}">\n'
+                f'  <div class="inc-card-icon">{c["icon"]}</div>\n'
+                f'  <div class="inc-card-title">{c["title"]}</div>\n'
+                f'  <div class="inc-card-en">{c["en"]}</div>\n'
+                f'  <div class="inc-card-desc">{c["desc"]}</div>\n'
+                f'  <div class="inc-card-stats">{stats_html}</div>\n'
+                f'  <div class="inc-card-tags">{tags_html}</div>\n'
+                f'  {cta_html}\n'
+                f'</div>\n'
+            )
+        else:
+            cards_html += (
+                f'<a href="{card_link}" target="_blank" class="inc-card" data-glow="{c["glow"]}">\n'
+                f'  <div class="inc-card-icon">{c["icon"]}</div>\n'
+                f'  <div class="inc-card-title">{c["title"]}</div>\n'
+                f'  <div class="inc-card-en">{c["en"]}</div>\n'
+                f'  <div class="inc-card-desc">{c["desc"]}</div>\n'
+                f'  <div class="inc-card-stats">{stats_html}</div>\n'
+                f'  <div class="inc-card-tags">{tags_html}</div>\n'
+                f'  {cta_html}\n'
+                f'</a>\n'
+            )
 
     action_line = f'    <div class="inc-action">{action_text}</div>\n' if action_text else ''
 
@@ -1537,7 +1559,7 @@ def build_future_section_home(data):
         status = '当前各类AI应用分散在不同平台，一线员工在外部AI工具上积累了大量实战经验。未来我们将统一整合、沉淀推广，形成完整营销AI工具矩阵。'
 
     return (
-        '<section class="future-home-section">\n'
+        '<section class="future-home-section" id="future-home">\n'
         '  <div class="future-home-inner">\n'
         '    <div class="future-home-header">\n'
         '      <div class="future-home-pill">FUTURE PLAN</div>\n'
@@ -1646,6 +1668,7 @@ def build_scene_page(data, scene, prev_scene=None, next_scene=None):
 
     detail_nav = f'''<div class="scene-detail-nav">
   <a href="index.html" class="back-btn">← 返回首页</a>
+  <a href="index.html#ai-arch" class="back-btn">返回</a>
   <div class="nav-title">{scene.get("icon","")} {scene.get("title","")}</div>
   <div class="nav-pager">{prev_link}{next_link}</div>
 </div>'''
@@ -1668,6 +1691,7 @@ def build_future_page(data):
 
     detail_nav = f'''<div class="scene-detail-nav">
   <a href="index.html" class="back-btn">← 返回首页</a>
+  <a href="index.html#future-home" class="back-btn">返回</a>
   <div class="nav-title">🚀 未来规划</div>
   <div class="nav-pager"></div>
 </div>'''

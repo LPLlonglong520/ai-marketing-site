@@ -450,6 +450,8 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .scene-detail-nav { display: flex; align-items: center; gap: 16px; padding: 20px 28px; background: linear-gradient(135deg, #0d2550, #1a3d6e); color: #fff; border-radius: 0 0 16px 16px; margin-bottom: 24px; }
 .scene-detail-nav .back-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 10px; background: rgba(255,255,255,.1); color: rgba(255,255,255,.8); font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid rgba(255,255,255,.1); transition: all var(--transition); }
 .scene-detail-nav .back-btn:hover { background: rgba(255,255,255,.18); color: #fff; }
+.scene-detail-nav .back-btn + .back-btn { background: rgba(94,234,212,.1); border-color: rgba(94,234,212,.2); color: #5eead4; }
+.scene-detail-nav .back-btn + .back-btn:hover { background: rgba(94,234,212,.2); color: #fff; }
 .scene-detail-nav .nav-title { font-size: 18px; font-weight: 700; flex: 1; text-align: center; }
 .scene-detail-nav .nav-pager { display: flex; gap: 10px; }
 .scene-detail-nav .pager-btn { padding: 8px 14px; border-radius: 10px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.7); font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid rgba(255,255,255,.08); transition: all var(--transition); }
@@ -559,6 +561,9 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .inc-card-cta { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #60a5fa; transition: all .2s; }
 .inc-card:hover .inc-card-cta { gap: 10px; color: #93c5fd; }
 .inc-card-cta::after { content: '→'; }
+.inc-card-cta.no-arrow { color: rgba(255,255,255,.5); }
+.inc-card-cta.no-arrow::after { display: none; }
+.inc-card:hover .inc-card-cta.no-arrow { color: rgba(255,255,255,.65); }
 
 @media (max-width: 768px) { .inc-section { padding: 30px 16px 35px; } .inc-title { font-size: 24px; } .inc-card { padding: 24px 20px; } .inc-card-title { font-size: 18px; } .arch-sub, .inc-sub { white-space: normal; text-overflow: clip; } .inc-action { white-space: normal; font-size: 12px; } }
 
@@ -685,7 +690,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   </div>
 </section>
 
-<section class="arch-section">
+<section class="arch-section" id="ai-arch">
   <div class="arch-inner">
     <div class="arch-title">
       <span class="at-pill">AI应用矩阵</span>
@@ -793,21 +798,21 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   <div class="inc-card-tags"><span class="inc-card-tag">月度之星</span><span class="inc-card-tag">持续激励</span><span class="inc-card-tag">全员覆盖</span></div>
   <div class="inc-card-cta">查看荣誉榜单</div>
 </a>
-<a href="#" target="_blank" class="inc-card" data-glow="purple">
+<div class="inc-card" data-glow="purple">
   <div class="inc-card-icon">🎯</div>
   <div class="inc-card-title">年底综合激励</div>
   <div class="inc-card-en">YEAR-END AWARD</div>
   <div class="inc-card-desc">年底综合评定，AI应用标杆团队/个人额外奖励，颁发年度AI赋能营销奖项，纳入绩效考核。</div>
   <div class="inc-card-stats"><div><div class="inc-stat-num">年度</div><div class="inc-stat-label">综合评优</div></div><div><div class="inc-stat-num">标杆</div><div class="inc-stat-label">示范效应</div></div></div>
   <div class="inc-card-tags"><span class="inc-card-tag">年度评优</span><span class="inc-card-tag">绩效加分</span><span class="inc-card-tag">示范标杆</span></div>
-  <div class="inc-card-cta">敬请期待</div>
-</a>
+  <div class="inc-card-cta no-arrow">敬请期待</div>
+</div>
     </div>
     <div class="inc-action">营销中台6月已前往6个区域（广东、深圳、江苏、安徽、北京、天津）进行现场AI应用赋能及交流，8月将继续奔赴一线！</div>
   </div>
 </section>
 
-<section class="future-home-section">
+<section class="future-home-section" id="future-home">
   <div class="future-home-inner">
     <div class="future-home-header">
       <div class="future-home-pill">FUTURE PLAN</div>

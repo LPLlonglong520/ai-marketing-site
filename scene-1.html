@@ -450,6 +450,8 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .scene-detail-nav { display: flex; align-items: center; gap: 16px; padding: 20px 28px; background: linear-gradient(135deg, #0d2550, #1a3d6e); color: #fff; border-radius: 0 0 16px 16px; margin-bottom: 24px; }
 .scene-detail-nav .back-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 10px; background: rgba(255,255,255,.1); color: rgba(255,255,255,.8); font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid rgba(255,255,255,.1); transition: all var(--transition); }
 .scene-detail-nav .back-btn:hover { background: rgba(255,255,255,.18); color: #fff; }
+.scene-detail-nav .back-btn + .back-btn { background: rgba(94,234,212,.1); border-color: rgba(94,234,212,.2); color: #5eead4; }
+.scene-detail-nav .back-btn + .back-btn:hover { background: rgba(94,234,212,.2); color: #fff; }
 .scene-detail-nav .nav-title { font-size: 18px; font-weight: 700; flex: 1; text-align: center; }
 .scene-detail-nav .nav-pager { display: flex; gap: 10px; }
 .scene-detail-nav .pager-btn { padding: 8px 14px; border-radius: 10px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.7); font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid rgba(255,255,255,.08); transition: all var(--transition); }
@@ -559,6 +561,9 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .inc-card-cta { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #60a5fa; transition: all .2s; }
 .inc-card:hover .inc-card-cta { gap: 10px; color: #93c5fd; }
 .inc-card-cta::after { content: '→'; }
+.inc-card-cta.no-arrow { color: rgba(255,255,255,.5); }
+.inc-card-cta.no-arrow::after { display: none; }
+.inc-card:hover .inc-card-cta.no-arrow { color: rgba(255,255,255,.65); }
 
 @media (max-width: 768px) { .inc-section { padding: 30px 16px 35px; } .inc-title { font-size: 24px; } .inc-card { padding: 24px 20px; } .inc-card-title { font-size: 18px; } .arch-sub, .inc-sub { white-space: normal; text-overflow: clip; } .inc-action { white-space: normal; font-size: 12px; } }
 
@@ -592,6 +597,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 
 <div class="scene-detail-nav">
   <a href="index.html" class="back-btn">← 返回首页</a>
+  <a href="index.html#ai-arch" class="back-btn">返回</a>
   <div class="nav-title">📈 机会点增量</div>
   <div class="nav-pager"><span class="pager-btn disabled">← 上一场景</span><a href="scene-2.html" class="pager-btn">下一场景 →</a></div>
 </div>
