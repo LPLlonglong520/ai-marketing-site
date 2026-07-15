@@ -597,10 +597,19 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 
 <div class="scene-detail-nav">
   <a href="index.html" class="back-btn">← 返回首页</a>
-  <a href="index.html#ai-arch" class="back-btn">返回</a>
+  <a href="index.html#landing-scenes" class="back-btn back-to-module">返回</a>
   <div class="nav-title">📋 招投标</div>
   <div class="nav-pager"><a href="scene-3.html" class="pager-btn">← 上一场景</a><a href="scene-5.html" class="pager-btn">下一场景 →</a></div>
 </div>
+<script>
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var back = document.querySelector('.back-to-module');
+  if (back && params.get('from') === 'ai-arch') {
+    back.href = 'index.html#ai-arch';
+  }
+})();
+</script>
 
 <div class="detail-wrap">
 <div class="scene-timeline-item" id="scene-bid">

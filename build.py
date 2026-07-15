@@ -1396,18 +1396,32 @@ def build_arch_section():
         }
     ]
 
+    def with_source(link):
+        if not link:
+            return link
+        if '?' in link:
+            if '#' in link:
+                base_q, frag = link.split('#', 1)
+                return f'{base_q}&from=ai-arch#{frag}'
+            return f'{link}&from=ai-arch'
+        if '#' in link:
+            base, frag = link.split('#', 1)
+            return f'{base}?from=ai-arch#{frag}'
+        return f'{link}?from=ai-arch'
+
     cards_html = ''
     for d in dimensions:
         apps_html = ''
         for app_name, app_link in d['apps']:
             if app_link:
-                apps_html += f'<div class="ac-app"><span class="ac-app-dot"></span><a href="{app_link}" class="ac-app-link">{app_name}</a></div>\n'
+                apps_html += f'<div class="ac-app"><span class="ac-app-dot"></span><a href="{with_source(app_link)}" class="ac-app-link">{app_name}</a></div>\n'
             else:
                 apps_html += f'<div class="ac-app"><span class="ac-app-dot"></span>{app_name}</div>\n'
 
         if d.get('card_link'):
+            card_link = with_source(d['card_link'])
             cards_html += (
-                f'<a href="{d["card_link"]}" class="arch-card arch-card-linkable" data-color="{d["color"]}">\n'
+                f'<a href="{card_link}" class="arch-card arch-card-linkable" data-color="{d["color"]}">\n'
                 f'  <div class="arch-card-top">\n'
                 f'    <div class="ac-icon">{d["icon"]}</div>\n'
                 f'    <div>\n'
@@ -1632,7 +1646,7 @@ def build_home(data):
         )
 
     cards_section = (
-        '<section class="landing-section">\n'
+        '<section class="landing-section" id="landing-scenes">\n'
         '  <div class="landing-inner">\n'
         '    <div class="landing-title">六大场景，<em>全面覆盖</em></div>\n'
         '    <div class="landing-sub">点击卡片深入了解每个场景的具体应用与操作</div>\n'
@@ -1668,10 +1682,19 @@ def build_scene_page(data, scene, prev_scene=None, next_scene=None):
 
     detail_nav = f'''<div class="scene-detail-nav">
   <a href="index.html" class="back-btn">← 返回首页</a>
-  <a href="index.html#ai-arch" class="back-btn">返回</a>
+  <a href="index.html#landing-scenes" class="back-btn back-to-module">返回</a>
   <div class="nav-title">{scene.get("icon","")} {scene.get("title","")}</div>
   <div class="nav-pager">{prev_link}{next_link}</div>
-</div>'''
+</div>
+<script>
+(function() {{
+  var params = new URLSearchParams(window.location.search);
+  var back = document.querySelector('.back-to-module');
+  if (back && params.get('from') === 'ai-arch') {{
+    back.href = 'index.html#ai-arch';
+  }}
+}})();
+</script>'''
 
     scene_html = render_scene(data, scene)
 
