@@ -345,6 +345,7 @@ nav.scrolled { box-shadow:0 1px 12px rgba(0,0,0,.06); }
 .hero-logo-dept { font-size:18px; color:rgba(255,255,255,.45); font-weight:500; letter-spacing:.8px; }
 .hero h1 em { background:linear-gradient(135deg,#5eead4,#818cf8,#60a5fa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-style:normal; }
 .hero-sub { font-size:16px; color:rgba(255,255,255,.5); margin:0 auto 36px; max-width:640px; line-height:1.75; }
+.hero-action { font-size:15px; color:#60a5fa; margin:-22px auto 0; max-width:760px; line-height:1.7; font-weight:500; letter-spacing:.2px; text-shadow:0 0 24px rgba(96,165,250,.35); }
 .hero-incentive-divider { width:80px; height:1px; background:rgba(255,255,255,.12); border-radius:1px; margin:44px auto 28px; }
 .hero-incentive-label { text-align:center; font-size:24px; font-weight:900; background:linear-gradient(135deg,#fbbf24,#f59e0b,#fb923c); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:4px; margin-bottom:24px; }
 .hero-incentives-row { display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-top:0; }
@@ -549,6 +550,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   .hero-logo-dept { font-size:14px; }
   .hero h1 { font-size:26px; }
   .hero-sub { font-size:13px; max-width:100%; }
+  .hero-action { font-size:12px; max-width:100%; margin-top:-18px; padding:0 8px; }
   .hero-card { width:calc(50% - 8px); padding:16px 10px; border-radius:16px; }
   .hero-card .hc-icon { font-size:30px; }
   .hero-card .hc-name { font-size:13px; }
@@ -1453,12 +1455,15 @@ def build_home(data):
   <div class="nav-right">{g.get('页脚部门','营销中心综合管理部')}</div>
 </nav>'''
 
+    action_html = f'<p class="hero-action">{g.get("Hero行动信息","")}</p>' if g.get('Hero行动信息') else ''
+
     hero = f'''<section class="hero" id="hero" style="min-height:auto;padding:120px 40px 40px;">
   <div class="hero-bg-circles"><span></span><span></span><span></span></div>
   <div class="hero-inner">
     <div class="hero-logo-row"><img class="hero-logo-img" src="{logo}" alt="安恒信息"><div class="hero-logo-dept">营销中心 · 综合管理部</div></div>
     <h1>{g.get('Hero大标题','AI赋能营销')}<br><em>{g.get('Hero副标题','让每一线都更强')}</em></h1>
     <p class="hero-sub">{g.get('Hero描述','')}</p>
+{action_html}
   </div>
 </section>'''
 
