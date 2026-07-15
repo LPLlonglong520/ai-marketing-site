@@ -756,6 +756,103 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   .scene-detail-nav .pager-btn { font-size: 12px; padding: 6px 10px; }
   .detail-wrap { padding: 0 14px 40px; }
 }
+
+/* ═══════════ 营销+AI 业务架构section ═══════════ */
+.arch-section { background: linear-gradient(180deg, #060f25 0%, #0a1638 60%, #070e2a 100%); padding: 100px 28px 110px; position: relative; overflow: hidden; }
+.arch-section::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse 70% 50% at 50% 30%, rgba(91,63,212,.08) 0%, transparent 70%); pointer-events:none; }
+.arch-section::after { content:''; position:absolute; inset:0; background-image: radial-gradient(circle at 1px 1px, rgba(99,140,230,.06) 1px, transparent 0); background-size: 28px 28px; pointer-events:none; }
+.arch-inner { max-width: 1180px; margin: 0 auto; position: relative; z-index: 1; }
+.arch-title { text-align: center; font-size: 38px; font-weight: 900; color: #fff; margin-bottom: 12px; letter-spacing: -.5px; }
+.arch-title .at-pill { display: inline-block; padding: 2px 18px; margin: 0 6px; border-radius: 14px; background: linear-gradient(135deg, #5eead4 0%, #818cf8 50%, #60a5fa 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.arch-sub { text-align: center; font-size: 16px; color: rgba(255,255,255,.6); margin-bottom: 64px; max-width: 720px; margin-left:auto; margin-right:auto; line-height: 1.8; }
+.arch-sub strong { color: #5eead4; font-weight: 700; }
+
+/* 中心Hub */
+.arch-hub-wrap { display: flex; justify-content: center; margin-bottom: 50px; position: relative; }
+.arch-hub { position: relative; padding: 28px 56px; border-radius: 28px; background: linear-gradient(135deg, #0d2550 0%, #1a3d6e 100%); border: 1px solid rgba(99,140,230,.35); box-shadow: 0 0 0 1px rgba(94,234,212,.1), 0 12px 56px rgba(13,37,80,.6), 0 0 80px rgba(99,140,230,.15); }
+.arch-hub::before { content: ''; position: absolute; inset: -2px; border-radius: 30px; background: linear-gradient(135deg, rgba(94,234,212,.4), rgba(129,140,248,.4), rgba(96,165,250,.4)); z-index: -1; filter: blur(12px); opacity: .35; }
+.arch-hub-icon { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); width: 56px; height: 56px; border-radius: 16px; background: linear-gradient(135deg, #5eead4 0%, #818cf8 50%, #60a5fa 100%); display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 8px 24px rgba(99,140,230,.4); }
+.arch-hub-text { font-size: 28px; font-weight: 900; color: #fff; letter-spacing: 2px; line-height: 1.2; text-align: center; }
+.arch-hub-sub { font-size: 12px; color: rgba(255,255,255,.55); margin-top: 6px; letter-spacing: 4px; text-align: center; }
+.arch-hub-decor { position: absolute; width: 12px; height: 12px; border-radius: 50%; background: #5eead4; box-shadow: 0 0 12px #5eead4; }
+.arch-hub-decor.d1 { top: 10px; left: -6px; animation: archpulse 2.5s ease-in-out infinite; }
+.arch-hub-decor.d2 { top: 10px; right: -6px; background: #818cf8; box-shadow: 0 0 12px #818cf8; animation: archpulse 2.5s ease-in-out infinite .8s; }
+.arch-hub-decor.d3 { bottom: 10px; left: -6px; background: #60a5fa; box-shadow: 0 0 12px #60a5fa; animation: archpulse 2.5s ease-in-out infinite 1.6s; }
+.arch-hub-decor.d4 { bottom: 10px; right: -6px; background: #c084fc; box-shadow: 0 0 12px #c084fc; animation: archpulse 2.5s ease-in-out infinite 1.2s; }
+@keyframes archpulse { 0%,100% { transform: scale(1); opacity: .7 } 50% { transform: scale(1.4); opacity: 1 } }
+
+/* 4维卡片网格 */
+.arch-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; position: relative; }
+.arch-grid::before { content: ''; position: absolute; top: -28px; left: 12.5%; right: 12.5%; height: 1px; background: linear-gradient(90deg, transparent 0%, rgba(99,140,230,.4) 25%, rgba(99,140,230,.4) 75%, transparent 100%); }
+.arch-grid::after { content: ''; position: absolute; top: -32px; left: 50%; transform: translateX(-50%); width: 12px; height: 12px; border-radius: 50%; background: #5eead4; box-shadow: 0 0 16px #5eead4; }
+.arch-card { background: linear-gradient(165deg, rgba(15,43,92,.85) 0%, rgba(26,58,118,.7) 100%); border: 1px solid rgba(255,255,255,.08); border-radius: 22px; padding: 28px 24px 24px; position: relative; transition: all var(--transition); overflow: hidden; }
+.arch-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.arch-card:hover { transform: translateY(-6px); border-color: rgba(99,162,255,.3); box-shadow: 0 20px 56px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,255,.06); }
+.arch-card[data-color="blue"]::before { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+.arch-card[data-color="purple"]::before { background: linear-gradient(90deg, #8b5cf6, #c084fc); }
+.arch-card[data-color="orange"]::before { background: linear-gradient(90deg, #f59e0b, #fb923c); }
+.arch-card[data-color="teal"]::before { background: linear-gradient(90deg, #10b981, #5eead4); }
+.arch-card[data-color="blue"] .ac-icon { background: linear-gradient(135deg, #1e40af, #3b82f6); }
+.arch-card[data-color="purple"] .ac-icon { background: linear-gradient(135deg, #6d28d9, #8b5cf6); }
+.arch-card[data-color="orange"] .ac-icon { background: linear-gradient(135deg, #d97706, #f59e0b); }
+.arch-card[data-color="teal"] .ac-icon { background: linear-gradient(135deg, #047857, #10b981); }
+.arch-card-top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.ac-icon { width: 44px; height: 44px; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+.ac-name { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: -.2px; }
+.ac-en { font-size: 11px; color: rgba(255,255,255,.4); font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; margin-top: 2px; }
+.ac-desc { font-size: 12px; color: rgba(255,255,255,.55); line-height: 1.7; margin-bottom: 16px; min-height: 50px; }
+.ac-divider { height: 1px; background: rgba(255,255,255,.06); margin: 14px 0 14px; }
+.ac-divider-label { font-size: 11px; color: rgba(255,255,255,.35); font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; }
+.ac-apps { display: flex; flex-direction: column; gap: 8px; }
+.ac-app { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.05); font-size: 12px; color: rgba(255,255,255,.78); transition: all .2s; }
+.ac-app:hover { background: rgba(99,162,255,.1); border-color: rgba(99,162,255,.2); color: #fff; }
+.ac-app-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.arch-card[data-color="blue"] .ac-app-dot { background: #60a5fa; box-shadow: 0 0 6px #60a5fa; }
+.arch-card[data-color="purple"] .ac-app-dot { background: #c084fc; box-shadow: 0 0 6px #c084fc; }
+.arch-card[data-color="orange"] .ac-app-dot { background: #fb923c; box-shadow: 0 0 6px #fb923c; }
+.arch-card[data-color="teal"] .ac-app-dot { background: #5eead4; box-shadow: 0 0 6px #5eead4; }
+
+@media (max-width: 900px) { .arch-grid { grid-template-columns: repeat(2, 1fr); } .arch-grid::before { display: none; } .arch-grid::after { display: none; } .arch-title { font-size: 28px; } .arch-sub { font-size: 14px; margin-bottom: 40px; } .arch-hub-text { font-size: 22px; } .arch-hub { padding: 22px 36px; } }
+@media (max-width: 560px) { .arch-grid { grid-template-columns: 1fr; } }
+
+/* ═══════════ 激励section（浅色大卡片）═══════════ */
+.inc-section { background: linear-gradient(180deg, #060f25 0%, #0a1638 50%, #0d1f52 100%); padding: 100px 28px 110px; position: relative; overflow: hidden; }
+.inc-section::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse 60% 50% at 50% 25%, rgba(245,158,11,.06) 0%, transparent 70%); pointer-events:none; }
+.inc-inner { max-width: 1120px; margin: 0 auto; position: relative; z-index: 1; }
+.inc-header { text-align: center; margin-bottom: 56px; }
+.inc-title { font-size: 32px; font-weight: 900; color: #fff; margin-bottom: 8px; letter-spacing: -.3px; }
+.inc-title em { background: linear-gradient(135deg, #fbbf24, #f59e0b, #fb923c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-style: normal; }
+.inc-sub { font-size: 15px; color: rgba(255,255,255,.55); max-width: 720px; margin: 0 auto; line-height: 1.8; }
+.inc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+@media (max-width: 900px) { .inc-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .inc-grid { grid-template-columns: 1fr; } }
+
+.inc-card { background: linear-gradient(145deg, rgba(15,43,92,.92), rgba(26,58,118,.78)); border: 1px solid rgba(255,255,255,.08); border-radius: 20px; padding: 32px 28px 28px; color: #fff; text-decoration: none; transition: all var(--transition); display: block; position: relative; overflow: hidden; }
+.inc-card::before { content:''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.inc-card[data-glow="gold"]::before { background: linear-gradient(90deg, #fbbf24, #f59e0b, #fb923c); }
+.inc-card[data-glow="blue"]::before { background: linear-gradient(90deg, #60a5fa, #818cf8); }
+.inc-card[data-glow="purple"]::before { background: linear-gradient(90deg, #a78bfa, #c084fc); }
+.inc-card:hover { transform: translateY(-6px); border-color: rgba(99,162,255,.3); box-shadow: 0 20px 56px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.06); }
+.inc-card-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 16px; box-shadow: 0 6px 18px rgba(0,0,0,.3); }
+.inc-card[data-glow="gold"] .inc-card-icon { background: linear-gradient(135deg, #d97706, #f59e0b); }
+.inc-card[data-glow="blue"] .inc-card-icon { background: linear-gradient(135deg, #1e40af, #3b82f6); }
+.inc-card[data-glow="purple"] .inc-card-icon { background: linear-gradient(135deg, #6d28d9, #8b5cf6); }
+.inc-card-title { font-size: 22px; font-weight: 800; margin-bottom: 4px; letter-spacing: -.2px; }
+.inc-card-en { font-size: 11px; color: rgba(255,255,255,.4); font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 14px; }
+.inc-card-desc { font-size: 13px; color: rgba(255,255,255,.65); line-height: 1.75; margin-bottom: 20px; min-height: 50px; }
+.inc-card-stats { display: flex; gap: 16px; padding: 14px 0; border-top: 1px solid rgba(255,255,255,.06); border-bottom: 1px solid rgba(255,255,255,.06); margin-bottom: 16px; }
+.inc-stat-num { font-size: 22px; font-weight: 900; line-height: 1.1; }
+.inc-card[data-glow="gold"] .inc-stat-num { color: #fbbf24; }
+.inc-card[data-glow="blue"] .inc-stat-num { color: #60a5fa; }
+.inc-card[data-glow="purple"] .inc-stat-num { color: #c084fc; }
+.inc-stat-label { font-size: 11px; color: rgba(255,255,255,.5); margin-top: 2px; }
+.inc-card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.inc-card-tag { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; background: rgba(255,255,255,.06); color: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.05); }
+.inc-card-cta { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #60a5fa; transition: all .2s; }
+.inc-card:hover .inc-card-cta { gap: 10px; color: #93c5fd; }
+.inc-card-cta::after { content: '→'; }
+
+@media (max-width: 768px) { .inc-section { padding: 60px 16px 70px; } .inc-title { font-size: 24px; } .inc-card { padding: 24px 20px; } .inc-card-title { font-size: 18px; } }
 </style>'''
 
 
@@ -1205,6 +1302,150 @@ def render_scene(data, scene):
 </div>'''
 
 
+def build_arch_section():
+    """营销+AI 业务架构section：中央Hub + 4个维度分支"""
+    dimensions = [
+        {
+            'color': 'blue', 'icon': '🚀', 'name': '增量', 'en': 'GROWTH',
+            'desc': '找机会、扩市场、挖增量——AI让每一个商机都不被错过。',
+            'apps': ['市场分析平台', '标讯运营', '市场报告', '标讯AI分析', '客户画像', 'AI对练']
+        },
+        {
+            'color': 'purple', 'icon': '✨', 'name': '质量', 'en': 'QUALITY',
+            'desc': '提品质、控风险、保交付——AI让每一份方案都专业可靠。',
+            'apps': ['营销AI小秘', '行销数字员工', '渠道专版', '招投标AI', '参数评估']
+        },
+        {
+            'color': 'orange', 'icon': '⚡', 'name': '能效', 'en': 'EFFICIENCY',
+            'desc': '省时间、降成本、提人效——AI让每一个流程都快人一步。',
+            'apps': ['知识助手', 'Skill共享', 'AI对练', '智能问答', '自动报告']
+        },
+        {
+            'color': 'teal', 'icon': '🛠️', 'name': '管理', 'en': 'MANAGEMENT',
+            'desc': '聚资源、统入口、促协同——AI让每一次管理都心中有数。',
+            'apps': ['营销数字员工', 'Skill共享平台', '统一入口', '整合资源', '持续迭代']
+        }
+    ]
+
+    cards_html = ''
+    for d in dimensions:
+        apps_html = ''.join(
+            f'<div class="ac-app"><span class="ac-app-dot"></span>{app}</div>'
+            for app in d['apps']
+        )
+        cards_html += (
+            f'<div class="arch-card" data-color="{d["color"]}">\n'
+            f'  <div class="arch-card-top">\n'
+            f'    <div class="ac-icon">{d["icon"]}</div>\n'
+            f'    <div>\n'
+            f'      <div class="ac-name">{d["name"]}</div>\n'
+            f'      <div class="ac-en">{d["en"]}</div>\n'
+            f'    </div>\n'
+            f'  </div>\n'
+            f'  <div class="ac-desc">{d["desc"]}</div>\n'
+            f'  <div class="ac-divider"></div>\n'
+            f'  <div class="ac-divider-label">AI 应用</div>\n'
+            f'  <div class="ac-apps">\n'
+            f'{apps_html}\n'
+            f'  </div>\n'
+            f'</div>\n'
+        )
+
+    return (
+        '<section class="arch-section">\n'
+        '  <div class="arch-inner">\n'
+        '    <div class="arch-title">\n'
+        '      <span class="at-pill">营销 + AI</span>\n'
+        '    </div>\n'
+        '    <div class="arch-sub">\n'
+        '      围绕提升<strong>增量、质量、能效、管理</strong>四大目标<br>\n'
+        '      设计营销AI应用，<strong>赋能全链路营销业务</strong>\n'
+        '    </div>\n'
+        '    <div class="arch-hub-wrap">\n'
+        '      <div class="arch-hub">\n'
+        '        <span class="arch-hub-decor d1"></span>\n'
+        '        <span class="arch-hub-decor d2"></span>\n'
+        '        <span class="arch-hub-decor d3"></span>\n'
+        '        <span class="arch-hub-decor d4"></span>\n'
+        '        <div class="arch-hub-icon">🤖</div>\n'
+        '        <div class="arch-hub-text">营销 AI 应用矩阵</div>\n'
+        '        <div class="arch-hub-sub">MARKETING × AI</div>\n'
+        '      </div>\n'
+        '    </div>\n'
+        '    <div class="arch-grid">\n'
+        + cards_html +
+        '    </div>\n'
+        '  </div>\n'
+        '</section>'
+    )
+
+
+def build_incentive_section():
+    """激励section：3张大卡片（与6场景卡片同尺寸）"""
+    cards = [
+        {
+            'glow': 'gold', 'icon': '🏆', 'title': '10W专项激励', 'en': 'SPECIAL AWARD',
+            'desc': '针对AI应用有突出贡献的个人/团队，提供10万元专项激励基金，授予年度AI应用先锋荣誉。',
+            'stats': [('10W', '专项基金'), ('年度', '评优周期')],
+            'tags': ['突出贡献', '先锋团队', '专项基金'],
+            'link': 'https://365.kdocs.cn/l/cqQpJWaDnycr', 'link_text': '查看激励详情'
+        },
+        {
+            'glow': 'blue', 'icon': '📅', 'title': '常态化月度激励', 'en': 'MONTHLY AWARD',
+            'desc': '每月评选AI应用之星，月度公示、月度激励，让AI使用习惯持续渗透到每一个一线团队。',
+            'stats': [('月度', '评选节奏'), ('全员', '参与范围')],
+            'tags': ['月度之星', '持续激励', '全员覆盖'],
+            'link': 'https://ah-marketing-2026.github.io/honor/', 'link_text': '查看荣誉榜单'
+        },
+        {
+            'glow': 'purple', 'icon': '🎯', 'title': '年底综合激励', 'en': 'YEAR-END AWARD',
+            'desc': '年底综合评定，AI应用标杆团队/个人额外奖励，颁发年度AI赋能营销奖项，纳入绩效考核。',
+            'stats': [('年度', '综合评优'), ('标杆', '示范效应')],
+            'tags': ['年度评优', '绩效加分', '示范标杆'],
+            'link': '#', 'link_text': '敬请期待'
+        }
+    ]
+
+    cards_html = ''
+    for c in cards:
+        stats_html = ''.join(
+            f'<div><div class="inc-stat-num">{n}</div><div class="inc-stat-label">{l}</div></div>'
+            for n, l in c['stats']
+        )
+        tags_html = ''.join(
+            f'<span class="inc-card-tag">{t}</span>' for t in c['tags']
+        )
+        cta_html = f'<div class="inc-card-cta">{c["link_text"]}</div>'
+        cards_html += (
+            f'<a href="{c["link"]}" target="_blank" class="inc-card" data-glow="{c["glow"]}">\n'
+            f'  <div class="inc-card-icon">{c["icon"]}</div>\n'
+            f'  <div class="inc-card-title">{c["title"]}</div>\n'
+            f'  <div class="inc-card-en">{c["en"]}</div>\n'
+            f'  <div class="inc-card-desc">{c["desc"]}</div>\n'
+            f'  <div class="inc-card-stats">{stats_html}</div>\n'
+            f'  <div class="inc-card-tags">{tags_html}</div>\n'
+            f'  {cta_html}\n'
+            f'</a>\n'
+        )
+
+    return (
+        '<section class="inc-section">\n'
+        '  <div class="inc-inner">\n'
+        '    <div class="inc-header">\n'
+        '      <div class="inc-title">积极使用 AI，更有 <em>丰厚激励</em> 等你拿</div>\n'
+        '      <div class="inc-sub">\n'
+        '        积极使用AI工具，主动反馈优化建议，甚至自建提效Skill——<br>\n'
+        '        优秀实践可获月度激励、专项大奖及年度荣誉！\n'
+        '      </div>\n'
+        '    </div>\n'
+        '    <div class="inc-grid">\n'
+        + cards_html +
+        '    </div>\n'
+        '  </div>\n'
+        '</section>'
+    )
+
+
 def build_home(data):
     """生成首页 index.html — Hero + 卡片网格"""
     g = data['global']
@@ -1215,27 +1456,12 @@ def build_home(data):
   <div class="nav-right">{g.get('页脚部门','营销中心综合管理部')}</div>
 </nav>'''
 
-    heroes_chars = ''
-    for h in data['heroes']:
-        heroes_chars += f'      <div class="hero-card"><div class="hc-icon">{h["avatar"]}</div><div class="hc-name">{h["name"]}</div><div class="hc-desc">{h["bubble"].replace("\\n","<br>")}</div></div>\n'
-
     hero = f'''<section class="hero" id="hero" style="min-height:auto;padding:120px 40px 80px;">
   <div class="hero-bg-circles"><span></span><span></span><span></span></div>
   <div class="hero-inner">
     <div class="hero-logo-row"><img class="hero-logo-img" src="{logo}" alt="安恒信息"><div class="hero-logo-dept">营销中心 · 综合管理部</div></div>
     <h1>{g.get('Hero大标题','AI赋能营销')}<br><em>{g.get('Hero副标题','让每一线都更强')}</em></h1>
     <p class="hero-sub">{g.get('Hero描述','')}</p>
-    <div class="hero-char-cards">
-{heroes_chars}
-    </div>
-    <div class="hero-incentive-divider"></div>
-    <div class="hero-incentive-label">✨ 激励 ✨</div>
-    <div class="hero-incentives-row">
-      <a href="https://ah-marketing-2026.github.io/honor/" target="_blank" class="hero-incentive-badge"><div class="hb-icon">📅</div><div class="hb-title">常态化月度</div><div class="hb-sub">月度AI应用激励</div><div class="hb-link">查看详情 →</div></a>
-      <a href="https://365.kdocs.cn/l/cqQpJWaDnycr" target="_blank" class="hero-incentive-badge"><div class="hb-icon">🏆</div><div class="hb-title">10W专项</div><div class="hb-sub">特别贡献激励</div><div class="hb-link">查看详情 →</div></a>
-      <div class="hero-incentive-badge"><div class="hb-icon">🎯</div><div class="hb-title">年底激励</div><div class="hb-sub">敬请期待</div></div>
-    </div>
-    <div class="hero-incentive-desc">积极使用AI工具，主动反馈优化建议，甚至自建提效Skill——优秀实践可获月度激励、专项大奖及年度荣誉！</div>
   </div>
 </section>'''
 
@@ -1289,7 +1515,9 @@ def build_home(data):
     )
 
     title = g.get('页面标题','AI赋能营销 · 营销中心综合管理部')
-    return '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1.0">\n<title>' + title + '</title>\n' + CSS + '\n</head>\n<body>\n<div id="prog"></div>\n\n' + nav + '\n\n' + hero + '\n\n' + cards_section + '\n\n' + footer + '\n\n<script>window.addEventListener(\'scroll\',()=>{const h=document.documentElement.scrollHeight-window.innerHeight;document.getElementById(\'prog\').style.width=(h>0?window.scrollY/h*100:0)+\'%\'});</script>\n</body>\n</html>'
+    arch_section = build_arch_section()
+    incentive_section = build_incentive_section()
+    return '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1.0">\n<title>' + title + '</title>\n' + CSS + '\n</head>\n<body>\n<div id="prog"></div>\n\n' + nav + '\n\n' + hero + '\n\n' + cards_section + '\n\n' + arch_section + '\n\n' + incentive_section + '\n\n' + footer + '\n\n<script>window.addEventListener(\'scroll\',()=>{const h=document.documentElement.scrollHeight-window.innerHeight;document.getElementById(\'prog\').style.width=(h>0?window.scrollY/h*100:0)+\'%\'});</script>\n</body>\n</html>'
 
 
 def build_scene_page(data, scene, prev_scene=None, next_scene=None):
