@@ -86,6 +86,51 @@ def parse_content(path):
         if pm: future['plan'] = pm.group(1).strip()
     data['future_plan'] = future
     
+    # ---- 激励模块 ----
+    inc = {'标题': '积极使用 AI，更有 丰厚激励 等你拿', '副标题': '积极使用AI工具，主动反馈优化建议，甚至自建提效Skill——优秀实践可获月度激励、专项大奖及年度荣誉！', 'cards': []}
+    inc_start = text.find('## 激励模块')
+    inc_end = text.find('## 未来规划') if text.find('## 未来规划') > inc_start else len(text)
+    if inc_start >= 0 and inc_end > inc_start:
+        inc_section = text[inc_start:inc_end]
+        # 提取模块标题/副标题
+        tbl_match = re.search(r'(\|.+\|\n)+', inc_section[:inc_section.find('### 激励1')] if '### 激励1' in inc_section else inc_section[:200])
+        if tbl_match:
+            for line in tbl_match.group().strip().split('\n'):
+                m = re.match(r'\|\s*(标题|副标题)\s*\|\s*(.+?)\s*\|', line)
+                if m:
+                    inc[m.group(1)] = m.group(2).strip()
+        # 提取各激励卡片
+        inc_card_blocks = re.split(r'\n### 激励\d+ · .+\n', inc_section)
+        inc_card_headers = re.findall(r'### 激励(\d+) · (.+)\n', inc_section)
+        for ci, (cid, cname) in enumerate(inc_card_headers):
+            cb = inc_card_blocks[ci + 1] if ci + 1 < len(inc_card_blocks) else ''
+            card = {'glow': 'gold', 'icon': '', 'title': cname.strip(), 'en': '', 'desc': '', 'stats': [], 'tags': [], 'link': '#', 'link_text': '敬请期待'}
+            # 中英文字段映射
+            field_map = {'光晕': 'glow', '图标': 'icon', '标题': 'title', '英文': 'en', '描述': 'desc', '链接': 'link', '链接文字': 'link_text'}
+            # 属性表
+            for line in cb.split('\n'):
+                m = re.match(r'\|\s*(光晕|图标|标题|英文|描述|链接|链接文字)\s*\|\s*(.+?)\s*\|', line)
+                if m:
+                    key = field_map.get(m.group(1), m.group(1))
+                    card[key] = m.group(2).strip()
+            # 重点词
+            kw_match = re.search(r'\*\*重点词\*\*\s*\n\n((?:\|.+\|\n)+)', cb)
+            if kw_match:
+                nums = []
+                labels = []
+                for line in kw_match.group(1).strip().split('\n'):
+                    m = re.match(r'\|\s*(.+?)\s*\|\s*(.+?)\s*\|', line)
+                    if m and m.group(1).strip() not in ('数字', '') and not m.group(1).strip().startswith('--'):
+                        nums.append(m.group(1).strip())
+                        labels.append(m.group(2).strip())
+                card['stats'] = list(zip(nums, labels))
+            # 标签
+            tags_match = re.search(r'\*\*标签\*\*\s*\n\n(.+)', cb)
+            if tags_match:
+                card['tags'] = [t.strip() for t in tags_match.group(1).strip().split('、') if t.strip()]
+            inc['cards'].append(card)
+    data['incentive'] = inc
+    
     # ---- 场景拆分 ----
     scene_blocks = re.split(r'\n## 场景\d+ · .+\n', text)
     scene_headers = re.findall(r'## 场景(\d+) · (.+)\n', text)
@@ -94,7 +139,7 @@ def parse_content(path):
         snum = int(snum_str)
         block = scene_blocks[idx + 1] if idx + 1 < len(scene_blocks) else ''
         # 截掉未来规划、点赞评论模块和漫画角色，避免串到场景解析中
-        tail = re.search(r'\n## (?:未来规划|点赞评论模块|漫画角色)', block)
+        tail = re.search(r'\n## (?:激励模块|未来规划|点赞评论模块|漫画角色)', block)
         if tail:
             block = block[:tail.start()]
         
@@ -1408,11 +1453,16 @@ def build_arch_section():
 
 
 def build_incentive_section(data=None):
-    """激励section：3张大卡片（与6场景卡片同尺寸）+ 底部行动信息"""
+    """激励section：3张大卡片（与6场景卡片同尺寸）+ 底部行动信息 — 从content.md读取配置"""
     action_text = ''
     if data and data.get('global', {}).get('Hero行动信息'):
         action_text = data['global']['Hero行动信息']
-    cards = [
+    
+    # 从 data['incentive'] 读取，fallback到硬编码
+    inc_data = data.get('incentive', {}) if data else {}
+    inc_title = inc_data.get('标题', '积极使用 AI，更有 丰厚激励 等你拿')
+    inc_sub = inc_data.get('副标题', '积极使用AI工具，主动反馈优化建议，甚至自建提效Skill——优秀实践可获月度激励、专项大奖及年度荣誉！')
+    cards = inc_data.get('cards', [
         {
             'glow': 'gold', 'icon': '🏆', 'title': '10W专项激励', 'en': 'SPECIAL AWARD',
             'desc': '针对AI应用有突出贡献的个人/团队，提供10万元专项激励基金，授予年度AI应用先锋荣誉。',
@@ -1434,7 +1484,7 @@ def build_incentive_section(data=None):
             'tags': ['年度评优', '绩效加分', '示范标杆'],
             'link': '#', 'link_text': '敬请期待'
         }
-    ]
+    ])
 
     cards_html = ''
     for c in cards:
@@ -1464,8 +1514,8 @@ def build_incentive_section(data=None):
         '<section class="inc-section">\n'
         '  <div class="inc-inner">\n'
         '    <div class="inc-header">\n'
-        '      <div class="inc-title">积极使用 AI，更有 <em>丰厚激励</em> 等你拿</div>\n'
-        '      <div class="inc-sub">积极使用AI工具，主动反馈优化建议，甚至自建提效Skill——优秀实践可获月度激励、专项大奖及年度荣誉！</div>\n'
+        f'      <div class="inc-title">{inc_title}</div>\n'
+        f'      <div class="inc-sub">{inc_sub}</div>\n'
         '    </div>\n'
         '    <div class="inc-grid">\n'
         + cards_html +
