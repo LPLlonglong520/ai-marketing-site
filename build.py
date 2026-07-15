@@ -1303,27 +1303,27 @@ def render_scene(data, scene):
 
 
 def build_arch_section():
-    """营销+AI 业务架构section：中央Hub + 4个维度分支"""
+    """营销+AI 业务架构section：中央Hub + 4个维度分支（按PPT 1:1文案）"""
     dimensions = [
         {
-            'color': 'blue', 'icon': '🚀', 'name': '增量', 'en': 'GROWTH',
-            'desc': '找机会、扩市场、挖增量——AI让每一个商机都不被错过。',
-            'apps': ['市场分析平台', '标讯运营', '市场报告', '标讯AI分析', '客户画像', 'AI对练']
+            'color': 'blue', 'icon': '🚀', 'name': '抓增量', 'en': 'GROWTH',
+            'desc': '看清市场空间、数据驱动作战',
+            'apps': ['市场空间报告', '标讯推送', '......']
         },
         {
-            'color': 'purple', 'icon': '✨', 'name': '质量', 'en': 'QUALITY',
-            'desc': '提品质、控风险、保交付——AI让每一份方案都专业可靠。',
-            'apps': ['营销AI小秘', '行销数字员工', '渠道专版', '招投标AI', '参数评估']
+            'color': 'purple', 'icon': '✨', 'name': '抓质量', 'en': 'QUALITY',
+            'desc': '提升拜访、招投标方案质量',
+            'apps': ['AI对练', '标书制作及检查', '......']
         },
         {
-            'color': 'orange', 'icon': '⚡', 'name': '能效', 'en': 'EFFICIENCY',
-            'desc': '省时间、降成本、提人效——AI让每一个流程都快人一步。',
-            'apps': ['知识助手', 'Skill共享', 'AI对练', '智能问答', '自动报告']
+            'color': 'orange', 'icon': '⚡', 'name': '提能效', 'en': 'EFFICIENCY',
+            'desc': '整合行销能力，全面搜集客户信息',
+            'apps': ['行销数字员工', '客户画像', '......']
         },
         {
-            'color': 'teal', 'icon': '🛠️', 'name': '管理', 'en': 'MANAGEMENT',
-            'desc': '聚资源、统入口、促协同——AI让每一次管理都心中有数。',
-            'apps': ['营销数字员工', 'Skill共享平台', '统一入口', '整合资源', '持续迭代']
+            'color': 'teal', 'icon': '🛠️', 'name': '助管理', 'en': 'MANAGEMENT',
+            'desc': '辅助管理决策、业务关键信息查询',
+            'apps': ['营销AI小秘', '查企业、查价格', '......']
         }
     ]
 
