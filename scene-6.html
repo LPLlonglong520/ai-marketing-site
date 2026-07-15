@@ -419,7 +419,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   .fb-comment-form input { flex:1; }
 }
 /* ═══════════ 首页卡片网格（Landing Cards）═══════════ */
-.landing-section { background: linear-gradient(180deg, #070e2a 0%, #0a1638 40%, #0d1f52 100%); padding: 40px 28px 50px; position: relative; overflow: hidden; }
+.landing-section { background: linear-gradient(180deg, #070e2a 0%, #0a1638 40%, #0d1f52 100%); padding: 28px 28px 50px; position: relative; overflow: hidden; }
 .landing-section::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse 60% 50% at 50% 20%, rgba(59,130,246,.06) 0%, transparent 70%); pointer-events:none; }
 .landing-inner { max-width: 1120px; margin: 0 auto; position: relative; z-index: 1; }
 .landing-title { text-align: center; font-size: 32px; font-weight: 900; color: #fff; margin-bottom: 8px; letter-spacing: -.3px; }
@@ -531,6 +531,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .inc-title em { background: linear-gradient(135deg, #fbbf24, #f59e0b, #fb923c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-style: normal; }
 .inc-sub { font-size: 15px; color: rgba(255,255,255,.6); max-width: 100%; line-height: 1.5; padding: 0 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .inc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.inc-action { text-align: center; margin-top: 32px; font-size: 14px; color: #60a5fa; font-weight: 500; letter-spacing: .2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0 24px rgba(96,165,250,.3); }
 @media (max-width: 900px) { .inc-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) { .inc-grid { grid-template-columns: 1fr; } }
 
@@ -559,7 +560,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .inc-card:hover .inc-card-cta { gap: 10px; color: #93c5fd; }
 .inc-card-cta::after { content: '→'; }
 
-@media (max-width: 768px) { .inc-section { padding: 30px 16px 35px; } .inc-title { font-size: 24px; } .inc-card { padding: 24px 20px; } .inc-card-title { font-size: 18px; } .arch-sub, .inc-sub { white-space: normal; text-overflow: clip; } }
+@media (max-width: 768px) { .inc-section { padding: 30px 16px 35px; } .inc-title { font-size: 24px; } .inc-card { padding: 24px 20px; } .inc-card-title { font-size: 18px; } .arch-sub, .inc-sub { white-space: normal; text-overflow: clip; } .inc-action { white-space: normal; font-size: 12px; } }
 </style>
 </head>
 <body>

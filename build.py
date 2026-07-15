@@ -702,7 +702,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   .fb-comment-form input { flex:1; }
 }
 /* ═══════════ 首页卡片网格（Landing Cards）═══════════ */
-.landing-section { background: linear-gradient(180deg, #070e2a 0%, #0a1638 40%, #0d1f52 100%); padding: 40px 28px 50px; position: relative; overflow: hidden; }
+.landing-section { background: linear-gradient(180deg, #070e2a 0%, #0a1638 40%, #0d1f52 100%); padding: 28px 28px 50px; position: relative; overflow: hidden; }
 .landing-section::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse 60% 50% at 50% 20%, rgba(59,130,246,.06) 0%, transparent 70%); pointer-events:none; }
 .landing-inner { max-width: 1120px; margin: 0 auto; position: relative; z-index: 1; }
 .landing-title { text-align: center; font-size: 32px; font-weight: 900; color: #fff; margin-bottom: 8px; letter-spacing: -.3px; }
@@ -814,6 +814,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .inc-title em { background: linear-gradient(135deg, #fbbf24, #f59e0b, #fb923c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-style: normal; }
 .inc-sub { font-size: 15px; color: rgba(255,255,255,.6); max-width: 100%; line-height: 1.5; padding: 0 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .inc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.inc-action { text-align: center; margin-top: 32px; font-size: 14px; color: #60a5fa; font-weight: 500; letter-spacing: .2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 0 24px rgba(96,165,250,.3); }
 @media (max-width: 900px) { .inc-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) { .inc-grid { grid-template-columns: 1fr; } }
 
@@ -842,7 +843,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .inc-card:hover .inc-card-cta { gap: 10px; color: #93c5fd; }
 .inc-card-cta::after { content: '→'; }
 
-@media (max-width: 768px) { .inc-section { padding: 30px 16px 35px; } .inc-title { font-size: 24px; } .inc-card { padding: 24px 20px; } .inc-card-title { font-size: 18px; } .arch-sub, .inc-sub { white-space: normal; text-overflow: clip; } }
+@media (max-width: 768px) { .inc-section { padding: 30px 16px 35px; } .inc-title { font-size: 24px; } .inc-card { padding: 24px 20px; } .inc-card-title { font-size: 18px; } .arch-sub, .inc-sub { white-space: normal; text-overflow: clip; } .inc-action { white-space: normal; font-size: 12px; } }
 </style>'''
 
 
@@ -1382,8 +1383,11 @@ def build_arch_section():
     )
 
 
-def build_incentive_section():
-    """激励section：3张大卡片（与6场景卡片同尺寸）"""
+def build_incentive_section(data=None):
+    """激励section：3张大卡片（与6场景卡片同尺寸）+ 底部行动信息"""
+    action_text = ''
+    if data and data.get('global', {}).get('Hero行动信息'):
+        action_text = data['global']['Hero行动信息']
     cards = [
         {
             'glow': 'gold', 'icon': '🏆', 'title': '10W专项激励', 'en': 'SPECIAL AWARD',
@@ -1430,6 +1434,8 @@ def build_incentive_section():
             f'</a>\n'
         )
 
+    action_line = f'    <div class="inc-action">{action_text}</div>\n' if action_text else ''
+
     return (
         '<section class="inc-section">\n'
         '  <div class="inc-inner">\n'
@@ -1440,6 +1446,7 @@ def build_incentive_section():
         '    <div class="inc-grid">\n'
         + cards_html +
         '    </div>\n'
+        + action_line +
         '  </div>\n'
         '</section>'
     )
@@ -1455,15 +1462,12 @@ def build_home(data):
   <div class="nav-right">{g.get('页脚部门','营销中心综合管理部')}</div>
 </nav>'''
 
-    action_html = f'<p class="hero-action">{g.get("Hero行动信息","")}</p>' if g.get('Hero行动信息') else ''
-
-    hero = f'''<section class="hero" id="hero" style="min-height:auto;padding:120px 40px 40px;">
+    hero = f'''<section class="hero" id="hero" style="min-height:auto;padding:120px 40px 24px;">
   <div class="hero-bg-circles"><span></span><span></span><span></span></div>
   <div class="hero-inner">
     <div class="hero-logo-row"><img class="hero-logo-img" src="{logo}" alt="安恒信息"><div class="hero-logo-dept">营销中心 · 综合管理部</div></div>
     <h1>{g.get('Hero大标题','AI赋能营销')}<br><em>{g.get('Hero副标题','让每一线都更强')}</em></h1>
     <p class="hero-sub">{g.get('Hero描述','')}</p>
-{action_html}
   </div>
 </section>'''
 
@@ -1518,7 +1522,7 @@ def build_home(data):
 
     title = g.get('页面标题','AI赋能营销 · 营销中心综合管理部')
     arch_section = build_arch_section()
-    incentive_section = build_incentive_section()
+    incentive_section = build_incentive_section(data)
     return '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1.0">\n<title>' + title + '</title>\n' + CSS + '\n</head>\n<body>\n<div id="prog"></div>\n\n' + nav + '\n\n' + hero + '\n\n' + cards_section + '\n\n' + arch_section + '\n\n' + incentive_section + '\n\n' + footer + '\n\n<script>window.addEventListener(\'scroll\',()=>{const h=document.documentElement.scrollHeight-window.innerHeight;document.getElementById(\'prog\').style.width=(h>0?window.scrollY/h*100:0)+\'%\'});</script>\n</body>\n</html>'
 
 
