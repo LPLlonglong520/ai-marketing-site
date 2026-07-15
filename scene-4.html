@@ -41,7 +41,7 @@ nav.scrolled { box-shadow:0 1px 12px rgba(0,0,0,.06); }
 .nav-tabs a.active { color:var(--blue); font-weight:600; background:var(--blue-l); }
 .nav-tabs a.active::after { width:24px; }
 .nav-right { font-size:12px; font-weight:600; color:var(--muted); background:var(--white); border:1px solid rgba(0,0,0,.06); padding:6px 16px; border-radius:24px; transition:all var(--transition); }
-.hero { min-height:100vh; padding:120px 40px 100px; background:linear-gradient(170deg,#070e2a 0%,#0d1f52 20%,#0f2b5c 42%,#0b2248 65%,#060f25 100%); display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+.hero { min-height:100vh; padding:120px 40px 50px; background:linear-gradient(170deg,#070e2a 0%,#0d1f52 20%,#0f2b5c 42%,#0b2248 65%,#060f25 100%); display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
 .hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 70% 50% at 50% 35%,rgba(59,130,246,.08) 0%,transparent 65%); pointer-events:none; }
 .hero-bg-circles { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
 .hero-bg-circles::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 60% 42% at 50% 28%, rgba(99,140,230,.12) 0%, transparent 70%); }
@@ -260,7 +260,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   .nav-tabs a { padding:5px 8px; font-size:12px; border-radius:14px; white-space:nowrap; flex-shrink:0; }
   .nav-right { display:none; }
 
-  .hero { padding:84px 16px 64px; min-height:auto; }
+  .hero { padding:84px 16px 32px; min-height:auto; }
   .hero-inner { padding:0 8px; animation:none; }
   .hero-logo-img { height:38px; }
   .hero-logo-dept { font-size:14px; }
@@ -417,12 +417,12 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   .fb-comment-form input { flex:1; }
 }
 /* ═══════════ 首页卡片网格（Landing Cards）═══════════ */
-.landing-section { background: linear-gradient(180deg, #070e2a 0%, #0a1638 40%, #0d1f52 100%); padding: 80px 28px 100px; position: relative; overflow: hidden; }
+.landing-section { background: linear-gradient(180deg, #070e2a 0%, #0a1638 40%, #0d1f52 100%); padding: 40px 28px 50px; position: relative; overflow: hidden; }
 .landing-section::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse 60% 50% at 50% 20%, rgba(59,130,246,.06) 0%, transparent 70%); pointer-events:none; }
 .landing-inner { max-width: 1120px; margin: 0 auto; position: relative; z-index: 1; }
 .landing-title { text-align: center; font-size: 32px; font-weight: 900; color: #fff; margin-bottom: 8px; letter-spacing: -.3px; }
 .landing-title em { background: linear-gradient(135deg, #5eead4, #818cf8, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-style: normal; }
-.landing-sub { text-align: center; font-size: 15px; color: rgba(255,255,255,.5); margin-bottom: 48px; }
+.landing-sub { text-align: center; font-size: 15px; color: rgba(255,255,255,.6); margin-bottom: 32px; line-height: 1.5; }
 .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 @media (max-width: 900px) { .cards-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) { .cards-grid { grid-template-columns: 1fr; } }
@@ -459,7 +459,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 
 /* 移动端适配 */
 @media (max-width: 768px) {
-  .landing-section { padding: 48px 16px 64px; }
+  .landing-section { padding: 24px 16px 32px; }
   .landing-title { font-size: 24px; }
   .landing-sub { font-size: 13px; margin-bottom: 32px; }
   .card-item { padding: 20px; border-radius: 16px; }
@@ -475,13 +475,13 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 }
 
 /* ═══════════ 营销+AI 业务架构section ═══════════ */
-.arch-section { background: linear-gradient(180deg, #060f25 0%, #0a1638 60%, #070e2a 100%); padding: 100px 28px 110px; position: relative; overflow: hidden; }
+.arch-section { background: linear-gradient(180deg, #060f25 0%, #0a1638 60%, #070e2a 100%); padding: 50px 28px 55px; position: relative; overflow: hidden; }
 .arch-section::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse 70% 50% at 50% 30%, rgba(91,63,212,.08) 0%, transparent 70%); pointer-events:none; }
 .arch-section::after { content:''; position:absolute; inset:0; background-image: radial-gradient(circle at 1px 1px, rgba(99,140,230,.06) 1px, transparent 0); background-size: 28px 28px; pointer-events:none; }
 .arch-inner { max-width: 1180px; margin: 0 auto; position: relative; z-index: 1; }
 .arch-title { text-align: center; font-size: 38px; font-weight: 900; color: #fff; margin-bottom: 12px; letter-spacing: -.5px; }
 .arch-title .at-pill { display: inline-block; padding: 2px 18px; margin: 0 6px; border-radius: 14px; background: linear-gradient(135deg, #5eead4 0%, #818cf8 50%, #60a5fa 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-.arch-sub { text-align: center; font-size: 16px; color: rgba(255,255,255,.6); margin-bottom: 64px; max-width: 720px; margin-left:auto; margin-right:auto; line-height: 1.8; }
+.arch-sub { text-align: center; font-size: 15px; color: rgba(255,255,255,.6); margin: 0 auto 32px; line-height: 1.5; max-width: 100%; padding: 0 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .arch-sub strong { color: #5eead4; font-weight: 700; }
 
 /* 中心Hub */
@@ -533,13 +533,13 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 @media (max-width: 560px) { .arch-grid { grid-template-columns: 1fr; } }
 
 /* ═══════════ 激励section（浅色大卡片）═══════════ */
-.inc-section { background: linear-gradient(180deg, #060f25 0%, #0a1638 50%, #0d1f52 100%); padding: 100px 28px 110px; position: relative; overflow: hidden; }
+.inc-section { background: linear-gradient(180deg, #060f25 0%, #0a1638 50%, #0d1f52 100%); padding: 50px 28px 55px; position: relative; overflow: hidden; }
 .inc-section::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse 60% 50% at 50% 25%, rgba(245,158,11,.06) 0%, transparent 70%); pointer-events:none; }
 .inc-inner { max-width: 1120px; margin: 0 auto; position: relative; z-index: 1; }
-.inc-header { text-align: center; margin-bottom: 56px; }
+.inc-header { text-align: center; margin-bottom: 32px; }
 .inc-title { font-size: 32px; font-weight: 900; color: #fff; margin-bottom: 8px; letter-spacing: -.3px; }
 .inc-title em { background: linear-gradient(135deg, #fbbf24, #f59e0b, #fb923c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-style: normal; }
-.inc-sub { font-size: 15px; color: rgba(255,255,255,.55); max-width: 720px; margin: 0 auto; line-height: 1.8; }
+.inc-sub { font-size: 15px; color: rgba(255,255,255,.6); max-width: 100%; line-height: 1.5; padding: 0 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .inc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 @media (max-width: 900px) { .inc-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) { .inc-grid { grid-template-columns: 1fr; } }
@@ -569,7 +569,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .inc-card:hover .inc-card-cta { gap: 10px; color: #93c5fd; }
 .inc-card-cta::after { content: '→'; }
 
-@media (max-width: 768px) { .inc-section { padding: 60px 16px 70px; } .inc-title { font-size: 24px; } .inc-card { padding: 24px 20px; } .inc-card-title { font-size: 18px; } }
+@media (max-width: 768px) { .inc-section { padding: 30px 16px 35px; } .inc-title { font-size: 24px; } .inc-card { padding: 24px 20px; } .inc-card-title { font-size: 18px; } .arch-sub, .inc-sub { white-space: normal; text-overflow: clip; } }
 </style>
 </head>
 <body>
