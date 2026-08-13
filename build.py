@@ -289,6 +289,8 @@ def parse_content(path):
                         elif k == '截图2说明':
                             if len(inc_data['images']) >= 2:
                                 inc_data['images'][-1]['caption'] = v
+                        elif k == '标题':
+                            inc_data['title'] = v
                         elif k.startswith('数据') and '数值' in k:
                             num = re.search(r'数据(\d+)', k)
                             if num:
@@ -985,10 +987,12 @@ def build_increment_board(increment_data):
         cap = img.get('caption', '')
         figures += f'<figure><img src="{img["src"]}" alt="">{"<figcaption>"+cap+"</figcaption>" if cap else ""}</figure>'
     
+    title = increment_data.get('title', '一线增量情况')
+    grid_style = 'grid-template-columns:repeat(2, 1fr);' if len(imgs) >= 2 else ''
+    
     return f'''      <div class="increment-board">
-        <div class="increment-title"><span class="ai-dot"></span>一线增量情况</div>
-        <div class="increment-gallery">{figures}</div>
-        <div class="increment-footer">增量情况</div>
+        <div class="increment-title"><span class="ai-dot"></span>{title}</div>
+        <div class="increment-gallery" style="{grid_style}">{figures}</div>
       </div>'''
 
 

@@ -83,9 +83,11 @@
 
 | 字段 | 值 |
 |------|-----|
-| 标题 | 一线增量情况 |
-| 截图1 | media/bid_increment_top5.png |
-| 截图1说明 | 📌 机会点运营 |
+| 标题 | 标讯运营 |
+| 截图1 | media/bid_analysis_board.png |
+| 截图1说明 | 📌 标讯运营分析 |
+| 截图2 | media/bid_increment_top5.png |
+| 截图2说明 | 📌 一线增量情况 |
 
 ---
 
