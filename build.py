@@ -14,8 +14,11 @@ if hasattr(sys.stdout, 'reconfigure'):
 
 def media_path(path):
     """Auto-upgrade image paths to .webp if a compressed version exists."""
-    if not path or not path.startswith('media/'):
+    if not path:
         return path
+    # 自动补 media/ 前缀
+    if not path.startswith('media/'):
+        path = 'media/' + path
     full = os.path.join(os.path.dirname(os.path.abspath(__file__)), path)
     base, ext = os.path.splitext(path)
     if ext.lower() in ('.png', '.jpeg', '.jpg'):

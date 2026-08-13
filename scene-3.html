@@ -179,6 +179,14 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .profile-preview-frame { width:100%; height:560px; border-radius:12px; overflow:hidden; border:1px solid rgba(0,0,0,.06); background:#fff; box-shadow:var(--shadow); }
 .profile-preview-frame iframe { width:100%; height:100%; border:none; }
 @media (max-width:768px) { .profile-preview { padding:0 16px 24px; } .profile-preview-frame { height:420px; } }
+/* ---- 运营报告长图预览 ---- */
+.report-preview { background:#f6f8fc; border-top:1px solid rgba(0,0,0,.05); padding:0 32px 28px; }
+.report-preview-label { display:flex; align-items:center; gap:10px; font-size:12px; font-weight:700; color:#5f6b7a; letter-spacing:.5px; padding:22px 0 14px; }
+.report-preview-label .pdot { width:9px;height:9px;border-radius:50%;background:#f59e0b; box-shadow:0 0 6px rgba(245,158,11,.4); }
+.report-preview-label .pbeta { font-size:9px; background:#fef3c7; color:#b45309; padding:3px 10px; border-radius:12px; font-weight:800; letter-spacing:1px; text-transform:uppercase; }
+.report-preview-frame { width:100%; max-height:620px; border-radius:12px; overflow-y:auto; overflow-x:hidden; border:1px solid rgba(0,0,0,.06); background:#fff; box-shadow:var(--shadow); }
+.report-preview-frame img { width:100%; display:block; }
+@media (max-width:768px) { .report-preview { padding:0 16px 24px; } .report-preview-frame { max-height:460px; } }
 /* ---- 截图画廊 ---- */
 .img-gallery { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; align-items:start; }
 .img-gallery.col5 { grid-template-columns:repeat(5,1fr); }
@@ -704,6 +712,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
       <div class="app-video-label"><span class="vdot"></span>应用演示视频</div>
       <div class="video-wrapper" data-video-src="media/proj_xiaomi.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'><rect fill='%230a0d14' width='16' height='9'/></svg>"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
     </div>
+    
       </div>
   <div class="app-block" id="app-s3-2">
     <div class="app-block-header">
@@ -737,6 +746,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
       <div class="app-video-label"><span class="vdot"></span>应用演示视频</div>
       <div class="video-wrapper" data-video-src="media/proj_digital.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'><rect fill='%230a0d14' width='16' height='9'/></svg>"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
     </div>
+    
       </div>
   </div>
 </div>
