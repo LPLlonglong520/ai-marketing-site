@@ -138,6 +138,11 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .path-tag .arr { color:var(--muted); margin:0 3px; }
 /* ---- 视频面板 ---- */
 .app-video-panel { background:#f6f8fc; padding:24px 32px 28px; border-top:1px solid rgba(0,0,0,.05); }
+.app-video-detail { background:#fff; padding:20px 32px; border-top:1px solid rgba(0,0,0,.04); }
+.app-video-detail-content { font-size:14px; line-height:1.8; color:var(--text); }
+.app-video-detail-content strong { color:var(--blue); font-size:15px; }
+.app-video-detail-content ul { margin:8px 0; padding-left:20px; }
+.app-video-detail-content li { margin:4px 0; color:#3a4a5c; }
 .app-video-label { display:flex; align-items:center; gap:10px; font-size:12px; font-weight:700; color:#5f6b7a; letter-spacing:.6px; text-transform:uppercase; margin-bottom:14px; }
 .app-video-label .vdot { width:9px;height:9px;border-radius:50%;background:#3b82f6; box-shadow:0 0 6px rgba(59,130,246,.4); }
 .video-wrapper { position:relative; width:100%; border-radius:12px; overflow:hidden; background:#0a0d14; box-shadow:0 3px 16px rgba(0,0,0,.06); transition:all var(--transition); }
@@ -176,6 +181,7 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 @media (max-width:768px) { .profile-preview { padding:0 16px 24px; } .profile-preview-frame { height:420px; } }
 /* ---- 截图画廊 ---- */
 .img-gallery { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; align-items:start; }
+.img-gallery.col5 { grid-template-columns:repeat(5,1fr); }
 .img-gallery.col2 { grid-template-columns:repeat(2,1fr); }
 .img-gallery.col1 { grid-template-columns:1fr; }
 .img-gallery figure { background:#fff; border-radius:12px; overflow:hidden; border:1px solid rgba(0,0,0,.06); margin:0; display:flex; flex-direction:column; height:100%; box-shadow:var(--shadow); transition:all var(--transition); }
@@ -336,7 +342,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   .video-wrapper video { max-height:240px; }
   .video-wrapper { min-height:200px; border-radius:10px; }
   .vp-icon { width:56px; height:56px; font-size:22px; }
-  .img-gallery,.img-gallery.col2,.img-gallery.col1 { grid-template-columns:1fr; gap:12px; }
+  .img-gallery,.img-gallery.col2,.img-gallery.col1,.img-gallery.col5 { grid-template-columns:1fr; gap:12px; }
   .img-gallery img { max-height:300px; }
 
   .profile-preview { padding:0 14px 20px; }

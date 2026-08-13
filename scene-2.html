@@ -138,6 +138,11 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .path-tag .arr { color:var(--muted); margin:0 3px; }
 /* ---- 视频面板 ---- */
 .app-video-panel { background:#f6f8fc; padding:24px 32px 28px; border-top:1px solid rgba(0,0,0,.05); }
+.app-video-detail { background:#fff; padding:20px 32px; border-top:1px solid rgba(0,0,0,.04); }
+.app-video-detail-content { font-size:14px; line-height:1.8; color:var(--text); }
+.app-video-detail-content strong { color:var(--blue); font-size:15px; }
+.app-video-detail-content ul { margin:8px 0; padding-left:20px; }
+.app-video-detail-content li { margin:4px 0; color:#3a4a5c; }
 .app-video-label { display:flex; align-items:center; gap:10px; font-size:12px; font-weight:700; color:#5f6b7a; letter-spacing:.6px; text-transform:uppercase; margin-bottom:14px; }
 .app-video-label .vdot { width:9px;height:9px;border-radius:50%;background:#3b82f6; box-shadow:0 0 6px rgba(59,130,246,.4); }
 .video-wrapper { position:relative; width:100%; border-radius:12px; overflow:hidden; background:#0a0d14; box-shadow:0 3px 16px rgba(0,0,0,.06); transition:all var(--transition); }
@@ -176,6 +181,7 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 @media (max-width:768px) { .profile-preview { padding:0 16px 24px; } .profile-preview-frame { height:420px; } }
 /* ---- 截图画廊 ---- */
 .img-gallery { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; align-items:start; }
+.img-gallery.col5 { grid-template-columns:repeat(5,1fr); }
 .img-gallery.col2 { grid-template-columns:repeat(2,1fr); }
 .img-gallery.col1 { grid-template-columns:1fr; }
 .img-gallery figure { background:#fff; border-radius:12px; overflow:hidden; border:1px solid rgba(0,0,0,.06); margin:0; display:flex; flex-direction:column; height:100%; box-shadow:var(--shadow); transition:all var(--transition); }
@@ -336,7 +342,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   .video-wrapper video { max-height:240px; }
   .video-wrapper { min-height:200px; border-radius:10px; }
   .vp-icon { width:56px; height:56px; font-size:22px; }
-  .img-gallery,.img-gallery.col2,.img-gallery.col1 { grid-template-columns:1fr; gap:12px; }
+  .img-gallery,.img-gallery.col2,.img-gallery.col1,.img-gallery.col5 { grid-template-columns:1fr; gap:12px; }
   .img-gallery img { max-height:300px; }
 
   .profile-preview { padding:0 14px 20px; }
@@ -695,12 +701,15 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
     <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot"></span>销售实战对练项目（含战略产品&行业方向）</div>
       <div class="video-wrapper" data-video-src="media/ai_train_video.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'><rect fill='%230a0d14' width='16' height='9'/></svg>"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
+    </div>    <div class="app-video-detail">
+      <div class="app-video-detail-content"><strong>销售实战对练项目（含战略产品&行业方向）</strong><br><br>★战略产品方向<br>同步2026AI实战大比武销售赛道对练的6门课程内容，已纳入销售新员工必修课程：<br>- AI基础入门：聊AI驱动安全<br>- 战略产品方向：AI+安全运营，AI+数据安全，高价值安全服务，商密应用，AI全域安全<br><br>★行业方向<br>包含电力、大数据局、企业、教育、金融等12个行业方向：<br>- 行业销售可选择对应行业对练进行演练学习<br>- 渠道销售可选择电力、教育、企业的行业对练进行学习</div>
     </div>    <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot" style="background:#38bdf8;"></span>应用演示截图</div>
-      <div class="img-gallery "><figure class="mobile-screenshot"><img src="media/image23.webp" alt=""><figcaption>📱 移动端-进入课程查看演练场景</figcaption></figure>
+      <div class="img-gallery col5"><figure class="mobile-screenshot"><img src="media/image23.webp" alt=""><figcaption>📱 移动端-进入课程查看演练场景</figcaption></figure>
 <figure class="mobile-screenshot"><img src="media/image24.webp" alt=""><figcaption>📱 移动端-与AI客户进行交流</figcaption></figure>
 <figure class="mobile-screenshot"><img src="media/image22.webp" alt=""><figcaption>📱 移动端-查看学习报告分析与建议</figcaption></figure>
-<figure class="pc-screenshot"><img src="media/ai_train_pc_chat.png" alt=""><figcaption>💻 PC端演练界面（金融行业）</figcaption></figure></div>
+<figure class="pc-screenshot"><img src="media/ai_train_pc_chat.png" alt=""><figcaption>💻 PC端演练界面（金融行业）</figcaption></figure>
+<figure class="pc-screenshot"><img src="media/ai_train_pc_report.png" alt=""><figcaption>💻 PC端演练报告（金融行业）</figcaption></figure></div>
     </div>
       </div>
   </div>

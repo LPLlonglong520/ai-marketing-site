@@ -209,7 +209,7 @@ def parse_content(path):
             bid_compare_data = None
             bid_steps_data = []
             for line in ab.split('\n'):
-                m = re.match(r'\|\s*(标题|副标题|演示视频|视频说明|截图(\d+)|截图(\d+)说明|演示类型|占位图标|占位文字|入口文字|入口链接|画像预览|画像标签)\s*\|\s*(.+?)\s*\|', line)
+                m = re.match(r'\|\s*(标题|副标题|演示视频|视频说明|视频详情|截图(\d+)|截图(\d+)说明|演示类型|占位图标|占位文字|入口文字|入口链接|画像预览|画像标签)\s*\|\s*(.+?)\s*\|', line)
                 if m:
                     k = m.group(1)
                     v = m.group(4) if m.group(4) else ''
@@ -221,6 +221,8 @@ def parse_content(path):
                         app['video'] = v
                     elif k == '视频说明':
                         app['video_label'] = v
+                    elif k == '视频详情':
+                        app['video_detail'] = v
                     elif k == '演示类型':
                         app['placeholder'] = (v == 'placeholder')
                     elif k == '占位图标':
@@ -505,6 +507,11 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .path-tag .arr { color:var(--muted); margin:0 3px; }
 /* ---- 视频面板 ---- */
 .app-video-panel { background:#f6f8fc; padding:24px 32px 28px; border-top:1px solid rgba(0,0,0,.05); }
+.app-video-detail { background:#fff; padding:20px 32px; border-top:1px solid rgba(0,0,0,.04); }
+.app-video-detail-content { font-size:14px; line-height:1.8; color:var(--text); }
+.app-video-detail-content strong { color:var(--blue); font-size:15px; }
+.app-video-detail-content ul { margin:8px 0; padding-left:20px; }
+.app-video-detail-content li { margin:4px 0; color:#3a4a5c; }
 .app-video-label { display:flex; align-items:center; gap:10px; font-size:12px; font-weight:700; color:#5f6b7a; letter-spacing:.6px; text-transform:uppercase; margin-bottom:14px; }
 .app-video-label .vdot { width:9px;height:9px;border-radius:50%;background:#3b82f6; box-shadow:0 0 6px rgba(59,130,246,.4); }
 .video-wrapper { position:relative; width:100%; border-radius:12px; overflow:hidden; background:#0a0d14; box-shadow:0 3px 16px rgba(0,0,0,.06); transition:all var(--transition); }
@@ -543,6 +550,7 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 @media (max-width:768px) { .profile-preview { padding:0 16px 24px; } .profile-preview-frame { height:420px; } }
 /* ---- 截图画廊 ---- */
 .img-gallery { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; align-items:start; }
+.img-gallery.col5 { grid-template-columns:repeat(5,1fr); }
 .img-gallery.col2 { grid-template-columns:repeat(2,1fr); }
 .img-gallery.col1 { grid-template-columns:1fr; }
 .img-gallery figure { background:#fff; border-radius:12px; overflow:hidden; border:1px solid rgba(0,0,0,.06); margin:0; display:flex; flex-direction:column; height:100%; box-shadow:var(--shadow); transition:all var(--transition); }
@@ -703,7 +711,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   .video-wrapper video { max-height:240px; }
   .video-wrapper { min-height:200px; border-radius:10px; }
   .vp-icon { width:56px; height:56px; font-size:22px; }
-  .img-gallery,.img-gallery.col2,.img-gallery.col1 { grid-template-columns:1fr; gap:12px; }
+  .img-gallery,.img-gallery.col2,.img-gallery.col1,.img-gallery.col5 { grid-template-columns:1fr; gap:12px; }
   .img-gallery img { max-height:300px; }
 
   .profile-preview { padding:0 14px 20px; }
@@ -1403,6 +1411,16 @@ def render_scene(data, scene):
       <div class="video-wrapper" data-video-src="media/{app['video']}"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'><rect fill='%230a0d14' width='16' height='9'/></svg>"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
     </div>'''
         
+        # 视频详情说明（如果有）
+        if app.get('video_detail'):
+            detail_html = app['video_detail'].replace('\\n', '<br>')
+            # 处理markdown粗体 **text**
+            import re as re_detail
+            detail_html = re_detail.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', detail_html)
+            video_panel += f'''    <div class="app-video-detail">
+      <div class="app-video-detail-content">{detail_html}</div>
+    </div>'''
+        
         # 渲染截图（如果有）——可与视频同时存在
         if app.get('images') and not app.get('placeholder'):
             imgs = app['images']
@@ -1432,7 +1450,7 @@ def render_scene(data, scene):
                     fig_cls = mobile_cls + pc_cls
                     figs.append(f'<figure class="{fig_cls.strip()}"><img src="{img["src"]}" alt="">{"<figcaption>"+cap+"</figcaption>" if cap else ""}</figure>')
                 n = len(imgs)
-                gcol = 'col1' if n==1 else ('col2' if n==2 else '')
+                gcol = 'col1' if n==1 else ('col2' if n==2 else ('col5' if n==5 else ''))
                 video_panel += f'''    <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot" style="background:#38bdf8;"></span>应用演示截图</div>
       <div class="img-gallery {gcol}">{chr(10).join(figs)}</div>
