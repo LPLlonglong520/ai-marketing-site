@@ -1866,7 +1866,7 @@ def build_home(data):
         ('scene-3.html','🚀','项目推进','Project Delivery','7×24h智能支持，适配项目推进全流程','2个AI应用',['营销AI小秘','行销数字员工'],'linear-gradient(135deg,#0f2b5c,#5b3fd4)'),
         ('scene-4.html','📋','招投标','Bidding','招标文件解析→商务标生成→投标检查','3大AI能力',['招标解析','商务标生成','投标检查'],'linear-gradient(135deg,#e8710a,#dc2626)'),
         ('scene-5.html','🏭','渠道赋能','Channel Empowerment','渠道AI数字员工 · 渠道市场分析空间','2个AI应用',['安小渠','渠道市场分析'],'linear-gradient(135deg,#0d9488,#14b8a6)'),
-        ('scene-6.html','🛠️','Skill共享','Skill Sharing','整合一线实战经验，共建共享工具箱','2个AI应用',['30+大比武','40+提质增效','共建共享'],'linear-gradient(135deg,#0ea5e9,#0284c7)'),
+        ('scene-6.html','🛠️','Skill共享','Skill Sharing','整合一线实战经验，共建共享工具箱','1个应用',['30+大比武','40+提质增效','共建共享'],'linear-gradient(135deg,#0ea5e9,#0284c7)'),
         ('scene-7.html','🧠','知识助手','Knowledge AI','20s获答，效率提升100%','1个AI应用',['5万+文档','20s获答','效率提升100%'],'linear-gradient(135deg,#6366f1,#8b5cf6)'),
     ]
 
