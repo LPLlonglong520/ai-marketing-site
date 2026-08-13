@@ -84,10 +84,8 @@
 | 字段 | 值 |
 |------|-----|
 | 标题 | 一线增量情况 |
-| 截图1 | media/bid_increment_board.png |
-| 截图1说明 | 📌 商机金额（机会点带来的新增商机） |
-| 截图2 | media/bid_increment_top5.png |
-| 截图2说明 | 📌 TOP5区域排名 |
+| 截图1 | media/bid_increment_top5.png |
+| 截图1说明 | 📌 机会点运营 |
 
 ---
 

@@ -225,7 +225,8 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .increment-board { background:var(--white); border-radius:var(--r-lg); border:1px solid rgba(0,0,0,.05); margin:28px 0 36px; box-shadow:var(--shadow); overflow:hidden; }
 .increment-title { padding:18px 24px; font-size:15px; font-weight:800; color:var(--text); background:linear-gradient(180deg,#fcfdfe,#fff); border-bottom:1px solid rgba(0,0,0,.04); display:flex; align-items:center; }
 .increment-body { display:flex; gap:24px; padding:24px; align-items:center; }
-.increment-gallery { display:grid; grid-template-columns:1fr 1fr; gap:24px; padding:24px; }
+.increment-gallery { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:24px; padding:24px; }
+.increment-footer { padding:14px 24px; background:#f8fafc; border-top:1px solid rgba(0,0,0,.04); font-size:13px; color:#5f6b7a; font-weight:600; text-align:right; }
 .increment-img { flex:1; min-width:0; }
 .increment-img figure, .increment-gallery figure { margin:0; border-radius:12px; overflow:hidden; border:1px solid rgba(0,0,0,.06); cursor:zoom-in; transition:transform .25s ease,box-shadow .25s ease; }
 .increment-img figure:hover, .increment-gallery figure:hover { transform:scale(1.02); box-shadow:0 12px 40px rgba(0,0,0,.08); }
@@ -707,7 +708,8 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
       </div>
       <div class="increment-board">
         <div class="increment-title"><span class="ai-dot"></span>一线增量情况</div>
-        <div class="increment-gallery"><figure><img src="media/bid_increment_board.png" alt=""><figcaption>📌 商机金额（机会点带来的新增商机）</figcaption></figure><figure><img src="media/bid_increment_top5.png" alt=""><figcaption>📌 TOP5区域排名</figcaption></figure></div>
+        <div class="increment-gallery"><figure><img src="media/bid_increment_top5.png" alt=""><figcaption>📌 机会点运营</figcaption></figure></div>
+        <div class="increment-footer">增量情况</div>
       </div>
   <div class="app-block" id="app-s1-3">
     <div class="app-block-header">
