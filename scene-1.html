@@ -226,6 +226,7 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .bg-bid  { background:linear-gradient(180deg,#fff6ed 0%,#f7f8fb 50%,#f7f8fb 100%); }
 .bg-knowledge { background:linear-gradient(180deg,#eef1ff 0%,#f7f8fb 50%,#f7f8fb 100%); }
 .bg-skill { background:linear-gradient(180deg,#e2f2ff 0%,#f7f8fb 50%,#f7f8fb 100%); }
+.bg-channel { background:linear-gradient(180deg,#e6f7f5 0%,#f7f8fb 50%,#f7f8fb 100%); }
 .stats-strip { background:linear-gradient(120deg,#060f25,#0d2550,#091c3e); border-radius:18px; padding:32px 48px; display:flex; flex-wrap:wrap; gap:40px; justify-content:space-around; margin:0 0 48px; box-shadow:0 8px 32px rgba(6,15,37,.15); }
 .app-stats-strip { background:linear-gradient(135deg,#f6f9ff,#eaf2ff); border-radius:14px; padding:20px 32px; display:flex; flex-wrap:wrap; gap:32px; justify-content:space-around; margin:0 32px 24px; border:1px solid rgba(59,130,246,.1); }
 .app-stats-item { text-align:center; }
@@ -765,7 +766,7 @@ document.querySelectorAll('.scene-toggle').forEach(function(btn){
 });
 const navLinks=document.querySelectorAll('.nav-tabs a');
 const sceneButtons=document.querySelectorAll('.scene-nav-btn');
-const scenes=[{id:'scene-opp',navIdx:0},{id:'scene-visit',navIdx:1},{id:'scene-proj',navIdx:2},{id:'scene-bid',navIdx:3},{id:'scene-knowledge',navIdx:4}];
+const scenes=[{id:'scene-opp',navIdx:0},{id:'scene-visit',navIdx:1},{id:'scene-proj',navIdx:2},{id:'scene-bid',navIdx:3},{id:'scene-channel',navIdx:4},{id:'scene-skill',navIdx:5},{id:'scene-knowledge',navIdx:6}];
 const io=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){const idx=scenes.findIndex(s=>s.id===e.target.id);if(idx===-1)return;navLinks.forEach(a=>a.classList.remove('active'));sceneButtons.forEach(b=>b.classList.remove('active'));if(navLinks[idx])navLinks[idx].classList.add('active');if(sceneButtons[idx])sceneButtons[idx].classList.add('active')}})},{threshold:0.25});
 scenes.forEach(s=>{const el=document.getElementById(s.id);if(el)io.observe(el)});
 
@@ -782,7 +783,7 @@ function loadVideo(wrapper){
   vid.addEventListener('canplay',function(){
     wrapper.classList.remove('loading');
     wrapper.classList.add('playing');
-    vid.play().catch(function(){});
+    // 不自动播放，等待用户点击
   },{once:true});
   vid.addEventListener('error',function(){
     wrapper.classList.remove('loading');wrapper.classList.add('error');

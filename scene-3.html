@@ -226,6 +226,7 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .bg-bid  { background:linear-gradient(180deg,#fff6ed 0%,#f7f8fb 50%,#f7f8fb 100%); }
 .bg-knowledge { background:linear-gradient(180deg,#eef1ff 0%,#f7f8fb 50%,#f7f8fb 100%); }
 .bg-skill { background:linear-gradient(180deg,#e2f2ff 0%,#f7f8fb 50%,#f7f8fb 100%); }
+.bg-channel { background:linear-gradient(180deg,#e6f7f5 0%,#f7f8fb 50%,#f7f8fb 100%); }
 .stats-strip { background:linear-gradient(120deg,#060f25,#0d2550,#091c3e); border-radius:18px; padding:32px 48px; display:flex; flex-wrap:wrap; gap:40px; justify-content:space-around; margin:0 0 48px; box-shadow:0 8px 32px rgba(6,15,37,.15); }
 .app-stats-strip { background:linear-gradient(135deg,#f6f9ff,#eaf2ff); border-radius:14px; padding:20px 32px; display:flex; flex-wrap:wrap; gap:32px; justify-content:space-around; margin:0 32px 24px; border:1px solid rgba(59,130,246,.1); }
 .app-stats-item { text-align:center; }
@@ -618,7 +619,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   <div class="scene-header">
     <div class="scene-header-ico" style="background:linear-gradient(135deg,#0f2b5c,#5b3fd4);color:#fff;">🚀</div>
     <div><div class="scene-title">项目推进</div><div class="scene-sub"></div></div>
-    <div class="scene-count">3个应用</div>
+    <div class="scene-count">2个应用</div>
   </div>
   <div class="scene-body">
 
@@ -676,31 +677,6 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
       <div class="video-wrapper" data-video-src="media/media5.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'><rect fill='%230a0d14' width='16' height='9'/></svg>"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
     </div>
       </div>
-  <div class="app-block" id="app-s3-3">
-    <div class="app-block-header">
-      <div class="app-num-badge" style="background:linear-gradient(135deg,#e8710a,#dc2626);">3</div>
-      <div><div class="app-title">行销数字员工-渠道专版</div><div class="app-subtitle">渠道专属智能售前专家 · 7×24小时在线 · 全流程问题闭环</div></div>
-    </div>
-    <div class="app-content">
-      <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div><p>渠道伙伴遇到技术问题时，<strong>同样找不到人、找不到资料</strong>。晚上或周末遇到紧急技术询问更是两眼一抹黑，渠道伙伴等半天，合作体验大打折扣。</p><div class="col-emoji-bg">🔀</div></div>
-      <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div><p>专为<strong>渠道伙伴</strong>打造的专属智能售前专家，内置丰富知识，全天候服务：</p>
-        <ul>
-          <li>📚 完善的产品知识库（渠道适配版）</li>
-          <li>🎯 行业打法与经验</li>
-          <li>📋 公司参与标准</li>
-          <li>⚡ 7×24小时实时响应</li>
-          <li>🔄 问题反馈全流程闭环</li>
-        </ul><div class="col-emoji-bg">⚡</div></div>
-      <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div><p>钉钉搜索行销数字员工-渠道专版，输入问题即可获得专业解答。
----</p>
-        <div class="path-tag"><span>钉钉</span> <span class="arr">→</span> <span>行销数字员工-渠道专版</span> <span class="arr">→</span> <span>直接提问</span></div>
-        <p style="font-size:12px;color:var(--muted);margin-top:8px;">📅 8月上线 · 敬请期待</p><div class="col-emoji-bg">🗝️</div></div>
-    </div>
-    <div class="app-video-panel">
-      <div class="app-video-label"><span class="vdot"></span>应用演示视频（移动端演示）</div>
-      <div class="no-video"><div class="nv-ico">🔧</div><p>📅 8月上线 · 敬请期待</p></div>
-    </div>
-      </div>
   </div>
 </div>
 </div>
@@ -731,7 +707,7 @@ document.querySelectorAll('.scene-toggle').forEach(function(btn){
 });
 const navLinks=document.querySelectorAll('.nav-tabs a');
 const sceneButtons=document.querySelectorAll('.scene-nav-btn');
-const scenes=[{id:'scene-opp',navIdx:0},{id:'scene-visit',navIdx:1},{id:'scene-proj',navIdx:2},{id:'scene-bid',navIdx:3},{id:'scene-knowledge',navIdx:4}];
+const scenes=[{id:'scene-opp',navIdx:0},{id:'scene-visit',navIdx:1},{id:'scene-proj',navIdx:2},{id:'scene-bid',navIdx:3},{id:'scene-channel',navIdx:4},{id:'scene-skill',navIdx:5},{id:'scene-knowledge',navIdx:6}];
 const io=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){const idx=scenes.findIndex(s=>s.id===e.target.id);if(idx===-1)return;navLinks.forEach(a=>a.classList.remove('active'));sceneButtons.forEach(b=>b.classList.remove('active'));if(navLinks[idx])navLinks[idx].classList.add('active');if(sceneButtons[idx])sceneButtons[idx].classList.add('active')}})},{threshold:0.25});
 scenes.forEach(s=>{const el=document.getElementById(s.id);if(el)io.observe(el)});
 
@@ -748,7 +724,7 @@ function loadVideo(wrapper){
   vid.addEventListener('canplay',function(){
     wrapper.classList.remove('loading');
     wrapper.classList.add('playing');
-    vid.play().catch(function(){});
+    // 不自动播放，等待用户点击
   },{once:true});
   vid.addEventListener('error',function(){
     wrapper.classList.remove('loading');wrapper.classList.add('error');

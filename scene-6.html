@@ -226,6 +226,7 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .bg-bid  { background:linear-gradient(180deg,#fff6ed 0%,#f7f8fb 50%,#f7f8fb 100%); }
 .bg-knowledge { background:linear-gradient(180deg,#eef1ff 0%,#f7f8fb 50%,#f7f8fb 100%); }
 .bg-skill { background:linear-gradient(180deg,#e2f2ff 0%,#f7f8fb 50%,#f7f8fb 100%); }
+.bg-channel { background:linear-gradient(180deg,#e6f7f5 0%,#f7f8fb 50%,#f7f8fb 100%); }
 .stats-strip { background:linear-gradient(120deg,#060f25,#0d2550,#091c3e); border-radius:18px; padding:32px 48px; display:flex; flex-wrap:wrap; gap:40px; justify-content:space-around; margin:0 0 48px; box-shadow:0 8px 32px rgba(6,15,37,.15); }
 .app-stats-strip { background:linear-gradient(135deg,#f6f9ff,#eaf2ff); border-radius:14px; padding:20px 32px; display:flex; flex-wrap:wrap; gap:32px; justify-content:space-around; margin:0 32px 24px; border:1px solid rgba(59,130,246,.1); }
 .app-stats-item { text-align:center; }
@@ -599,7 +600,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   <a href="index.html" class="back-btn">← 返回首页</a>
   <a href="index.html#landing-scenes" class="back-btn back-to-module">返回</a>
   <div class="nav-title">🛠️ Skill共享平台</div>
-  <div class="nav-pager"><a href="scene-5.html" class="pager-btn">← 上一场景</a><span class="pager-btn disabled">下一场景 →</span></div>
+  <div class="nav-pager"><a href="scene-5.html" class="pager-btn">← 上一场景</a><a href="scene-7.html" class="pager-btn">下一场景 →</a></div>
 </div>
 <script>
 (function() {
@@ -634,17 +635,17 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
           <li>一线AI实战大比武产出 <strong>30+ 应用案例</strong></li>
           <li>AI提质增效产出近 <strong>40个优秀案例</strong></li>
           <li>一线员工在外部AI应用上的实践技能、能力亟需整合到公司平台，<strong>沉淀推广一线宝贵经验</strong></li>
-        </ul><div class="col-emoji-bg">📊</div></div>
+        </ul><div class="col-emoji-bg">🛠️</div></div>
       <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div><p>建设Skill共享平台，<strong>基础Skill + 业务专属Skill</strong>，欢迎大家上传优秀Skill，更有大奖等你来拿：</p>
         <ul>
           <li>🏗️ 构建公司内部统一Skill共享平台</li>
           <li>📤 一线员工上传实战经验与优秀Skill</li>
           <li>🏆 激励机制：上传优秀Skill赢大奖</li>
           <li>🔄 持续沉淀推广，形成营销AI工具箱</li>
-        </ul><div class="col-emoji-bg">⚡</div></div>
+        </ul><div class="col-emoji-bg">✨</div></div>
       <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div><p>登录营销AI小秘平台，进入Skill共享平台，选择所需Skill即可使用。
 ---</p>
-        <div class="path-tag"><span>DASLink</span> <span class="arr">→</span> <span>行销门户2.0</span> <span class="arr">→</span> <span>Skill共享平台</span></div><div class="col-emoji-bg">🗝️</div></div>
+        <div class="path-tag"><span>DASLink</span> <span class="arr">→</span> <span>行销门户2.0</span> <span class="arr">→</span> <span>Skill共享平台</span></div><div class="col-emoji-bg">🔧</div></div>
     </div>
     <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot" style="background:#38bdf8;"></span>应用演示截图</div>
@@ -681,7 +682,7 @@ document.querySelectorAll('.scene-toggle').forEach(function(btn){
 });
 const navLinks=document.querySelectorAll('.nav-tabs a');
 const sceneButtons=document.querySelectorAll('.scene-nav-btn');
-const scenes=[{id:'scene-opp',navIdx:0},{id:'scene-visit',navIdx:1},{id:'scene-proj',navIdx:2},{id:'scene-bid',navIdx:3},{id:'scene-knowledge',navIdx:4}];
+const scenes=[{id:'scene-opp',navIdx:0},{id:'scene-visit',navIdx:1},{id:'scene-proj',navIdx:2},{id:'scene-bid',navIdx:3},{id:'scene-channel',navIdx:4},{id:'scene-skill',navIdx:5},{id:'scene-knowledge',navIdx:6}];
 const io=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){const idx=scenes.findIndex(s=>s.id===e.target.id);if(idx===-1)return;navLinks.forEach(a=>a.classList.remove('active'));sceneButtons.forEach(b=>b.classList.remove('active'));if(navLinks[idx])navLinks[idx].classList.add('active');if(sceneButtons[idx])sceneButtons[idx].classList.add('active')}})},{threshold:0.25});
 scenes.forEach(s=>{const el=document.getElementById(s.id);if(el)io.observe(el)});
 
@@ -698,7 +699,7 @@ function loadVideo(wrapper){
   vid.addEventListener('canplay',function(){
     wrapper.classList.remove('loading');
     wrapper.classList.add('playing');
-    vid.play().catch(function(){});
+    // 不自动播放，等待用户点击
   },{once:true});
   vid.addEventListener('error',function(){
     wrapper.classList.remove('loading');wrapper.classList.add('error');

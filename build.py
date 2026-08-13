@@ -554,6 +554,7 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .bg-bid  { background:linear-gradient(180deg,#fff6ed 0%,#f7f8fb 50%,#f7f8fb 100%); }
 .bg-knowledge { background:linear-gradient(180deg,#eef1ff 0%,#f7f8fb 50%,#f7f8fb 100%); }
 .bg-skill { background:linear-gradient(180deg,#e2f2ff 0%,#f7f8fb 50%,#f7f8fb 100%); }
+.bg-channel { background:linear-gradient(180deg,#e6f7f5 0%,#f7f8fb 50%,#f7f8fb 100%); }
 .stats-strip { background:linear-gradient(120deg,#060f25,#0d2550,#091c3e); border-radius:18px; padding:32px 48px; display:flex; flex-wrap:wrap; gap:40px; justify-content:space-around; margin:0 0 48px; box-shadow:0 8px 32px rgba(6,15,37,.15); }
 .app-stats-strip { background:linear-gradient(135deg,#f6f9ff,#eaf2ff); border-radius:14px; padding:20px 32px; display:flex; flex-wrap:wrap; gap:32px; justify-content:space-around; margin:0 32px 24px; border:1px solid rgba(59,130,246,.1); }
 .app-stats-item { text-align:center; }
@@ -956,7 +957,7 @@ document.querySelectorAll('.scene-toggle').forEach(function(btn){
 });
 const navLinks=document.querySelectorAll('.nav-tabs a');
 const sceneButtons=document.querySelectorAll('.scene-nav-btn');
-const scenes=[{id:'scene-opp',navIdx:0},{id:'scene-visit',navIdx:1},{id:'scene-proj',navIdx:2},{id:'scene-bid',navIdx:3},{id:'scene-knowledge',navIdx:4}];
+const scenes=[{id:'scene-opp',navIdx:0},{id:'scene-visit',navIdx:1},{id:'scene-proj',navIdx:2},{id:'scene-bid',navIdx:3},{id:'scene-channel',navIdx:4},{id:'scene-skill',navIdx:5},{id:'scene-knowledge',navIdx:6}];
 const io=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){const idx=scenes.findIndex(s=>s.id===e.target.id);if(idx===-1)return;navLinks.forEach(a=>a.classList.remove('active'));sceneButtons.forEach(b=>b.classList.remove('active'));if(navLinks[idx])navLinks[idx].classList.add('active');if(sceneButtons[idx])sceneButtons[idx].classList.add('active')}})},{threshold:0.25});
 scenes.forEach(s=>{const el=document.getElementById(s.id);if(el)io.observe(el)});
 
@@ -973,7 +974,7 @@ function loadVideo(wrapper){
   vid.addEventListener('canplay',function(){
     wrapper.classList.remove('loading');
     wrapper.classList.add('playing');
-    vid.play().catch(function(){});
+    // 不自动播放，等待用户点击
   },{once:true});
   vid.addEventListener('error',function(){
     wrapper.classList.remove('loading');wrapper.classList.add('error');
@@ -1229,20 +1230,21 @@ def build_bid_compare(bid_compare_data):
 
 def render_scene(data, scene):
     """渲染单个场景为 HTML 字符串（详情页用）"""
-    scene_id_map = {1:'scene-opp',2:'scene-visit',3:'scene-proj',4:'scene-bid',5:'scene-knowledge',6:'scene-skill'}
-    bg_map = {1:'bg-opp',2:'bg-visit',3:'bg-proj',4:'bg-bid',5:'bg-knowledge',6:'bg-skill'}
-    icon_colors = ["linear-gradient(135deg,#0f2b5c,#1e4f8a)","linear-gradient(135deg,#00a884,#00b894)","linear-gradient(135deg,#0f2b5c,#5b3fd4)","linear-gradient(135deg,#e8710a,#dc2626)","linear-gradient(135deg,#6366f1,#8b5cf6)","linear-gradient(135deg,#0ea5e9,#0284c7)"]
+    scene_id_map = {1:'scene-opp',2:'scene-visit',3:'scene-proj',4:'scene-bid',5:'scene-channel',6:'scene-skill',7:'scene-knowledge'}
+    bg_map = {1:'bg-opp',2:'bg-visit',3:'bg-proj',4:'bg-bid',5:'bg-channel',6:'bg-skill',7:'bg-knowledge'}
+    icon_colors = ["linear-gradient(135deg,#0f2b5c,#1e4f8a)","linear-gradient(135deg,#00a884,#00b894)","linear-gradient(135deg,#0f2b5c,#5b3fd4)","linear-gradient(135deg,#e8710a,#dc2626)","linear-gradient(135deg,#0d9488,#14b8a6)","linear-gradient(135deg,#0ea5e9,#0284c7)","linear-gradient(135deg,#6366f1,#8b5cf6)"]
     badge_maps = {
         1: [("linear-gradient(135deg,#0f2b5c,#1e4f8a)","1"),("linear-gradient(135deg,#0284c7,#0891b2)","2"),("linear-gradient(135deg,#0891b2,#0e7490)","3"),("linear-gradient(135deg,#0e7490,#059669)","4")],
         2: [("linear-gradient(135deg,#00a884,#00b894)","1"),("linear-gradient(135deg,#0284c7,#4f46e5)","2")],
-        3: [("linear-gradient(135deg,#0f2b5c,#5b3fd4)","1"),("linear-gradient(135deg,#5b3fd4,#e8710a)","2"),("linear-gradient(135deg,#e8710a,#dc2626)","3")],
+        3: [("linear-gradient(135deg,#0f2b5c,#5b3fd4)","1"),("linear-gradient(135deg,#5b3fd4,#e8710a)","2")],
         4: [("linear-gradient(135deg,#e8710a,#dc2626)","AI")],
-        5: [("linear-gradient(135deg,#6366f1,#8b5cf6)","AI")],
-        6: [("linear-gradient(135deg,#0ea5e9,#0284c7)","1"),("linear-gradient(135deg,#0284c7,#0891b2)","2")]
+        5: [("linear-gradient(135deg,#0d9488,#14b8a6)","1"),("linear-gradient(135deg,#14b8a6,#0ea5e9)","2")],
+        6: [("linear-gradient(135deg,#0ea5e9,#0284c7)","1"),("linear-gradient(135deg,#0284c7,#0891b2)","2")],
+        7: [("linear-gradient(135deg,#6366f1,#8b5cf6)","AI")]
     }
-    pain_emojis = {1:'📊',2:'🔍',3:'🔀',4:'😰',5:'📚'}
-    solve_emojis = {1:'⚡',2:'✨',3:'⚡',4:'🏆',5:'💡'}
-    how_emojis = {1:'🗺️',2:'🎯',3:'🗝️',4:'🗝️',5:'🔮'}
+    pain_emojis = {1:'📊',2:'🔍',3:'🔀',4:'😰',5:'📈',6:'🛠️',7:'📚'}
+    solve_emojis = {1:'⚡',2:'✨',3:'⚡',4:'🏆',5:'⚡',6:'✨',7:'💡'}
+    how_emojis = {1:'🗺️',2:'🎯',3:'🗝️',4:'🗝️',5:'🏭',6:'🔧',7:'🔮'}
 
     profile_preview = '''    <div class="profile-preview">
       <div class="profile-preview-label"><span class="pdot"></span>客户画像 2.0 优化中 <span class="pbeta">NEW</span> — 下滑查看最新画像内容</div>
@@ -1620,10 +1622,11 @@ def build_home(data):
     cards_data = [
         ('scene-1.html','📈','机会点增量','Opportunity Growth','市场空间 · 价值线索 · 精细化运营','4个AI应用',['市场分析','标讯运营','市场报告','标讯AI分析'],'linear-gradient(135deg,#0f2b5c,#1e4f8a)'),
         ('scene-2.html','🤝','客户拜访','Customer Visit','拜访前充分准备，现场沟通稳定发挥','2个AI应用',['客户画像','AI对练','支持移动端'],'linear-gradient(135deg,#00a884,#00b894)'),
-        ('scene-3.html','🚀','项目推进','Project Delivery','7×24h智能支持，适配项目推进全流程','3个AI应用',['营销AI小秘','行销数字员工','渠道专版'],'linear-gradient(135deg,#0f2b5c,#5b3fd4)'),
+        ('scene-3.html','🚀','项目推进','Project Delivery','7×24h智能支持，适配项目推进全流程','2个AI应用',['营销AI小秘','行销数字员工'],'linear-gradient(135deg,#0f2b5c,#5b3fd4)'),
         ('scene-4.html','📋','招投标','Bidding','招标文件解析→商务标生成→投标检查','3大AI能力',['招标解析','商务标生成','投标检查'],'linear-gradient(135deg,#e8710a,#dc2626)'),
-        ('scene-5.html','🧠','知识助手','Knowledge AI','20s获答，效率提升100%','1个AI应用',['5万+文档','20s获答','效率提升100%'],'linear-gradient(135deg,#6366f1,#8b5cf6)'),
+        ('scene-5.html','🏭','渠道赋能','Channel Empowerment','渠道AI数字员工 · 渠道市场分析空间','2个AI应用',['安小渠','渠道市场分析'],'linear-gradient(135deg,#0d9488,#14b8a6)'),
         ('scene-6.html','🛠️','Skill共享','Skill Sharing','整合一线实战经验，共建共享工具箱','2个AI应用',['30+大比武','40+提质增效','共建共享'],'linear-gradient(135deg,#0ea5e9,#0284c7)'),
+        ('scene-7.html','🧠','知识助手','Knowledge AI','20s获答，效率提升100%','1个AI应用',['5万+文档','20s获答','效率提升100%'],'linear-gradient(135deg,#6366f1,#8b5cf6)'),
     ]
 
     cards_html = ''
@@ -1648,7 +1651,7 @@ def build_home(data):
     cards_section = (
         '<section class="landing-section" id="landing-scenes">\n'
         '  <div class="landing-inner">\n'
-        '    <div class="landing-title">六大场景，<em>全面覆盖</em></div>\n'
+        '    <div class="landing-title">七大场景，<em>全面覆盖</em></div>\n'
         '    <div class="landing-sub">点击卡片深入了解每个场景的具体应用与操作</div>\n'
         '    <div class="cards-grid">\n'
         + cards_html +
