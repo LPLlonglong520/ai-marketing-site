@@ -293,7 +293,7 @@ def parse_content(path):
                 lines = raw_how.split('\n')
                 cleaned_lines = []
                 for line in lines:
-                    m_inline = re.search(r'\s*\|\s*操作路径\s*\|', line)
+                    m_inline = re.search(r'\s*\|\s*(?:操作|快捷)路径\s*\|', line)
                     if m_inline:
                         desc_part = line[:m_inline.start()].strip()
                         path_part = line[m_inline.start():].strip()
@@ -306,7 +306,7 @@ def parse_content(path):
                 paths = []
                 extra = []
                 for line in cleaned_lines:
-                    m_path = re.match(r'\|\s*操作路径(\d*)\s*\|\s*(.+?)\s*\|', line)
+                    m_path = re.match(r'\|\s*(?:操作|快捷)路径(\d*)\s*\|\s*(.+?)\s*\|', line)
                     m_extra = re.match(r'\|\s*补充说明\s*\|\s*(.+?)\s*\|', line)
                     m_ptitle = re.match(r'\|\s*路径标题(\d*)\s*\|\s*(.+?)\s*\|', line)
                     if m_path:
