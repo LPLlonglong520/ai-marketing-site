@@ -182,6 +182,9 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .img-gallery figure:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); }
 .img-gallery img { width:100%; display:block; object-fit:contain; height:260px; background:#f6f8fc; line-height:0; flex-shrink:0; }
 .img-gallery figcaption { padding:12px 16px; font-size:13px; color:#5f6b7a; background:#fff; border-top:1px solid rgba(0,0,0,.04); font-weight:500; }
+/* 移动端截图缩小效果 */
+.img-gallery figure.mobile-screenshot { transform:scale(0.92); transform-origin:center top; }
+.img-gallery figure.pc-screenshot { grid-column:span 1; }
 .bid-flow-platform { display:flex; gap:18px; align-items:flex-start; margin-bottom:0; }
 .bid-flow-platform .app-video-panel { flex:1; min-width:0; }
 .img-gallery-single { grid-template-columns:1fr; }

@@ -209,7 +209,7 @@ def parse_content(path):
             bid_compare_data = None
             bid_steps_data = []
             for line in ab.split('\n'):
-                m = re.match(r'\|\s*(标题|副标题|演示视频|截图(\d+)|截图(\d+)说明|演示类型|占位图标|占位文字|入口文字|入口链接|画像预览)\s*\|\s*(.+?)\s*\|', line)
+                m = re.match(r'\|\s*(标题|副标题|演示视频|视频说明|截图(\d+)|截图(\d+)说明|演示类型|占位图标|占位文字|入口文字|入口链接|画像预览|画像标签)\s*\|\s*(.+?)\s*\|', line)
                 if m:
                     k = m.group(1)
                     v = m.group(4) if m.group(4) else ''
@@ -219,6 +219,8 @@ def parse_content(path):
                         app['subtitle'] = v
                     elif k == '演示视频':
                         app['video'] = v
+                    elif k == '视频说明':
+                        app['video_label'] = v
                     elif k == '演示类型':
                         app['placeholder'] = (v == 'placeholder')
                     elif k == '占位图标':
@@ -231,6 +233,8 @@ def parse_content(path):
                         app['entry_link'] = v
                     elif k == '画像预览':
                         app['profile_preview'] = v
+                    elif k == '画像标签':
+                        app['profile_label'] = v
                     elif k.startswith('截图') and k.endswith('说明'):
                         img_caps.append(v)
                     elif k.startswith('截图'):
@@ -545,6 +549,9 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .img-gallery figure:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); }
 .img-gallery img { width:100%; display:block; object-fit:contain; height:260px; background:#f6f8fc; line-height:0; flex-shrink:0; }
 .img-gallery figcaption { padding:12px 16px; font-size:13px; color:#5f6b7a; background:#fff; border-top:1px solid rgba(0,0,0,.04); font-weight:500; }
+/* 移动端截图缩小效果 */
+.img-gallery figure.mobile-screenshot { transform:scale(0.92); transform-origin:center top; }
+.img-gallery figure.pc-screenshot { grid-column:span 1; }
 .bid-flow-platform { display:flex; gap:18px; align-items:flex-start; margin-bottom:0; }
 .bid-flow-platform .app-video-panel { flex:1; min-width:0; }
 .img-gallery-single { grid-template-columns:1fr; }
@@ -1325,7 +1332,7 @@ def render_scene(data, scene):
     how_emojis = {1:'🗺️',2:'🎯',3:'🗝️',4:'🗝️',5:'🏭',6:'🔧',7:'🔮'}
 
     profile_preview = '''    <div class="profile-preview">
-      <div class="profile-preview-label"><span class="pdot"></span>客户画像 2.0 优化中 <span class="pbeta">NEW</span> — 下滑查看最新画像内容</div>
+      <div class="profile-preview-label"><span class="pdot"></span>{profile_label} <span class="pbeta">NEW</span> — 下滑查看最新画像内容</div>
       <div class="profile-preview-frame"><iframe src="{profile_src}" title="客户安全画像"></iframe></div>
     </div>'''
 
@@ -1383,16 +1390,25 @@ def render_scene(data, scene):
             app_stats_html = f'\n<div class="app-stats-strip">{"" .join(stats_items)}</div>\n{note}'
 
         video_panel = ''
+        # 渲染视频（如果有）
         if app.get('placeholder'):
-            video_panel = f'''    <div class="app-video-panel">
+            video_panel += f'''    <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot"></span>应用演示视频（移动端演示）</div>
       <div class="no-video"><div class="nv-ico">{app.get('placeholder_icon','📱')}</div><p>{app.get('placeholder_text','')}</p></div>
     </div>'''
-        elif app.get('images'):
+        elif app.get('video'):
+            vlabel = app.get('video_label', '应用演示视频')
+            video_panel += f'''    <div class="app-video-panel">
+      <div class="app-video-label"><span class="vdot"></span>{vlabel}</div>
+      <div class="video-wrapper" data-video-src="media/{app['video']}"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'><rect fill='%230a0d14' width='16' height='9'/></svg>"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
+    </div>'''
+        
+        # 渲染截图（如果有）——可与视频同时存在
+        if app.get('images') and not app.get('placeholder'):
             imgs = app['images']
             _bid = build_bid_compare(app.get('bid_compare'))
             if _bid and len(imgs) >= 2:
-                video_panel = f'''    <div class="bid-flow-platform">
+                video_panel += f'''    <div class="bid-flow-platform">
       <div class="app-video-panel">
         <div class="app-video-label"><span class="vdot" style="background:#38bdf8;"></span>业务流</div>
         <div class="img-gallery img-gallery-single"><figure><img src="{imgs[0]["src"]}" alt=""><figcaption>{imgs[0].get("caption","")}</figcaption></figure></div>
@@ -1404,17 +1420,22 @@ def render_scene(data, scene):
     </div>'''
                 if _bid: video_panel += '\n' + _bid
             else:
-                figs = [f'<figure><img src="{img["src"]}" alt="">{"<figcaption>"+img.get("caption","")+"</figcaption>" if img.get("caption","") else ""}</figure>' for img in imgs]
+                # 区分移动端和PC端截图
+                figs = []
+                for img in imgs:
+                    cap = img.get('caption', '')
+                    # 根据说明中的emoji判断是移动端还是PC端
+                    is_mobile = '📱' in cap
+                    is_pc = '💻' in cap
+                    mobile_cls = ' mobile-screenshot' if is_mobile else ''
+                    pc_cls = ' pc-screenshot' if is_pc else ''
+                    fig_cls = mobile_cls + pc_cls
+                    figs.append(f'<figure class="{fig_cls.strip()}"><img src="{img["src"]}" alt="">{"<figcaption>"+cap+"</figcaption>" if cap else ""}</figure>')
                 n = len(imgs)
                 gcol = 'col1' if n==1 else ('col2' if n==2 else '')
-                video_panel = f'''    <div class="app-video-panel">
+                video_panel += f'''    <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot" style="background:#38bdf8;"></span>应用演示截图</div>
       <div class="img-gallery {gcol}">{chr(10).join(figs)}</div>
-    </div>'''
-        elif app.get('video'):
-            video_panel = f'''    <div class="app-video-panel">
-      <div class="app-video-label"><span class="vdot"></span>应用演示视频</div>
-      <div class="video-wrapper" data-video-src="media/{app['video']}"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'><rect fill='%230a0d14' width='16' height='9'/></svg>"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
     </div>'''
 
         apps_html += f'''
@@ -1429,7 +1450,7 @@ def render_scene(data, scene):
       <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-how">🔧 平台入口</div>{how_html}</div><div class="col-emoji-bg">{he}</div></div>
     </div>
 {video_panel}
-    {profile_preview.format(profile_src=app.get('profile_preview','media/天津大学_安全画像.html')) if (snum==2 and ai==0 and app.get('profile_preview')) else ''}  </div>'''
+    {profile_preview.format(profile_src=app.get('profile_preview','media/天津大学_安全画像.html'), profile_label=app.get('profile_label','客户画像 2.0 优化中')) if (snum==2 and ai==0 and app.get('profile_preview')) else ''}  </div>'''
         
         # 渲染一线增量情况（如果该应用有）
         if app.get('increment'):
