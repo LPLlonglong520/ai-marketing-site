@@ -119,8 +119,11 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .app-block:hover .app-num-badge { transform:scale(1.08); }
 .app-title { font-size:19px; font-weight:800; color:var(--text); letter-spacing:-.2px; }
 .app-subtitle { margin-top:4px; font-size:13px; color:var(--muted); word-break:break-word; }
-.app-content { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; border-bottom:1px solid rgba(0,0,0,.04); }
-.app-col { padding:32px 28px; position:relative; overflow:hidden; border-right:1px solid rgba(0,0,0,.04); }
+.app-content { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; border-bottom:1px solid rgba(0,0,0,.04); align-items:stretch; }
+.app-col { padding:32px 28px; position:relative; overflow:hidden; border-right:1px solid rgba(0,0,0,.04); display:flex; flex-direction:column; justify-content:space-between; }
+.app-col-inner { flex:1; display:flex; flex-direction:column; justify-content:flex-start; }
+.app-col-inner > *:first-child { margin-top:0; }
+.app-col-inner > *:last-child { margin-bottom:0; }
 .app-col:last-child { border-right:none; }
 .col-label { font-size:13px; font-weight:800; margin-bottom:16px; display:flex; align-items:center; gap:8px; letter-spacing:.2px; }
 .col-label-pain { color:#dc2626; }
@@ -218,6 +221,23 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .bid-note { font-size:11px; color:#5f6b7a; display:block; margin-top:2px; }
 .bid-compare-footer { padding:12px 22px; background:#fafbfd; border-top:1px solid rgba(0,0,0,.04); font-size:11px; color:#5f6b7a; }
 .bid-compare-footer .boost { color:#059669; font-weight:700; }
+/* ---- 一线增量情况 ---- */
+.increment-board { background:var(--white); border-radius:var(--r-lg); border:1px solid rgba(0,0,0,.05); margin:28px 0 36px; box-shadow:var(--shadow); overflow:hidden; }
+.increment-title { padding:18px 24px; font-size:15px; font-weight:800; color:var(--text); background:linear-gradient(180deg,#fcfdfe,#fff); border-bottom:1px solid rgba(0,0,0,.04); display:flex; align-items:center; }
+.increment-body { display:flex; gap:24px; padding:24px; align-items:center; }
+.increment-img { flex:1; min-width:0; }
+.increment-img figure { margin:0; border-radius:12px; overflow:hidden; border:1px solid rgba(0,0,0,.06); }
+.increment-img img { width:100%; display:block; object-fit:contain; background:#f6f8fc; }
+.increment-img figcaption { padding:10px 14px; font-size:12px; color:#5f6b7a; background:#fff; border-top:1px solid rgba(0,0,0,.04); }
+.increment-data { flex:0 0 240px; display:flex; flex-direction:column; gap:16px; }
+.inc-stats { display:flex; flex-direction:column; gap:16px; }
+.inc-stat-item { text-align:center; padding:20px; background:linear-gradient(135deg,#eaf2ff,#dbe9ff); border-radius:12px; border:1px solid rgba(59,130,246,.15); }
+.inc-stat-num { font-size:28px; font-weight:900; color:var(--blue); letter-spacing:-.5px; }
+.inc-stat-label { font-size:13px; color:var(--muted); margin-top:6px; font-weight:600; }
+@media (max-width:768px) {
+  .increment-body { flex-direction:column; }
+  .increment-data { flex:1; width:100%; }
+}
 @media (max-width:768px) { .bid-flow-platform { flex-direction:column; } .bid-table thead th:first-child { width:100px; } }
 .scene-divider { max-width:1120px; margin:0 auto; border:none; border-top:1px solid rgba(0,0,0,.05); }
 .bg-opp  { background:linear-gradient(180deg,#eaf2ff 0%,#f7f8fb 50%,#f7f8fb 100%); }
@@ -629,20 +649,20 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
       <div><div class="app-title">市场分析平台</div><div class="app-subtitle">简化市场研判工作，仅需2分钟左右，就能完成区域、行业、客户多维度的安全市场分析；无需再耗费大量时间人工收集、整理、治理各类数据，高效满足市场分析需求。</div></div>
     </div>
     <div class="app-content">
-      <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div><p><strong>示例场景</strong>：某行业销售收到紧急需求，需要分析本区域金融、运营商行业近3年市场情况（地市/客户/中标方等多个维度）。</p>
-        <p><strong>人工处理</strong>：寻求咨询厂商去购买相关数据，需整理、治理、分析数据至少花费半天时间或直接找咨询厂商付费获取分析报告</p><div class="col-emoji-bg">📊</div></div>
-      <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div><p>收到需求，<strong>怎么在2分钟内</strong>完成多维度安全市场分析（请看如下应用演示视频）</p>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-pain">😩 用户痛点</div><p><strong>示例场景</strong>：某行业销售收到紧急需求，需要分析本区域金融、运营商行业近3年市场情况（地市/客户/中标方等多个维度）。</p>
+        <p><strong>人工处理</strong>：寻求咨询厂商去购买相关数据，需整理、治理、分析数据至少花费半天时间或直接找咨询厂商付费获取分析报告</p></div><div class="col-emoji-bg">📊</div></div>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-solve">✅ AI能帮你</div><p>收到需求，<strong>怎么在2分钟内</strong>完成多维度安全市场分析（请看如下应用演示视频）</p>
         <ul>
           <li>区域安全市场</li>
           <li>行业安全市场</li>
           <li>客户安全市场</li>
           <li>中标方竞争态势</li>
           <li>........................</li>
-        </ul><div class="col-emoji-bg">⚡</div></div>
-      <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div><p>登录DASLink ，进入市场情报分析平台就可使用。
+        </ul></div><div class="col-emoji-bg">⚡</div></div>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-how">🔧 平台入口</div><p>登录DASLink ，进入市场情报分析平台就可使用。
 ---</p>
         <div class="path-tag"><span>DASLINK</span> <span class="arr">→</span> <span>帆软</span> <span class="arr">→</span> <span>市场行销部</span> <span class="arr">→</span> <span>市场情报分析</span></div>
-        <div class="path-tag"><span>营销AI小秘</span> <span class="arr">→</span> <span>挖商机（PC）</span></div><div class="col-emoji-bg">🗺️</div></div>
+        <div class="path-tag"><span>营销AI小秘</span> <span class="arr">→</span> <span>挖商机（PC）</span></div></div><div class="col-emoji-bg">🗺️</div></div>
     </div>
     <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot"></span>应用演示视频</div>
@@ -652,20 +672,20 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   <div class="app-block" id="app-s1-2">
     <div class="app-block-header">
       <div class="app-num-badge" style="background:linear-gradient(135deg,#0284c7,#0891b2);">2</div>
-      <div><div class="app-title">标讯运营</div><div class="app-subtitle">标讯运营全流程线上化、标准化 · 聚焦有效标讯，挖掘增量，助力更多的“产粮”</div></div>
+      <div><div class="app-title">一线增量情况</div><div class="app-subtitle">标讯运营全流程线上化、标准化 · 聚焦有效标讯，挖掘增量，助力更多的“产粮”</div></div>
     </div>
     <div class="app-content">
-      <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div><p>以往标讯数据的筛选、处理<strong>全部依赖人工</strong>，耗时费力。大量无关数据、非业务数据混杂，真正有价值的标讯很难快速找到；且标讯的管理未标准化、流程化导致需要花费大量的时间去维护、复盘等</p><div class="col-emoji-bg">📊</div></div>
-      <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div><p>完成标讯工作<strong>线上化、标准化</strong>升级，搭建完整线上处理流程：</p>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-pain">😩 用户痛点</div><p>以往标讯数据的筛选、处理<strong>全部依赖人工</strong>，耗时费力。大量无关数据、非业务数据混杂，真正有价值的标讯很难快速找到；且标讯的管理未标准化、流程化导致需要花费大量的时间去维护、复盘等</p></div><div class="col-emoji-bg">📊</div></div>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-solve">✅ AI能帮你</div><p>完成标讯工作<strong>线上化、标准化</strong>升级，搭建完整线上处理流程：</p>
         <ul>
           <li>精准过滤无关/非我司业务数据</li>
           <li>聚焦有效标讯</li>
           <li>挖掘增量商机</li>
           <li>助力更多"产粮"</li>
           <li>........................</li>
-        </ul><div class="col-emoji-bg">⚡</div></div>
-      <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div><p>登录LTC-机会点，系统自动推送负责客户的高价值标讯。</p>
-        <div class="path-tag"><span>LTC</span> <span class="arr">→</span> <span>机会点（如下截图示例的平台主界面）</span></div><div class="col-emoji-bg">🗺️</div></div>
+        </ul></div><div class="col-emoji-bg">⚡</div></div>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-how">🔧 平台入口</div><p>登录LTC-机会点，系统自动推送负责客户的高价值标讯。</p>
+        <div class="path-tag"><span>LTC</span> <span class="arr">→</span> <span>机会点（如下截图示例的平台主界面）</span></div></div><div class="col-emoji-bg">🗺️</div></div>
     </div>
     <div class="bid-flow-platform">
       <div class="app-video-panel">
@@ -680,16 +700,23 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
       <div class="bid-compare">
         <div class="bid-compare-title"><span class="ai-dot"></span>AI助力高价值标讯</div>
         <table class="bid-table">
-          <thead><tr><th></th><th>数据治理</th><th>推送数量</th><th>标讯质量</th></tr></thead>
+          <thead><tr><th></th><th>版本/上线时间</th><th>V1.0/5.6</th><th>V2.0/6.6</th><th>V3.0/7.26</th></tr></thead>
           <tbody>
-            <tr class="old-row"><td><span class="bid-ver-tag old">V1.0（治理前）</span></td><td class="td-desc">NA客户推送全部标讯，非NA及未匹配推送专项标讯</td><td class="td-desc">1天1~2条</td><td class="td-desc">60%<br>纯安全标讯</td></tr>
-            <tr class="new-row"><td><span class="bid-ver-tag new">V2.0（治理后）</span></td><td class="td-desc">过滤NA客户信息化标讯、测评、友商维保等非我司业务数据</td><td class="td-desc">1天1条</td><td class="td-desc">90%<br>纯安全标讯</td></tr>
+            <tr class="old-row"><td><span class="bid-ver-tag old">V1.0（治理前）</span></td><td class="td-desc">数据治理<br></td><td class="td-desc">大小模型治理数据后，NA客户推送对应全部标讯，非NA及未匹配推送专项标讯<br></td><td class="td-desc">如上基础，过滤NA客户的信息化标讯；过滤测评、友商维保等非我司业务数据<br></td><td class="td-desc">如上基础，梳理及分析400+反馈无效的原因，过滤身份认证、信创改造、网络基础设施等产品类数据<br></td></tr>
+            <tr class="new-row"><td><span class="bid-ver-tag new">V2.0（治理后）</span></td><td class="td-desc">抽样时间<br></td><td class="td-desc">5.06-5.17<br></td><td class="td-desc">6.06-6.17<br></td><td class="td-desc">7.26-7.31<br></td></tr>
           </tbody>
         </table>
         <div class="bid-compare-footer">
-          <span>🎯 数据质量从60%提升至90%，推送更精准，大幅节省处理时间，标讯质量更高更有价值</span>
+          <span>🎯 </span>
         </div>
       </div>
+      </div>
+      <div class="increment-board">
+        <div class="increment-title"><span class="ai-dot"></span>一线增量情况</div>
+        <div class="increment-body">
+          <div class="increment-img"><figure><img src="media/bid_increment_board.png" alt=""><figcaption>📌 商机金额（机会点带来的新增商机）</figcaption></figure></div>
+          <div class="increment-data"><div class="inc-stats"><div class="inc-stat-item"><div class="inc-stat-num">3000W</div><div class="inc-stat-label">截至7月底</div></div><div class="inc-stat-item"><div class="inc-stat-num">TOP5</div><div class="inc-stat-label">北京、济南、海南、青岛、深圳</div></div></div></div>
+        </div>
       </div>
   <div class="app-block" id="app-s1-3">
     <div class="app-block-header">
@@ -697,18 +724,18 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
       <div><div class="app-title">内外市场空间分析报告</div><div class="app-subtitle">整体/地市/行业/客户运营.... · 一键智能化市场空间分析报告</div></div>
     </div>
     <div class="app-content">
-      <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div><p>需要定期撰写市场研判报告，数据收集分散、格式不统一、撰写耗时，<strong>难以保持报告质量的一致性</strong>，还容易因数据不全导致判断失准。</p><div class="col-emoji-bg">📊</div></div>
-      <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div><p>这份<strong>智能化报告（1年2次）</strong>，为大家开展客户精细化运营、区域市场态势研判提供全面数据支撑：</p>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-pain">😩 用户痛点</div><p>需要定期撰写市场研判报告，数据收集分散、格式不统一、撰写耗时，<strong>难以保持报告质量的一致性</strong>，还容易因数据不全导致判断失准。</p></div><div class="col-emoji-bg">📊</div></div>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-solve">✅ AI能帮你</div><p>这份<strong>智能化报告（1年2次）</strong>，为大家开展客户精细化运营、区域市场态势研判提供全面数据支撑：</p>
         <ul>
           <li>整体市场研判</li>
           <li>地市市场研判</li>
           <li>行业市场研判</li>
           <li>客户运营专项</li>
           <li>........................</li>
-        </ul><div class="col-emoji-bg">⚡</div></div>
-      <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div><p>进入钉钉专属主题知识库，选择本区域/战区分析报告。
+        </ul></div><div class="col-emoji-bg">⚡</div></div>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-how">🔧 平台入口</div><p>进入钉钉专属主题知识库，选择本区域/战区分析报告。
 ---</p>
-        <div class="path-tag"><span>钉钉文档</span> <span class="arr">→</span> <span>网安市场空间分析知识库</span> <span class="arr">→</span> <span>各区域/战区分析报告</span></div><div class="col-emoji-bg">🗺️</div></div>
+        <div class="path-tag"><span>钉钉文档</span> <span class="arr">→</span> <span>网安市场空间分析知识库</span> <span class="arr">→</span> <span>各区域/战区分析报告</span></div></div><div class="col-emoji-bg">🗺️</div></div>
     </div>
     <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot"></span>应用演示视频</div>
@@ -721,20 +748,21 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
       <div><div class="app-title">安恒标讯AI分析系统</div><div class="app-subtitle">标讯数据深度分析 · 个性化维度定制 · AI智能分析洞察</div></div>
     </div>
     <div class="app-content">
-      <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div><p>1.为了充分利用好标讯数据，进行市场空间分析、标讯运营等;2.是为了支持用户个性化，综合管理部利用Workbuddy等AI工具，研发AI分析平台，供大家使用，也可随时交流AI工具研发方法，用户自主进行个性化平台建设。</p><div class="col-emoji-bg">📊</div></div>
-      <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div><p><strong>平台提供两大分析能力：</strong></p>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-pain">😩 用户痛点</div><p>1.为了充分利用好标讯数据，进行市场空间分析、标讯运营等;2.是为了支持用户个性化，综合管理部利用Workbuddy等AI工具，研发AI分析平台，供大家使用，也可随时交流AI工具研发方法，用户自主进行个性化平台建设。</p></div><div class="col-emoji-bg">📊</div></div>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-solve">✅ AI能帮你</div><p><strong>平台提供两大分析能力：</strong></p>
         <ul>
           <li>📊 标准维度分析：市场空间分析、标讯运营等多维度数据洞察</li>
           <li>🤖 AI智能分析：个性化维度定制，AI驱动的深度分析</li>
-        </ul><div class="col-emoji-bg">⚡</div></div>
-      <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div><p>点击下方链接直接进入安恒标讯AI分析系统。
+        </ul></div><div class="col-emoji-bg">⚡</div></div>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-how">🔧 平台入口</div><p>点击下方链接直接进入安恒标讯AI分析系统。
 ---</p>
-        <a href="https://788276d5bd17420faeee74b1458b6e4a.app.codebuddy.work/" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:10px 20px;background:linear-gradient(135deg,#0d2550,#1a3d6e);color:#fff;border-radius:10px;font-weight:600;font-size:14px;text-decoration:none;transition:all .28s;">安恒标讯AI分析系统 <span style="font-size:12px;">↗</span></a><div class="col-emoji-bg">🗺️</div></div>
+        <a href="https://788276d5bd17420faeee74b1458b6e4a.app.codebuddy.work/" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:10px 20px;background:linear-gradient(135deg,#0d2550,#1a3d6e);color:#fff;border-radius:10px;font-weight:600;font-size:14px;text-decoration:none;transition:all .28s;">安恒标讯AI分析系统 <span style="font-size:12px;">↗</span></a></div><div class="col-emoji-bg">🗺️</div></div>
     </div>
     <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot" style="background:#38bdf8;"></span>应用演示截图</div>
-      <div class="img-gallery col2"><figure><img src="media/bid_ai_data_import.webp" alt=""><figcaption>📌 数据导入界面</figcaption></figure>
-<figure><img src="media/bid_ai_smart_analysis.webp" alt=""><figcaption>📌 AI智能分析界面</figcaption></figure></div>
+      <div class="img-gallery "><figure><img src="media/bid_ai_data_import.webp" alt=""><figcaption>📌 数据导入界面</figcaption></figure>
+<figure><img src="media/bid_ai_smart_analysis.webp" alt=""><figcaption>📌 AI智能分析界面</figcaption></figure>
+<figure><img src="media/bid_ai_report.png" alt=""><figcaption>📌 报告展示界面</figcaption></figure></div>
     </div>
       </div>
   </div>

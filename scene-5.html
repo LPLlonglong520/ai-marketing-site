@@ -119,8 +119,11 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .app-block:hover .app-num-badge { transform:scale(1.08); }
 .app-title { font-size:19px; font-weight:800; color:var(--text); letter-spacing:-.2px; }
 .app-subtitle { margin-top:4px; font-size:13px; color:var(--muted); word-break:break-word; }
-.app-content { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; border-bottom:1px solid rgba(0,0,0,.04); }
-.app-col { padding:32px 28px; position:relative; overflow:hidden; border-right:1px solid rgba(0,0,0,.04); }
+.app-content { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; border-bottom:1px solid rgba(0,0,0,.04); align-items:stretch; }
+.app-col { padding:32px 28px; position:relative; overflow:hidden; border-right:1px solid rgba(0,0,0,.04); display:flex; flex-direction:column; justify-content:space-between; }
+.app-col-inner { flex:1; display:flex; flex-direction:column; justify-content:flex-start; }
+.app-col-inner > *:first-child { margin-top:0; }
+.app-col-inner > *:last-child { margin-bottom:0; }
 .app-col:last-child { border-right:none; }
 .col-label { font-size:13px; font-weight:800; margin-bottom:16px; display:flex; align-items:center; gap:8px; letter-spacing:.2px; }
 .col-label-pain { color:#dc2626; }
@@ -218,6 +221,23 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .bid-note { font-size:11px; color:#5f6b7a; display:block; margin-top:2px; }
 .bid-compare-footer { padding:12px 22px; background:#fafbfd; border-top:1px solid rgba(0,0,0,.04); font-size:11px; color:#5f6b7a; }
 .bid-compare-footer .boost { color:#059669; font-weight:700; }
+/* ---- 一线增量情况 ---- */
+.increment-board { background:var(--white); border-radius:var(--r-lg); border:1px solid rgba(0,0,0,.05); margin:28px 0 36px; box-shadow:var(--shadow); overflow:hidden; }
+.increment-title { padding:18px 24px; font-size:15px; font-weight:800; color:var(--text); background:linear-gradient(180deg,#fcfdfe,#fff); border-bottom:1px solid rgba(0,0,0,.04); display:flex; align-items:center; }
+.increment-body { display:flex; gap:24px; padding:24px; align-items:center; }
+.increment-img { flex:1; min-width:0; }
+.increment-img figure { margin:0; border-radius:12px; overflow:hidden; border:1px solid rgba(0,0,0,.06); }
+.increment-img img { width:100%; display:block; object-fit:contain; background:#f6f8fc; }
+.increment-img figcaption { padding:10px 14px; font-size:12px; color:#5f6b7a; background:#fff; border-top:1px solid rgba(0,0,0,.04); }
+.increment-data { flex:0 0 240px; display:flex; flex-direction:column; gap:16px; }
+.inc-stats { display:flex; flex-direction:column; gap:16px; }
+.inc-stat-item { text-align:center; padding:20px; background:linear-gradient(135deg,#eaf2ff,#dbe9ff); border-radius:12px; border:1px solid rgba(59,130,246,.15); }
+.inc-stat-num { font-size:28px; font-weight:900; color:var(--blue); letter-spacing:-.5px; }
+.inc-stat-label { font-size:13px; color:var(--muted); margin-top:6px; font-weight:600; }
+@media (max-width:768px) {
+  .increment-body { flex-direction:column; }
+  .increment-data { flex:1; width:100%; }
+}
 @media (max-width:768px) { .bid-flow-platform { flex-direction:column; } .bid-table thead th:first-child { width:100px; } }
 .scene-divider { max-width:1120px; margin:0 auto; border:none; border-top:1px solid rgba(0,0,0,.05); }
 .bg-opp  { background:linear-gradient(180deg,#eaf2ff 0%,#f7f8fb 50%,#f7f8fb 100%); }
@@ -629,18 +649,18 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
       <div><div class="app-title">安小渠</div><div class="app-subtitle">专为渠道打造，可解答产品知识、行业打法、挖掘商机、渠道政策以及下载资料！7×24小时值守，减少重复答疑，提升渠道服务响应速度</div></div>
     </div>
     <div class="app-content">
-      <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div><p>渠道伙伴咨询产品知识、行业打法、渠道政策等问题，依赖人工答疑，响应慢、重复问题多，晚上或周末遇到紧急询问更是等半天。</p><div class="col-emoji-bg">📈</div></div>
-      <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div><p>安小渠——专为渠道打造的 AI 数字员工，7×24小时值守：</p>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-pain">😩 用户痛点</div><p>渠道伙伴咨询产品知识、行业打法、渠道政策等问题，依赖人工答疑，响应慢、重复问题多，晚上或周末遇到紧急询问更是等半天。</p></div><div class="col-emoji-bg">📈</div></div>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-solve">✅ AI能帮你</div><p>安小渠——专为渠道打造的 AI 数字员工，7×24小时值守：</p>
         <ul>
           <li>📚 内置产品知识库，输入产品问题即时获答</li>
           <li>🎯 提供行业解决方案与实战打法</li>
           <li>📋 渠道合作政策、返点规则等即时查询</li>
           <li>📥安全产品介绍PPT、方案模板等直接获取</li>
           <li>........................</li>
-        </ul><div class="col-emoji-bg">⚡</div></div>
-      <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div><p>安恒信息组织架构中的钉钉搜索"安小渠"即可使用。
+        </ul></div><div class="col-emoji-bg">⚡</div></div>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-how">🔧 平台入口</div><p>安恒信息组织架构中的钉钉搜索"安小渠"即可使用。
 ---</p>
-        <div class="path-tag"><span>钉钉</span> <span class="arr">→</span> <span>安小渠 （安和信息组织）</span></div><div class="col-emoji-bg">🏭</div></div>
+        <div class="path-tag"><span>钉钉</span> <span class="arr">→</span> <span>安小渠 （安和信息组织）</span></div></div><div class="col-emoji-bg">🏭</div></div>
     </div>
     <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot"></span>应用演示视频</div>
@@ -653,18 +673,18 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
       <div><div class="app-title">渠道市场分析空间</div><div class="app-subtitle">渠道地图 · 渠道运营 · 渠道市场研判 · 行业市场研判</div></div>
     </div>
     <div class="app-content">
-      <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div><p>渠道市场数据分散，缺乏统一看板，渠道伙伴分布、市场覆盖、渠道运营效果难以一目了然，渠道市场研判缺乏数据支撑。</p><div class="col-emoji-bg">📈</div></div>
-      <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div><p>搭建渠道市场分析空间，统一渠道地图、渠道运营、渠道市场研判、行业市场研判等看板：</p>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-pain">😩 用户痛点</div><p>渠道市场数据分散，缺乏统一看板，渠道伙伴分布、市场覆盖、渠道运营效果难以一目了然，渠道市场研判缺乏数据支撑。</p></div><div class="col-emoji-bg">📈</div></div>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-solve">✅ AI能帮你</div><p>搭建渠道市场分析空间，统一渠道地图、渠道运营、渠道市场研判、行业市场研判等看板：</p>
         <ul>
           <li>🗺️ 渠道伙伴分布、区域覆盖一目了然</li>
           <li>📊 渠道运营效果数据实时监控</li>
           <li>📈 渠道市场趋势与机会分析</li>
           <li>🏭 行业安全市场态势研判</li>
           <li>........................</li>
-        </ul><div class="col-emoji-bg">⚡</div></div>
-      <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div><p>看板已做完，数据权限体系研发需IT支持，目前在排期中，最迟2026年8月底可上线。
+        </ul></div><div class="col-emoji-bg">⚡</div></div>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-how">🔧 平台入口</div><p>看板已做完，数据权限体系研发需IT支持，目前在排期中，最迟2026年8月底可上线。
 ---</p>
-        <div class="path-tag"><span>DASLink</span> <span class="arr">→</span> <span>帆软</span> <span class="arr">→</span> <span>渠道市场空间分析</span></div><div class="col-emoji-bg">🏭</div></div>
+        <div class="path-tag"><span>DASLink</span> <span class="arr">→</span> <span>帆软</span> <span class="arr">→</span> <span>渠道市场空间分析</span></div></div><div class="col-emoji-bg">🏭</div></div>
     </div>
     <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot"></span>应用演示视频</div>

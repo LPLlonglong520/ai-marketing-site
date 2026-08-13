@@ -271,6 +271,35 @@ def parse_content(path):
                         bid_steps_data.append(step)
             app['bid_steps'] = bid_steps_data if bid_steps_data else None
             
+            # 解析一线增量情况
+            increment_match = re.search(r'### 一线增量情况\n\n((?:\|.+\|\n)+)', ab)
+            if increment_match:
+                inc_data = {'images': [], 'stats': []}
+                for line in increment_match.group(1).strip().split('\n'):
+                    cells = re.findall(r'\|\s*(.+?)\s*(?=\|)', line)
+                    if len(cells) >= 2:
+                        k = cells[0].strip()
+                        v = cells[1].strip()
+                        if k == '截图1':
+                            inc_data['images'].append({'src': media_path(v), 'caption': ''})
+                        elif k == '截图1说明':
+                            if inc_data['images']:
+                                inc_data['images'][-1]['caption'] = v
+                        elif k.startswith('数据') and '数值' in k:
+                            num = re.search(r'数据(\d+)', k)
+                            if num:
+                                idx = int(num.group(1))
+                                inc_data['stats'].append({'idx': idx, 'num': v, 'label': ''})
+                        elif k.startswith('数据') and '标签' in k:
+                            num = re.search(r'数据(\d+)', k)
+                            if num:
+                                idx = int(num.group(1))
+                                for s in inc_data['stats']:
+                                    if s['idx'] == idx:
+                                        s['label'] = v
+                                        break
+                app['increment'] = inc_data
+            
             if img_srcs:
                 app['images'] = [{'src': media_path(s), 'caption': img_caps[i] if i < len(img_caps) else ''} 
                                  for i, s in enumerate(img_srcs)]
@@ -447,8 +476,11 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .app-block:hover .app-num-badge { transform:scale(1.08); }
 .app-title { font-size:19px; font-weight:800; color:var(--text); letter-spacing:-.2px; }
 .app-subtitle { margin-top:4px; font-size:13px; color:var(--muted); word-break:break-word; }
-.app-content { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; border-bottom:1px solid rgba(0,0,0,.04); }
-.app-col { padding:32px 28px; position:relative; overflow:hidden; border-right:1px solid rgba(0,0,0,.04); }
+.app-content { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; border-bottom:1px solid rgba(0,0,0,.04); align-items:stretch; }
+.app-col { padding:32px 28px; position:relative; overflow:hidden; border-right:1px solid rgba(0,0,0,.04); display:flex; flex-direction:column; justify-content:space-between; }
+.app-col-inner { flex:1; display:flex; flex-direction:column; justify-content:flex-start; }
+.app-col-inner > *:first-child { margin-top:0; }
+.app-col-inner > *:last-child { margin-bottom:0; }
 .app-col:last-child { border-right:none; }
 .col-label { font-size:13px; font-weight:800; margin-bottom:16px; display:flex; align-items:center; gap:8px; letter-spacing:.2px; }
 .col-label-pain { color:#dc2626; }
@@ -546,6 +578,23 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .bid-note { font-size:11px; color:#5f6b7a; display:block; margin-top:2px; }
 .bid-compare-footer { padding:12px 22px; background:#fafbfd; border-top:1px solid rgba(0,0,0,.04); font-size:11px; color:#5f6b7a; }
 .bid-compare-footer .boost { color:#059669; font-weight:700; }
+/* ---- 一线增量情况 ---- */
+.increment-board { background:var(--white); border-radius:var(--r-lg); border:1px solid rgba(0,0,0,.05); margin:28px 0 36px; box-shadow:var(--shadow); overflow:hidden; }
+.increment-title { padding:18px 24px; font-size:15px; font-weight:800; color:var(--text); background:linear-gradient(180deg,#fcfdfe,#fff); border-bottom:1px solid rgba(0,0,0,.04); display:flex; align-items:center; }
+.increment-body { display:flex; gap:24px; padding:24px; align-items:center; }
+.increment-img { flex:1; min-width:0; }
+.increment-img figure { margin:0; border-radius:12px; overflow:hidden; border:1px solid rgba(0,0,0,.06); }
+.increment-img img { width:100%; display:block; object-fit:contain; background:#f6f8fc; }
+.increment-img figcaption { padding:10px 14px; font-size:12px; color:#5f6b7a; background:#fff; border-top:1px solid rgba(0,0,0,.04); }
+.increment-data { flex:0 0 240px; display:flex; flex-direction:column; gap:16px; }
+.inc-stats { display:flex; flex-direction:column; gap:16px; }
+.inc-stat-item { text-align:center; padding:20px; background:linear-gradient(135deg,#eaf2ff,#dbe9ff); border-radius:12px; border:1px solid rgba(59,130,246,.15); }
+.inc-stat-num { font-size:28px; font-weight:900; color:var(--blue); letter-spacing:-.5px; }
+.inc-stat-label { font-size:13px; color:var(--muted); margin-top:6px; font-weight:600; }
+@media (max-width:768px) {
+  .increment-body { flex-direction:column; }
+  .increment-data { flex:1; width:100%; }
+}
 @media (max-width:768px) { .bid-flow-platform { flex-direction:column; } .bid-table thead th:first-child { width:100px; } }
 .scene-divider { max-width:1120px; margin:0 auto; border:none; border-top:1px solid rgba(0,0,0,.05); }
 .bg-opp  { background:linear-gradient(180deg,#eaf2ff 0%,#f7f8fb 50%,#f7f8fb 100%); }
@@ -920,6 +969,32 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 @media (max-width: 900px) { .future-home-card { grid-template-columns: 1fr; gap: 24px; text-align: center; padding: 32px; } .future-home-icon { width: 80px; height: 80px; font-size: 38px; margin: 0 auto; } .future-home-tags { justify-content: center; } }
 @media (max-width: 768px) { .future-home-section { padding: 30px 16px 45px; } .future-home-title { font-size: 24px; } .future-home-card-title { font-size: 20px; } .future-home-card-desc { font-size: 14px; } }
 </style>'''
+
+
+def build_increment_board(increment_data):
+    if not increment_data:
+        return ''
+    imgs = increment_data.get('images', [])
+    stats = increment_data.get('stats', [])
+    
+    img_html = ''
+    if imgs:
+        img = imgs[0]
+        cap = img.get('caption', '')
+        img_html = f'<figure><img src="{img["src"]}" alt="">{"<figcaption>"+cap+"</figcaption>" if cap else ""}</figure>'
+    
+    stats_html = ''
+    if stats:
+        stats_items = ''.join(f'<div class="inc-stat-item"><div class="inc-stat-num">{st["num"]}</div><div class="inc-stat-label">{st["label"]}</div></div>' for st in stats)
+        stats_html = f'<div class="inc-stats">{stats_items}</div>'
+    
+    return f'''      <div class="increment-board">
+        <div class="increment-title"><span class="ai-dot"></span>一线增量情况</div>
+        <div class="increment-body">
+          <div class="increment-img">{img_html}</div>
+          <div class="increment-data">{stats_html}</div>
+        </div>
+      </div>'''
 
 
 def build_bid_steps(bid_steps_data):
@@ -1346,12 +1421,16 @@ def render_scene(data, scene):
       <div><div class="app-title">{app['title']}</div><div class="app-subtitle">{app.get('subtitle','')}</div></div>
     </div>{app_stats_html}
     <div class="app-content">
-      <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div>{pain}<div class="col-emoji-bg">{pe}</div></div>
-      <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div>{solve}<div class="col-emoji-bg">{se}</div></div>
-      <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div>{how_html}<div class="col-emoji-bg">{he}</div></div>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-pain">😩 用户痛点</div>{pain}</div><div class="col-emoji-bg">{pe}</div></div>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-solve">✅ AI能帮你</div>{solve}</div><div class="col-emoji-bg">{se}</div></div>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-how">🔧 平台入口</div>{how_html}</div><div class="col-emoji-bg">{he}</div></div>
     </div>
 {video_panel}
     {profile_preview.format(profile_src=app.get('profile_preview','media/天津大学_安全画像.html')) if (snum==2 and ai==0 and app.get('profile_preview')) else ''}  </div>'''
+        
+        # 渲染一线增量情况（如果该应用有）
+        if app.get('increment'):
+            apps_html += '\n' + build_increment_board(app['increment'])
 
     return f'''<div class="scene-timeline-item" id="{sid}">
 <div class="{bg}">

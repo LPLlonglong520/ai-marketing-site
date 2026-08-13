@@ -119,8 +119,11 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .app-block:hover .app-num-badge { transform:scale(1.08); }
 .app-title { font-size:19px; font-weight:800; color:var(--text); letter-spacing:-.2px; }
 .app-subtitle { margin-top:4px; font-size:13px; color:var(--muted); word-break:break-word; }
-.app-content { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; border-bottom:1px solid rgba(0,0,0,.04); }
-.app-col { padding:32px 28px; position:relative; overflow:hidden; border-right:1px solid rgba(0,0,0,.04); }
+.app-content { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; border-bottom:1px solid rgba(0,0,0,.04); align-items:stretch; }
+.app-col { padding:32px 28px; position:relative; overflow:hidden; border-right:1px solid rgba(0,0,0,.04); display:flex; flex-direction:column; justify-content:space-between; }
+.app-col-inner { flex:1; display:flex; flex-direction:column; justify-content:flex-start; }
+.app-col-inner > *:first-child { margin-top:0; }
+.app-col-inner > *:last-child { margin-bottom:0; }
 .app-col:last-child { border-right:none; }
 .col-label { font-size:13px; font-weight:800; margin-bottom:16px; display:flex; align-items:center; gap:8px; letter-spacing:.2px; }
 .col-label-pain { color:#dc2626; }
@@ -218,6 +221,23 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .bid-note { font-size:11px; color:#5f6b7a; display:block; margin-top:2px; }
 .bid-compare-footer { padding:12px 22px; background:#fafbfd; border-top:1px solid rgba(0,0,0,.04); font-size:11px; color:#5f6b7a; }
 .bid-compare-footer .boost { color:#059669; font-weight:700; }
+/* ---- 一线增量情况 ---- */
+.increment-board { background:var(--white); border-radius:var(--r-lg); border:1px solid rgba(0,0,0,.05); margin:28px 0 36px; box-shadow:var(--shadow); overflow:hidden; }
+.increment-title { padding:18px 24px; font-size:15px; font-weight:800; color:var(--text); background:linear-gradient(180deg,#fcfdfe,#fff); border-bottom:1px solid rgba(0,0,0,.04); display:flex; align-items:center; }
+.increment-body { display:flex; gap:24px; padding:24px; align-items:center; }
+.increment-img { flex:1; min-width:0; }
+.increment-img figure { margin:0; border-radius:12px; overflow:hidden; border:1px solid rgba(0,0,0,.06); }
+.increment-img img { width:100%; display:block; object-fit:contain; background:#f6f8fc; }
+.increment-img figcaption { padding:10px 14px; font-size:12px; color:#5f6b7a; background:#fff; border-top:1px solid rgba(0,0,0,.04); }
+.increment-data { flex:0 0 240px; display:flex; flex-direction:column; gap:16px; }
+.inc-stats { display:flex; flex-direction:column; gap:16px; }
+.inc-stat-item { text-align:center; padding:20px; background:linear-gradient(135deg,#eaf2ff,#dbe9ff); border-radius:12px; border:1px solid rgba(59,130,246,.15); }
+.inc-stat-num { font-size:28px; font-weight:900; color:var(--blue); letter-spacing:-.5px; }
+.inc-stat-label { font-size:13px; color:var(--muted); margin-top:6px; font-weight:600; }
+@media (max-width:768px) {
+  .increment-body { flex-direction:column; }
+  .increment-data { flex:1; width:100%; }
+}
 @media (max-width:768px) { .bid-flow-platform { flex-direction:column; } .bid-table thead th:first-child { width:100px; } }
 .scene-divider { max-width:1120px; margin:0 auto; border:none; border-top:1px solid rgba(0,0,0,.05); }
 .bg-opp  { background:linear-gradient(180deg,#eaf2ff 0%,#f7f8fb 50%,#f7f8fb 100%); }
@@ -631,21 +651,21 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 <div class="app-stats-strip"><div class="app-stats-item"><div class="app-stats-num">30+</div><div class="app-stats-label">AI实战大比武案例</div></div><div class="app-stats-item"><div class="app-stats-num">40+</div><div class="app-stats-label">AI提质增效优秀案例</div></div><div class="app-stats-item"><div class="app-stats-num">100%</div><div class="app-stats-label">共建共享</div></div></div>
 <div class="app-stats-note">整合一线AI实战经验，沉淀推广至公司平台</div>
     <div class="app-content">
-      <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div><ul>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-pain">😩 用户痛点</div><ul>
           <li>一线AI实战大比武产出 <strong>30+ 应用案例</strong></li>
           <li>AI提质增效产出近 <strong>40个优秀案例</strong></li>
           <li>一线员工在外部AI应用上的实践技能、能力亟需整合到公司平台，<strong>沉淀推广一线宝贵经验</strong></li>
-        </ul><div class="col-emoji-bg">🛠️</div></div>
-      <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div><p>建设Skill共享平台，<strong>基础Skill + 业务专属Skill</strong>，欢迎大家上传优秀Skill，更有大奖等你来拿：</p>
+        </ul></div><div class="col-emoji-bg">🛠️</div></div>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-solve">✅ AI能帮你</div><p>建设Skill共享平台，<strong>基础Skill + 业务专属Skill</strong>，欢迎大家上传优秀Skill，更有大奖等你来拿：</p>
         <ul>
           <li>🏗️ 构建公司内部统一Skill共享平台</li>
           <li>📤 一线员工上传实战经验与优秀Skill</li>
           <li>🏆 激励机制：上传优秀Skill赢大奖</li>
           <li>🔄 持续沉淀推广，形成营销AI工具箱</li>
-        </ul><div class="col-emoji-bg">✨</div></div>
-      <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div><p>登录营销AI小秘平台，进入Skill共享平台，选择所需Skill即可使用。
+        </ul></div><div class="col-emoji-bg">✨</div></div>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-how">🔧 平台入口</div><p>登录营销AI小秘平台，进入Skill共享平台，选择所需Skill即可使用。
 ---</p>
-        <div class="path-tag"><span>DASLink</span> <span class="arr">→</span> <span>行销门户2.0</span> <span class="arr">→</span> <span>Skill共享平台</span></div><div class="col-emoji-bg">🔧</div></div>
+        <div class="path-tag"><span>DASLink</span> <span class="arr">→</span> <span>行销门户2.0</span> <span class="arr">→</span> <span>Skill共享平台</span></div></div><div class="col-emoji-bg">🔧</div></div>
     </div>
     <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot" style="background:#38bdf8;"></span>应用演示截图</div>

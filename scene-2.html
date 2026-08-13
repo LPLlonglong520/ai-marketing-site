@@ -119,8 +119,11 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .app-block:hover .app-num-badge { transform:scale(1.08); }
 .app-title { font-size:19px; font-weight:800; color:var(--text); letter-spacing:-.2px; }
 .app-subtitle { margin-top:4px; font-size:13px; color:var(--muted); word-break:break-word; }
-.app-content { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; border-bottom:1px solid rgba(0,0,0,.04); }
-.app-col { padding:32px 28px; position:relative; overflow:hidden; border-right:1px solid rgba(0,0,0,.04); }
+.app-content { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; border-bottom:1px solid rgba(0,0,0,.04); align-items:stretch; }
+.app-col { padding:32px 28px; position:relative; overflow:hidden; border-right:1px solid rgba(0,0,0,.04); display:flex; flex-direction:column; justify-content:space-between; }
+.app-col-inner { flex:1; display:flex; flex-direction:column; justify-content:flex-start; }
+.app-col-inner > *:first-child { margin-top:0; }
+.app-col-inner > *:last-child { margin-bottom:0; }
 .app-col:last-child { border-right:none; }
 .col-label { font-size:13px; font-weight:800; margin-bottom:16px; display:flex; align-items:center; gap:8px; letter-spacing:.2px; }
 .col-label-pain { color:#dc2626; }
@@ -218,6 +221,23 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .bid-note { font-size:11px; color:#5f6b7a; display:block; margin-top:2px; }
 .bid-compare-footer { padding:12px 22px; background:#fafbfd; border-top:1px solid rgba(0,0,0,.04); font-size:11px; color:#5f6b7a; }
 .bid-compare-footer .boost { color:#059669; font-weight:700; }
+/* ---- 一线增量情况 ---- */
+.increment-board { background:var(--white); border-radius:var(--r-lg); border:1px solid rgba(0,0,0,.05); margin:28px 0 36px; box-shadow:var(--shadow); overflow:hidden; }
+.increment-title { padding:18px 24px; font-size:15px; font-weight:800; color:var(--text); background:linear-gradient(180deg,#fcfdfe,#fff); border-bottom:1px solid rgba(0,0,0,.04); display:flex; align-items:center; }
+.increment-body { display:flex; gap:24px; padding:24px; align-items:center; }
+.increment-img { flex:1; min-width:0; }
+.increment-img figure { margin:0; border-radius:12px; overflow:hidden; border:1px solid rgba(0,0,0,.06); }
+.increment-img img { width:100%; display:block; object-fit:contain; background:#f6f8fc; }
+.increment-img figcaption { padding:10px 14px; font-size:12px; color:#5f6b7a; background:#fff; border-top:1px solid rgba(0,0,0,.04); }
+.increment-data { flex:0 0 240px; display:flex; flex-direction:column; gap:16px; }
+.inc-stats { display:flex; flex-direction:column; gap:16px; }
+.inc-stat-item { text-align:center; padding:20px; background:linear-gradient(135deg,#eaf2ff,#dbe9ff); border-radius:12px; border:1px solid rgba(59,130,246,.15); }
+.inc-stat-num { font-size:28px; font-weight:900; color:var(--blue); letter-spacing:-.5px; }
+.inc-stat-label { font-size:13px; color:var(--muted); margin-top:6px; font-weight:600; }
+@media (max-width:768px) {
+  .increment-body { flex-direction:column; }
+  .increment-data { flex:1; width:100%; }
+}
 @media (max-width:768px) { .bid-flow-platform { flex-direction:column; } .bid-table thead th:first-child { width:100px; } }
 .scene-divider { max-width:1120px; margin:0 auto; border:none; border-top:1px solid rgba(0,0,0,.05); }
 .bg-opp  { background:linear-gradient(180deg,#eaf2ff 0%,#f7f8fb 50%,#f7f8fb 100%); }
@@ -629,8 +649,8 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
       <div><div class="app-title">客户画像 · AI全自动化客户分析</div><div class="app-subtitle">一句话指令 · 3分钟生成全方位客户画像 · 拜访前必备</div></div>
     </div>
     <div class="app-content">
-      <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div><p>上门拜访客户前，需要<strong>花大量时间零散查找</strong>客户资料：历年预算、采购记录、组织架构、安全成熟度…… 往往要翻好几个系统，还不完整，拜访效果大打折扣。</p><div class="col-emoji-bg">🔍</div></div>
-      <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div><p>仅需一句话指令，<strong>3分钟</strong>生成全方位完整客户分析画像：</p>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-pain">😩 用户痛点</div><p>上门拜访客户前，需要<strong>花大量时间零散查找</strong>客户资料：历年预算、采购记录、组织架构、安全成熟度…… 往往要翻好几个系统，还不完整，拜访效果大打折扣。</p></div><div class="col-emoji-bg">🔍</div></div>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-solve">✅ AI能帮你</div><p>仅需一句话指令，<strong>3分钟</strong>生成全方位完整客户分析画像：</p>
         <ul>
           <li>📅 网络安全/数据安全/安全运营</li>
           <li>🛒 AI安全/安全开发/基础安全防护</li>
@@ -638,11 +658,11 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
           <li>💡 客户招投标</li>
           <li>🕐 客户成交合同</li>
           <li>........................</li>
-        </ul><div class="col-emoji-bg">✨</div></div>
-      <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div><p>钉钉搜营销AI小秘，输入某客户的画像，系统自动生成完整画像报告，有效降低前期准备时间。
+        </ul></div><div class="col-emoji-bg">✨</div></div>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-how">🔧 平台入口</div><p>钉钉搜营销AI小秘，输入某客户的画像，系统自动生成完整画像报告，有效降低前期准备时间。
 ---</p>
         <div class="path-tag"><span>钉钉</span> <span class="arr">→</span> <span>营销AI小秘</span> <span class="arr">→</span> <span>输入指令</span></div>
-        <p style="font-size:12px;color:var(--muted);margin-top:8px;">📱 支持手机端，随时随地可问</p><div class="col-emoji-bg">🎯</div></div>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px;">📱 支持手机端，随时随地可问</p></div><div class="col-emoji-bg">🎯</div></div>
     </div>
     <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot"></span>应用演示视频</div>
@@ -658,19 +678,19 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
       <div><div class="app-title">AI对练 · 智能对练，客户现场完美表现</div><div class="app-subtitle">拜访前模拟演练 · 打磨沟通话术 · 提升沟通质量</div></div>
     </div>
     <div class="app-content">
-      <div class="app-col"><div class="col-label col-label-pain">😩 用户痛点</div><p>拜访重要客户前，<strong>不知道客户会提哪些刁钻问题</strong>，产品知识记不牢，面对质疑容易慌乱，沟通话术不够流畅，关键时刻掉链子。</p><div class="col-emoji-bg">🔍</div></div>
-      <div class="app-col"><div class="col-label col-label-solve">✅ AI能帮你</div><p>模拟真实客户角色进行<strong>实战对话演练</strong>，帮助提前打磨话术：</p>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-pain">😩 用户痛点</div><p>拜访重要客户前，<strong>不知道客户会提哪些刁钻问题</strong>，产品知识记不牢，面对质疑容易慌乱，沟通话术不够流畅，关键时刻掉链子。</p></div><div class="col-emoji-bg">🔍</div></div>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-solve">✅ AI能帮你</div><p>模拟真实客户角色进行<strong>实战对话演练</strong>，帮助提前打磨话术：</p>
         <ul>
           <li>对应场景/客户角色</li>
           <li>AI客户实战沟通</li>
           <li>获取学习报告和改进建议</li>
           <li>........................</li>
-        </ul><div class="col-emoji-bg">✨</div></div>
-      <div class="app-col"><div class="col-label col-label-how">🔧 平台入口</div><p>安恒学堂选择AI对练平台，选择拜访场景 → 选择客户角色 → 与AI对话 → 查看分析报告与建议。 
+        </ul></div><div class="col-emoji-bg">✨</div></div>
+      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-how">🔧 平台入口</div><p>安恒学堂选择AI对练平台，选择拜访场景 → 选择客户角色 → 与AI对话 → 查看分析报告与建议。 
 ---</p>
         <div class="path-tag"><span>AI对练平台</span> <span class="arr">→</span> <span>选场景</span> <span class="arr">→</span> <span>对练</span></div>
         <div class="path-tag"><span>营销AI小秘</span> <span class="arr">→</span> <span>练话术</span></div>
-        <p style="font-size:12px;color:var(--muted);margin-top:8px;">📱 支持手机端，随时随地练习</p><div class="col-emoji-bg">🎯</div></div>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px;">📱 支持手机端，随时随地练习</p></div><div class="col-emoji-bg">🎯</div></div>
     </div>
     <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot" style="background:#38bdf8;"></span>应用演示截图</div>
