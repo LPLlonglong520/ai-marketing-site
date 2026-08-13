@@ -86,10 +86,8 @@
 | 标题 | 一线增量情况 |
 | 截图1 | media/bid_increment_board.png |
 | 截图1说明 | 📌 商机金额（机会点带来的新增商机） |
-| 数据1数值 | 3000W |
-| 数据1标签 | 截至7月底 |
-| 数据2数值 | TOP5 |
-| 数据2标签 | 北京、济南、海南、青岛、深圳 |
+| 截图2 | media/bid_increment_top5.png |
+| 截图2说明 | 📌 TOP5区域排名 |
 
 ---
 
@@ -131,8 +129,6 @@
 | 截图1说明 | 📌 数据导入界面 |
 | 截图2 | media/bid_ai_smart_analysis.png |
 | 截图2说明 | 📌 AI智能分析界面 |
-| 截图3 | media/bid_ai_report.png |
-| 截图3说明 | 📌 报告展示界面 |
 | 入口文字 | 安恒标讯AI分析系统 |
 | 入口链接 | https://788276d5bd17420faeee74b1458b6e4a.app.codebuddy.work/ |
 

@@ -236,24 +236,23 @@ def parse_content(path):
                     elif k.startswith('截图'):
                         img_srcs.append(v)
             
-            # 解析AI标讯对比数据
+            # 解析AI标讯对比数据（通用表格，支持任意列数）
             bid_compare_match = re.search(r'### AI标讯对比数据\n\n((?:\|.+\|\n)+)', ab)
             if bid_compare_match:
-                rows = bid_compare_match.group(1).strip().split('\n')
-                data_rows = []
-                compare_footer = ''
-                for row in rows:
-                    cells = re.findall(r'\|\s*(.+?)\s*(?=\|)', row)
-                    if cells and cells[0].strip() not in ('维度', '') and not cells[0].startswith('--'):
-                        dim = cells[0].strip()
-                        v1 = cells[1].strip() if len(cells) > 1 else ''
-                        v2 = cells[2].strip() if len(cells) > 2 else ''
-                        if dim == '总结':
-                            compare_footer = v1
-                        else:
-                            data_rows.append({'dim': dim, 'v1': v1, 'v2': v2})
-                if data_rows:
-                    bid_compare_data = {'rows': data_rows, 'footer': compare_footer}
+                rows_raw = bid_compare_match.group(1).strip().split('\n')
+                # 过滤掉分隔符行（如 |------|------|...）
+                data_rows = [r for r in rows_raw if not re.match(r'\s*\|[-:\s|]+\|', r)]
+                if len(data_rows) >= 2:
+                    # 第一行是表头
+                    headers = [c.strip() for c in re.findall(r'\|\s*([^|]+?)\s*(?=\|)', data_rows[0]) if c.strip()]
+                    # 后续行是数据
+                    body_rows = []
+                    for row in data_rows[1:]:
+                        cells = [c.strip() for c in re.findall(r'\|\s*([^|]+?)\s*(?=\|)', row)]
+                        if any(cells):
+                            body_rows.append(cells)
+                    if headers and body_rows:
+                        bid_compare_data = {'headers': headers, 'rows': body_rows}
             app['bid_compare'] = bid_compare_data
             
             # 解析招投标流程步骤
@@ -284,6 +283,11 @@ def parse_content(path):
                             inc_data['images'].append({'src': media_path(v), 'caption': ''})
                         elif k == '截图1说明':
                             if inc_data['images']:
+                                inc_data['images'][-1]['caption'] = v
+                        elif k == '截图2':
+                            inc_data['images'].append({'src': media_path(v), 'caption': ''})
+                        elif k == '截图2说明':
+                            if len(inc_data['images']) >= 2:
                                 inc_data['images'][-1]['caption'] = v
                         elif k.startswith('数据') and '数值' in k:
                             num = re.search(r'数据(\d+)', k)
@@ -582,18 +586,14 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .increment-board { background:var(--white); border-radius:var(--r-lg); border:1px solid rgba(0,0,0,.05); margin:28px 0 36px; box-shadow:var(--shadow); overflow:hidden; }
 .increment-title { padding:18px 24px; font-size:15px; font-weight:800; color:var(--text); background:linear-gradient(180deg,#fcfdfe,#fff); border-bottom:1px solid rgba(0,0,0,.04); display:flex; align-items:center; }
 .increment-body { display:flex; gap:24px; padding:24px; align-items:center; }
+.increment-gallery { display:grid; grid-template-columns:1fr 1fr; gap:24px; padding:24px; }
 .increment-img { flex:1; min-width:0; }
-.increment-img figure { margin:0; border-radius:12px; overflow:hidden; border:1px solid rgba(0,0,0,.06); }
-.increment-img img { width:100%; display:block; object-fit:contain; background:#f6f8fc; }
-.increment-img figcaption { padding:10px 14px; font-size:12px; color:#5f6b7a; background:#fff; border-top:1px solid rgba(0,0,0,.04); }
-.increment-data { flex:0 0 240px; display:flex; flex-direction:column; gap:16px; }
-.inc-stats { display:flex; flex-direction:column; gap:16px; }
-.inc-stat-item { text-align:center; padding:20px; background:linear-gradient(135deg,#eaf2ff,#dbe9ff); border-radius:12px; border:1px solid rgba(59,130,246,.15); }
-.inc-stat-num { font-size:28px; font-weight:900; color:var(--blue); letter-spacing:-.5px; }
-.inc-stat-label { font-size:13px; color:var(--muted); margin-top:6px; font-weight:600; }
+.increment-img figure, .increment-gallery figure { margin:0; border-radius:12px; overflow:hidden; border:1px solid rgba(0,0,0,.06); cursor:zoom-in; transition:transform .25s ease,box-shadow .25s ease; }
+.increment-img figure:hover, .increment-gallery figure:hover { transform:scale(1.02); box-shadow:0 12px 40px rgba(0,0,0,.08); }
+.increment-img img, .increment-gallery img { width:100%; display:block; object-fit:contain; background:#f6f8fc; }
+.increment-img figcaption, .increment-gallery figcaption { padding:10px 14px; font-size:12px; color:#5f6b7a; background:#fff; border-top:1px solid rgba(0,0,0,.04); }
 @media (max-width:768px) {
-  .increment-body { flex-direction:column; }
-  .increment-data { flex:1; width:100%; }
+  .increment-gallery { grid-template-columns:1fr; }
 }
 @media (max-width:768px) { .bid-flow-platform { flex-direction:column; } .bid-table thead th:first-child { width:100px; } }
 .scene-divider { max-width:1120px; margin:0 auto; border:none; border-top:1px solid rgba(0,0,0,.05); }
@@ -975,25 +975,18 @@ def build_increment_board(increment_data):
     if not increment_data:
         return ''
     imgs = increment_data.get('images', [])
-    stats = increment_data.get('stats', [])
+    if not imgs:
+        return ''
     
-    img_html = ''
-    if imgs:
-        img = imgs[0]
+    # 两张截图并排网格
+    figures = ''
+    for img in imgs[:2]:
         cap = img.get('caption', '')
-        img_html = f'<figure><img src="{img["src"]}" alt="">{"<figcaption>"+cap+"</figcaption>" if cap else ""}</figure>'
-    
-    stats_html = ''
-    if stats:
-        stats_items = ''.join(f'<div class="inc-stat-item"><div class="inc-stat-num">{st["num"]}</div><div class="inc-stat-label">{st["label"]}</div></div>' for st in stats)
-        stats_html = f'<div class="inc-stats">{stats_items}</div>'
+        figures += f'<figure><img src="{img["src"]}" alt="">{"<figcaption>"+cap+"</figcaption>" if cap else ""}</figure>'
     
     return f'''      <div class="increment-board">
         <div class="increment-title"><span class="ai-dot"></span>一线增量情况</div>
-        <div class="increment-body">
-          <div class="increment-img">{img_html}</div>
-          <div class="increment-data">{stats_html}</div>
-        </div>
+        <div class="increment-gallery">{figures}</div>
       </div>'''
 
 
@@ -1266,40 +1259,44 @@ def md_to_html(md_text):
 def build_bid_compare(bid_compare_data):
     if not bid_compare_data:
         return ''
-    r = bid_compare_data['rows']
-    # 取主要维度（排除总结和质量说明）
-    main = [row for row in r if row['dim'] not in ('总结','质量说明')]
-    qn = next((row for row in r if row['dim'] == '质量说明'), None)
-    headers = ''.join(f'<th>{d["dim"]}</th>' for d in main)
+    headers = bid_compare_data['headers']
+    rows = bid_compare_data['rows']
+    if not headers or not rows:
+        return ''
     
-    def cell(d, ver):
-        if d['dim'] == '数据治理':
-            return f'<td class="td-desc">{d[ver]}</td>'
-        elif d['dim'] == '推送数量':
-            return f'<td class="td-desc">{d[ver]}</td>'
-        else:
-            note = qn[ver] if qn else ''
-            return f'<td class="td-desc">{d[ver]}<br>{note}</td>'
+    # 表头（第一列留空作为行标签列）
+    headers_html = ''.join(f'<th>{h}</th>' for h in headers[1:])  # 跳过第一列（版本/上线时间）
     
-    cls = {'v1':'old','v2':'new'}
-    ver_label = {'v1':('old','V1.0（治理前）'), 'v2':('new','V2.0（治理后）')}
+    # 数据行
     rows_html = ''
-    for v in ['v1','v2']:
-        c, lbl = ver_label[v]
-        cells = ''.join(cell(d, v) for d in main)
-        rows_html += f'\n            <tr class="{c}-row"><td><span class="bid-ver-tag {c}">{lbl}</span></td>{cells}</tr>'
+    for cells in rows:
+        if not cells:
+            continue
+        # 第一列作为行标签（带版本标签样式）
+        row_label = cells[0] if len(cells) > 0 else ''
+        label_cls = 'new'
+        if 'V1.0' in row_label or '治理前' in row_label:
+            label_cls = 'old'
+        label_html = f'<span class="bid-ver-tag {label_cls}">{row_label}</span>'
+        
+        # 其余列
+        data_cells = ''
+        for i, cell in enumerate(cells[1:], 1):
+            # 数据治理列、数量列等较长文本用 td-desc
+            if i < len(headers) and headers[i] in ('数据治理', '数量'):
+                data_cells += f'<td class="td-desc">{cell}</td>'
+            else:
+                data_cells += f'<td>{cell}</td>'
+        
+        rows_html += f'\n            <tr class="{label_cls}-row"><td>{label_html}</td>{data_cells}</tr>'
     
-    footer = bid_compare_data.get('footer','')
     return f'''      <div class="bid-compare">
         <div class="bid-compare-title"><span class="ai-dot"></span>AI助力高价值标讯</div>
         <table class="bid-table">
-          <thead><tr><th></th>{headers}</tr></thead>
+          <thead><tr><th></th>{headers_html}</tr></thead>
           <tbody>{rows_html}
           </tbody>
         </table>
-        <div class="bid-compare-footer">
-          <span>🎯 {footer}</span>
-        </div>
       </div>'''
 
 
