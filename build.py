@@ -1411,16 +1411,6 @@ def render_scene(data, scene):
       <div class="video-wrapper" data-video-src="media/{app['video']}"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'><rect fill='%230a0d14' width='16' height='9'/></svg>"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
     </div>'''
         
-        # 视频详情说明（如果有）
-        if app.get('video_detail'):
-            detail_html = app['video_detail'].replace('\\n', '<br>')
-            # 处理markdown粗体 **text**
-            import re as re_detail
-            detail_html = re_detail.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', detail_html)
-            video_panel += f'''    <div class="app-video-detail">
-      <div class="app-video-detail-content">{detail_html}</div>
-    </div>'''
-        
         # 渲染截图（如果有）——可与视频同时存在
         if app.get('images') and not app.get('placeholder'):
             imgs = app['images']
