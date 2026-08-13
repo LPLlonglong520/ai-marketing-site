@@ -209,7 +209,7 @@ def parse_content(path):
             bid_compare_data = None
             bid_steps_data = []
             for line in ab.split('\n'):
-                m = re.match(r'\|\s*(标题|副标题|演示视频|视频说明|视频详情|截图(\d+)|截图(\d+)说明|演示类型|占位图标|占位文字|入口文字|入口链接|画像预览|画像标签)\s*\|\s*(.+?)\s*\|', line)
+                m = re.match(r'\|\s*(标题|副标题|能力集截图|演示视频|视频说明|视频详情|截图(\d+)|截图(\d+)说明|演示类型|占位图标|占位文字|入口文字|入口链接|画像预览|画像标签)\s*\|\s*(.+?)\s*\|', line)
                 if m:
                     k = m.group(1)
                     v = m.group(4) if m.group(4) else ''
@@ -217,6 +217,8 @@ def parse_content(path):
                         app['title'] = v
                     elif k == '副标题':
                         app['subtitle'] = v
+                    elif k == '能力集截图':
+                        app['cap_images'] = [media_path(x.strip()) for x in v.split(',') if x.strip()]
                     elif k == '演示视频':
                         app['video'] = v
                     elif k == '视频说明':
@@ -260,6 +262,23 @@ def parse_content(path):
                     if headers and body_rows:
                         bid_compare_data = {'headers': headers, 'rows': body_rows}
             app['bid_compare'] = bid_compare_data
+
+            # 解析应用能力集（通用表格，支持任意列数，第一列空单元格自动合并到上一行）
+            capability_data = None
+            cap_match = re.search(r'### 应用能力集\n\n((?:\|.+\|\n)+)', ab)
+            if cap_match:
+                cap_rows_raw = cap_match.group(1).strip().split('\n')
+                cap_data_rows = [r for r in cap_rows_raw if not re.match(r'\s*\|[-:\s|]+\|', r)]
+                if len(cap_data_rows) >= 2:
+                    cap_headers = [c.strip() for c in re.findall(r'\|\s*([^|]+?)\s*(?=\|)', cap_data_rows[0]) if c.strip()]
+                    cap_body = []
+                    for row in cap_data_rows[1:]:
+                        cells = [c.strip() for c in re.findall(r'\|\s*([^|]+?)\s*(?=\|)', row)]
+                        if any(cells):
+                            cap_body.append(cells)
+                    if cap_headers and cap_body:
+                        capability_data = {'headers': cap_headers, 'rows': cap_body}
+            app['capability'] = capability_data
             
             # 解析招投标流程步骤
             bid_steps_match = re.search(r'### 招投标流程步骤\n\n((?:\|.+\|\n)+)', ab)
@@ -593,6 +612,27 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .bid-num { font-size:15px; font-weight:700; }
 .bid-num.old { color:#dc2626; }
 .bid-num.new { color:#059669; }
+/* ---- 应用能力集表格 ---- */
+.cap-board { margin:22px 32px 0; background:#fff; border-radius:14px; border:1px solid rgba(0,0,0,.05); overflow:hidden; box-shadow:var(--shadow); }
+.cap-title { padding:16px 22px; font-size:17px; font-weight:700; color:#fff; background:linear-gradient(135deg,#0d2550,#1a3d6e,#235491); display:flex; align-items:center; gap:10px; }
+.cap-title .ai-dot { width:10px; height:10px; background:#60a5fa; border-radius:50%; box-shadow:0 0 10px #60a5fa,0 0 4px #60a5fa; animation:pulse-dot 2s infinite; }
+.cap-img-wrap { border-radius:0 0 12px 12px; overflow:hidden; }
+.cap-img-wrap img { width:100%; display:block; border:none; }
+.cap-table-wrap { overflow-x:auto; border-radius:0 0 12px 12px; }
+.cap-table { width:100%; border-collapse:collapse; min-width:1200px; }
+.cap-table thead th { padding:11px 16px; font-size:12px; font-weight:700; color:#fff; text-align:left; background:#16355f; border-bottom:2px solid rgba(255,255,255,.08); letter-spacing:.4px; white-space:nowrap; }
+.cap-table td { padding:11px 16px; font-size:13px; color:var(--text); border-bottom:1px solid #eef0f4; vertical-align:middle; line-height:1.55; }
+.cap-table tbody tr:nth-child(even) td { background:rgba(15,43,92,.02); }
+.cap-table tbody tr:hover td { background:rgba(37,99,235,.045); }
+.cap-table td.cap-cat { width:150px; background:#f2f6fc; border-right:1px solid #e3eaf4; font-weight:700; color:#16355f; text-align:center; vertical-align:middle; }
+.cap-table .cap-cat-tag { display:inline-block; padding:5px 14px; border-radius:8px; background:linear-gradient(135deg,#0d2550,#1a3d6e); color:#fff; font-size:12px; font-weight:600; letter-spacing:.5px; }
+.cap-table td.cap-skill { width:130px; font-weight:600; color:#0d2550; }
+.cap-table td.cap-src { color:#5f6b7a; font-size:12px; white-space:nowrap; }
+@media (max-width:768px) {
+  .cap-board { margin:16px 16px 0; }
+  .cap-table { min-width:640px; }
+  .cap-table td { padding:10px 12px; font-size:12px; }
+}
 .bid-pct { font-size:26px; font-weight:900; }
 .bid-pct.old { color:#dc2626; }
 .bid-pct.new { color:#059669; }
@@ -627,7 +667,7 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .app-stats-item { text-align:center; }
 .app-stats-num { font-size:28px; font-weight:900; line-height:1.1; background:linear-gradient(135deg,#0d2550,#3b82f6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 .app-stats-label { font-size:11px; color:var(--muted); font-weight:500; margin-top:2px; }
-.app-stats-note { text-align:center; font-size:11px; color:var(--muted); margin-top:-4px; margin-bottom:16px; }
+.app-stats-note-inline { font-size:9px; color:var(--muted); font-weight:400; display:flex; align-items:center; justify-content:center; flex:0 0 auto; padding-left:12px; }
 .ss-item { text-align:center; }
 .ss-num { font-size:38px; font-weight:900; line-height:1; background:linear-gradient(90deg,#fbbf24,#fb923c,#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 .ss-label { font-size:13px; color:rgba(255,255,255,.5); margin-top:6px; }
@@ -706,6 +746,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   .app-stats-strip { padding:16px 18px; gap:16px; margin:0 16px 16px; }
   .app-stats-num { font-size:22px; }
   .app-stats-label { font-size:10px; }
+  .app-stats-note-inline { font-size:8px; padding-left:8px; }
 
   .app-video-panel { padding:16px 16px 20px; }
   .video-wrapper video { max-height:240px; }
@@ -1269,9 +1310,28 @@ def md_to_html(md_text):
     for p in parts:
         p = p.strip()
         if not p: continue
-        if p.startswith('- '):
-            items = [li[2:] for li in p.split('\n') if li.startswith('- ')]
+        lines = p.split('\n')
+        if lines[0].startswith('- '):
+            items = [li[2:] for li in lines if li.startswith('- ')]
             result.append('<ul>\n          ' + '\n          '.join(f'<li>{item}</li>' for item in items) + '\n        </ul>')
+        elif any(li.startswith('- ') for li in lines):
+            out = []
+            buf = []
+            for li in lines:
+                li = li.strip()
+                if li.startswith('- '):
+                    buf.append(li[2:])
+                else:
+                    if buf:
+                        out.append('<ul>\n          ' + '\n          '.join(f'<li>{item}</li>' for item in buf) + '\n        </ul>')
+                        buf = []
+                    if li:
+                        out.append(f'<p>{li}</p>')
+            if buf:
+                out.append('<ul>\n          ' + '\n          '.join(f'<li>{item}</li>' for item in buf) + '\n        </ul>')
+            result.extend(out)
+        elif len(lines) > 1:
+            result.append(f'<p>{"<br>".join(lines)}</p>')
         else:
             result.append(f'<p>{p}</p>')
     return '\n        '.join(result)
@@ -1318,6 +1378,63 @@ def build_bid_compare(bid_compare_data):
           <tbody>{rows_html}
           </tbody>
         </table>
+      </div>'''
+
+
+def build_capability_table(capability_data):
+    """渲染应用能力集表格：支持第一列空单元格合并（rowspan），放在视频上方"""
+    if not capability_data:
+        return ''
+    headers = capability_data['headers']
+    rows = capability_data['rows']
+    if not headers or not rows:
+        return ''
+
+    ncols = len(headers)
+    # 第一列做合并分组
+    groups = []  # (label, rows_list)
+    for cells in rows:
+        if len(cells) < ncols:
+            cells = cells + [''] * (ncols - len(cells))
+        label = cells[0].strip()
+        if label:
+            groups.append({'label': label, 'items': [cells[1:]]})
+        else:
+            if groups:
+                groups[-1]['items'].append(cells[1:])
+            else:
+                groups.append({'label': '', 'items': [cells[1:]]})
+
+    rows_html = ''
+    for gi, g in enumerate(groups):
+        items = g['items']
+        rowspan = len(items)
+        # 第一列单元格（跨行）
+        first_td = f'<td class="cap-cat" rowspan="{rowspan}"><span class="cap-cat-tag">{g["label"]}</span></td>' if rowspan > 1 else f'<td class="cap-cat"><span class="cap-cat-tag">{g["label"]}</span></td>'
+        for ii, cells in enumerate(items):
+            tds = ''
+            for ci, cell in enumerate(cells):
+                if ci == 0:
+                    tds += f'<td class="cap-skill">{cell}</td>'
+                else:
+                    cls = 'cap-src' if ci == len(cells) - 1 else ''
+                    tds += f'<td class="{cls}">{cell}</td>'
+            if ii == 0:
+                rows_html += f'<tr>{first_td}{tds}</tr>\n            '
+            else:
+                rows_html += f'<tr>{tds}</tr>\n            '
+
+    headers_html = ''.join(f'<th>{h}</th>' for h in headers)
+
+    return f'''      <div class="cap-board">
+        <div class="cap-title"><span class="ai-dot"></span>应用能力集</div>
+        <div class="cap-table-wrap">
+          <table class="cap-table">
+            <thead><tr>{headers_html}</tr></thead>
+            <tbody>{rows_html}
+            </tbody>
+          </table>
+        </div>
       </div>'''
 
 
@@ -1394,10 +1511,23 @@ def render_scene(data, scene):
         app_stats_html = ''
         if app.get('stats'):
             stats_items = [f'<div class="app-stats-item"><div class="app-stats-num">{st["num"]}</div><div class="app-stats-label">{st["label"]}</div></div>' for st in app['stats']]
-            note = f'<div class="app-stats-note">{app["stats_note"]}</div>' if app.get('stats_note') else ''
-            app_stats_html = f'\n<div class="app-stats-strip">{"" .join(stats_items)}</div>\n{note}'
+            note = f'<div class="app-stats-item app-stats-note-inline">{app["stats_note"]}</div>' if app.get('stats_note') else ''
+            app_stats_html = f'\n<div class="app-stats-strip">{"" .join(stats_items)}{note}</div>\n'
 
         video_panel = ''
+        # 应用能力集（图片优先，否则表格）
+        if app.get('cap_images'):
+            cap_imgs_html = '\n          '.join(f'<img src="{img}" alt="应用能力集" style="width:100%;display:block;border:none;">' for img in app['cap_images'])
+            video_panel += f'''    <div class="cap-board">
+      <div class="cap-title"><span class="ai-dot"></span>应用能力集</div>
+      <div class="cap-img-wrap">
+        {cap_imgs_html}
+      </div>
+    </div>\n'''
+        else:
+            _cap = build_capability_table(app.get('capability'))
+            if _cap:
+                video_panel += _cap + '\n'
         # 渲染视频（如果有）
         if app.get('placeholder'):
             video_panel += f'''    <div class="app-video-panel">

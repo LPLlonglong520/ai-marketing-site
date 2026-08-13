@@ -224,6 +224,27 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .bid-num { font-size:15px; font-weight:700; }
 .bid-num.old { color:#dc2626; }
 .bid-num.new { color:#059669; }
+/* ---- 应用能力集表格 ---- */
+.cap-board { margin:22px 32px 0; background:#fff; border-radius:14px; border:1px solid rgba(0,0,0,.05); overflow:hidden; box-shadow:var(--shadow); }
+.cap-title { padding:16px 22px; font-size:17px; font-weight:700; color:#fff; background:linear-gradient(135deg,#0d2550,#1a3d6e,#235491); display:flex; align-items:center; gap:10px; }
+.cap-title .ai-dot { width:10px; height:10px; background:#60a5fa; border-radius:50%; box-shadow:0 0 10px #60a5fa,0 0 4px #60a5fa; animation:pulse-dot 2s infinite; }
+.cap-img-wrap { border-radius:0 0 12px 12px; overflow:hidden; }
+.cap-img-wrap img { width:100%; display:block; border:none; }
+.cap-table-wrap { overflow-x:auto; border-radius:0 0 12px 12px; }
+.cap-table { width:100%; border-collapse:collapse; min-width:1200px; }
+.cap-table thead th { padding:11px 16px; font-size:12px; font-weight:700; color:#fff; text-align:left; background:#16355f; border-bottom:2px solid rgba(255,255,255,.08); letter-spacing:.4px; white-space:nowrap; }
+.cap-table td { padding:11px 16px; font-size:13px; color:var(--text); border-bottom:1px solid #eef0f4; vertical-align:middle; line-height:1.55; }
+.cap-table tbody tr:nth-child(even) td { background:rgba(15,43,92,.02); }
+.cap-table tbody tr:hover td { background:rgba(37,99,235,.045); }
+.cap-table td.cap-cat { width:150px; background:#f2f6fc; border-right:1px solid #e3eaf4; font-weight:700; color:#16355f; text-align:center; vertical-align:middle; }
+.cap-table .cap-cat-tag { display:inline-block; padding:5px 14px; border-radius:8px; background:linear-gradient(135deg,#0d2550,#1a3d6e); color:#fff; font-size:12px; font-weight:600; letter-spacing:.5px; }
+.cap-table td.cap-skill { width:130px; font-weight:600; color:#0d2550; }
+.cap-table td.cap-src { color:#5f6b7a; font-size:12px; white-space:nowrap; }
+@media (max-width:768px) {
+  .cap-board { margin:16px 16px 0; }
+  .cap-table { min-width:640px; }
+  .cap-table td { padding:10px 12px; font-size:12px; }
+}
 .bid-pct { font-size:26px; font-weight:900; }
 .bid-pct.old { color:#dc2626; }
 .bid-pct.new { color:#059669; }
@@ -258,7 +279,7 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .app-stats-item { text-align:center; }
 .app-stats-num { font-size:28px; font-weight:900; line-height:1.1; background:linear-gradient(135deg,#0d2550,#3b82f6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 .app-stats-label { font-size:11px; color:var(--muted); font-weight:500; margin-top:2px; }
-.app-stats-note { text-align:center; font-size:11px; color:var(--muted); margin-top:-4px; margin-bottom:16px; }
+.app-stats-note-inline { font-size:9px; color:var(--muted); font-weight:400; display:flex; align-items:center; justify-content:center; flex:0 0 auto; padding-left:12px; }
 .ss-item { text-align:center; }
 .ss-num { font-size:38px; font-weight:900; line-height:1; background:linear-gradient(90deg,#fbbf24,#fb923c,#f97316); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 .ss-label { font-size:13px; color:rgba(255,255,255,.5); margin-top:6px; }
@@ -337,6 +358,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   .app-stats-strip { padding:16px 18px; gap:16px; margin:0 16px 16px; }
   .app-stats-num { font-size:22px; }
   .app-stats-label { font-size:10px; }
+  .app-stats-note-inline { font-size:8px; padding-left:8px; }
 
   .app-video-panel { padding:16px 16px 20px; }
   .video-wrapper video { max-height:240px; }
@@ -654,8 +676,8 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
       <div class="app-num-badge" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);font-size:13px;">AI</div>
       <div><div class="app-title">知识AI助手</div><div class="app-subtitle">AI让知识获取更快更准</div></div>
     </div>
-<div class="app-stats-strip"><div class="app-stats-item"><div class="app-stats-num">50000+</div><div class="app-stats-label">累计访问量 (PV)</div></div><div class="app-stats-item"><div class="app-stats-num">20s</div><div class="app-stats-label">平均获得答案时间</div></div><div class="app-stats-item"><div class="app-stats-num">1000%</div><div class="app-stats-label">效率提升</div></div></div>
-<div class="app-stats-note">2024年9月上线，持续迭代至今</div>
+<div class="app-stats-strip"><div class="app-stats-item"><div class="app-stats-num">50000+</div><div class="app-stats-label">累计访问量 (PV)</div></div><div class="app-stats-item"><div class="app-stats-num">20s</div><div class="app-stats-label">平均获得答案时间</div></div><div class="app-stats-item"><div class="app-stats-num">1000%</div><div class="app-stats-label">效率提升</div></div><div class="app-stats-item app-stats-note-inline">2024年9月上线，持续迭代至今</div></div>
+
     <div class="app-content">
       <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-pain">😩 用户痛点</div><p>知识中心是公司内部权威知识库，现有<strong>5W+资料</strong>，是大家最常用的查找知识、文档、资料的平台。但ES检索本身存在缺陷：</p>
         <ul>
