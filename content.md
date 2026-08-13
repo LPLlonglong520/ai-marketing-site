@@ -480,8 +480,10 @@
 |------|-----|
 | 标题 | Skill共享平台 |
 | 副标题 | 基础Skill + 业务专属Skill · 上传优秀Skill赢大奖 |
-| 截图1 | media/skill_p10_img_5.png |
+| 截图1 | skill_main.png |
 | 截图1说明 | 📌 Skill共享平台主界面 |
+| 运营报告 | skill_report.jpg |
+| 运营报告标签 | 运营报告 |
 
 ### 应用数据
 

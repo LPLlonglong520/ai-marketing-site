@@ -209,7 +209,7 @@ def parse_content(path):
             bid_compare_data = None
             bid_steps_data = []
             for line in ab.split('\n'):
-                m = re.match(r'\|\s*(标题|副标题|能力集截图|演示视频|视频说明|视频详情|截图(\d+)|截图(\d+)说明|演示类型|占位图标|占位文字|入口文字|入口链接|画像预览|画像标签)\s*\|\s*(.+?)\s*\|', line)
+                m = re.match(r'\|\s*(标题|副标题|能力集截图|演示视频|视频说明|视频详情|截图(\d+)|截图(\d+)说明|演示类型|占位图标|占位文字|入口文字|入口链接|画像预览|画像标签|运营报告|运营报告标签)\s*\|\s*(.+?)\s*\|', line)
                 if m:
                     k = m.group(1)
                     v = m.group(4) if m.group(4) else ''
@@ -239,6 +239,10 @@ def parse_content(path):
                         app['profile_preview'] = v
                     elif k == '画像标签':
                         app['profile_label'] = v
+                    elif k == '运营报告':
+                        app['report_preview'] = v
+                    elif k == '运营报告标签':
+                        app['report_label'] = v
                     elif k.startswith('截图') and k.endswith('说明'):
                         img_caps.append(v)
                     elif k.startswith('截图'):
@@ -567,6 +571,14 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .profile-preview-frame { width:100%; height:560px; border-radius:12px; overflow:hidden; border:1px solid rgba(0,0,0,.06); background:#fff; box-shadow:var(--shadow); }
 .profile-preview-frame iframe { width:100%; height:100%; border:none; }
 @media (max-width:768px) { .profile-preview { padding:0 16px 24px; } .profile-preview-frame { height:420px; } }
+/* ---- 运营报告长图预览 ---- */
+.report-preview { background:#f6f8fc; border-top:1px solid rgba(0,0,0,.05); padding:0 32px 28px; }
+.report-preview-label { display:flex; align-items:center; gap:10px; font-size:12px; font-weight:700; color:#5f6b7a; letter-spacing:.5px; padding:22px 0 14px; }
+.report-preview-label .pdot { width:9px;height:9px;border-radius:50%;background:#f59e0b; box-shadow:0 0 6px rgba(245,158,11,.4); }
+.report-preview-label .pbeta { font-size:9px; background:#fef3c7; color:#b45309; padding:3px 10px; border-radius:12px; font-weight:800; letter-spacing:1px; text-transform:uppercase; }
+.report-preview-frame { width:100%; max-height:620px; border-radius:12px; overflow-y:auto; overflow-x:hidden; border:1px solid rgba(0,0,0,.06); background:#fff; box-shadow:var(--shadow); }
+.report-preview-frame img { width:100%; display:block; }
+@media (max-width:768px) { .report-preview { padding:0 16px 24px; } .report-preview-frame { max-height:460px; } }
 /* ---- 截图画廊 ---- */
 .img-gallery { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; align-items:start; }
 .img-gallery.col5 { grid-template-columns:repeat(5,1fr); }
@@ -1461,6 +1473,11 @@ def render_scene(data, scene):
       <div class="profile-preview-frame"><iframe src="{profile_src}" title="客户安全画像"></iframe></div>
     </div>'''
 
+    report_preview = '''    <div class="report-preview">
+      <div class="report-preview-label"><span class="pdot"></span>{report_label} <span class="pbeta">REPORT</span> — 下滑查看完整报告</div>
+      <div class="report-preview-frame"><img src="{report_src}" alt="{report_label}" loading="lazy"></div>
+    </div>'''
+
     snum = scene['num']
     sid = scene_id_map.get(snum, f'scene-{snum}')
     bg = bg_map.get(snum,'')
@@ -1588,6 +1605,7 @@ def render_scene(data, scene):
       <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-how">🔧 平台入口</div>{how_html}</div><div class="col-emoji-bg">{he}</div></div>
     </div>
 {video_panel}
+    {report_preview.format(report_src=media_path(app.get('report_preview','')), report_label=app.get('report_label','运营报告')) if app.get('report_preview') else ''}
     {profile_preview.format(profile_src=app.get('profile_preview','media/天津大学_安全画像.html'), profile_label=app.get('profile_label','客户画像 2.0 优化中')) if (snum==2 and ai==0 and app.get('profile_preview')) else ''}  </div>'''
         
         # 渲染一线增量情况（如果该应用有）

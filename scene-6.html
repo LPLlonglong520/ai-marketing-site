@@ -179,6 +179,14 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .profile-preview-frame { width:100%; height:560px; border-radius:12px; overflow:hidden; border:1px solid rgba(0,0,0,.06); background:#fff; box-shadow:var(--shadow); }
 .profile-preview-frame iframe { width:100%; height:100%; border:none; }
 @media (max-width:768px) { .profile-preview { padding:0 16px 24px; } .profile-preview-frame { height:420px; } }
+/* ---- 运营报告长图预览 ---- */
+.report-preview { background:#f6f8fc; border-top:1px solid rgba(0,0,0,.05); padding:0 32px 28px; }
+.report-preview-label { display:flex; align-items:center; gap:10px; font-size:12px; font-weight:700; color:#5f6b7a; letter-spacing:.5px; padding:22px 0 14px; }
+.report-preview-label .pdot { width:9px;height:9px;border-radius:50%;background:#f59e0b; box-shadow:0 0 6px rgba(245,158,11,.4); }
+.report-preview-label .pbeta { font-size:9px; background:#fef3c7; color:#b45309; padding:3px 10px; border-radius:12px; font-weight:800; letter-spacing:1px; text-transform:uppercase; }
+.report-preview-frame { width:100%; max-height:620px; border-radius:12px; overflow-y:auto; overflow-x:hidden; border:1px solid rgba(0,0,0,.06); background:#fff; box-shadow:var(--shadow); }
+.report-preview-frame img { width:100%; display:block; }
+@media (max-width:768px) { .report-preview { padding:0 16px 24px; } .report-preview-frame { max-height:460px; } }
 /* ---- 截图画廊 ---- */
 .img-gallery { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; align-items:start; }
 .img-gallery.col5 { grid-template-columns:repeat(5,1fr); }
@@ -697,7 +705,11 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
     </div>
     <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot" style="background:#38bdf8;"></span>应用演示截图</div>
-      <div class="img-gallery col1"><figure class=""><img src="media/skill_p10_img_5.webp" alt=""><figcaption>📌 Skill共享平台主界面</figcaption></figure></div>
+      <div class="img-gallery col1"><figure class=""><img src="skill_main.png" alt=""><figcaption>📌 Skill共享平台主界面</figcaption></figure></div>
+    </div>
+        <div class="report-preview">
+      <div class="report-preview-label"><span class="pdot"></span>运营报告 <span class="pbeta">REPORT</span> — 下滑查看完整报告</div>
+      <div class="report-preview-frame"><img src="skill_report.jpg" alt="运营报告" loading="lazy"></div>
     </div>
       </div>
   </div>
