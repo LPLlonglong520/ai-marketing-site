@@ -435,8 +435,10 @@ nav.scrolled { box-shadow:0 1px 12px rgba(0,0,0,.06); }
 .nav-tabs a:hover { color:var(--blue); background:var(--blue-l); }
 .nav-tabs a.active { color:var(--blue); font-weight:600; background:var(--blue-l); }
 .nav-tabs a.active::after { width:24px; }
-.nav-right { font-size:12px; font-weight:600; color:var(--muted); background:var(--white); border:1px solid rgba(0,0,0,.06); padding:6px 16px; border-radius:24px; transition:all var(--transition); }
-.hero { min-height:100vh; padding:120px 40px 50px; background:linear-gradient(170deg,#070e2a 0%,#0d1f52 20%,#0f2b5c 42%,#0b2248 65%,#060f25 100%); display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+.nav-right { display:flex; align-items:center; gap:8px; font-size:12px; font-weight:600; color:var(--muted); background:var(--white); border:1px solid rgba(0,0,0,.06); padding:4px 14px 4px 4px; border-radius:24px; transition:all var(--transition); }
+.nav-right img { height:24px; width:auto; border-radius:50%; background:#fff; padding:2px; box-shadow:0 0 8px rgba(0,168,132,.15); }
+.nav-right-dept { white-space:nowrap; }
+.hero { min-height:100vh; padding:48px 40px 50px; background:linear-gradient(170deg,#070e2a 0%,#0d1f52 20%,#0f2b5c 42%,#0b2248 65%,#060f25 100%); display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
 .hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 70% 50% at 50% 35%,rgba(59,130,246,.08) 0%,transparent 65%); pointer-events:none; }
 .hero-bg-circles { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
 .hero-bg-circles::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 60% 42% at 50% 28%, rgba(99,140,230,.12) 0%, transparent 70%); }
@@ -1063,7 +1065,7 @@ def build_increment_board(increment_data):
     
     return f'''      <div class="increment-board">
         <div class="increment-title"><span class="ai-dot"></span>{title}</div>
-        <div class="increment-gallery" style="{grid_style}">{figures}</div>
+        <div class="img-gallery col2" style="{grid_style}">{figures}</div>
       </div>'''
 
 
@@ -1869,13 +1871,12 @@ def build_home(data):
 
     nav = f'''<nav>
   <a class="nav-brand" href="index.html"><img src="{logo}" alt="安恒信息"><span>AI赋能营销</span></a>
-  <div class="nav-right">{g.get('页脚部门','营销中心综合管理部')}</div>
+  <div class="nav-right"><img src="{logo}" alt=""><span class="nav-right-dept">{g.get('页脚部门','安恒信息 · 营销中心 · 综合管理部')}</span></div>
 </nav>'''
 
-    hero = f'''<section class="hero" id="hero" style="min-height:auto;padding:120px 40px 24px;">
+    hero = f'''<section class="hero" id="hero" style="min-height:auto;padding:80px 40px 24px;">
   <div class="hero-bg-circles"><span></span><span></span><span></span></div>
   <div class="hero-inner">
-    <div class="hero-logo-row"><img class="hero-logo-img" src="{logo}" alt="安恒信息"><div class="hero-logo-dept">营销中心 · 综合管理部</div></div>
     <h1>{g.get('Hero大标题','AI赋能营销')}<br><em>{g.get('Hero副标题','让每一线都更强')}</em></h1>
     <p class="hero-sub">{g.get('Hero描述','')}</p>
   </div>
