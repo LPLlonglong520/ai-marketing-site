@@ -249,6 +249,7 @@
 | 副标题 | 10+提效Skill综合能力平台 · 适配项目推进全流程多场景 |
 | 演示视频 | proj_xiaomi.mp4                      |
 | 能力集截图 | media/cap_xiaomi_top.png, media/cap_xiaomi_bottom.png |
+| 操作指南 | https://luycloud.github.io/marketing-ai-assistant/ |
 
 ### 应用能力集
 

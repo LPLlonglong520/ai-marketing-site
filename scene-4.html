@@ -123,6 +123,9 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .app-block:hover .app-num-badge { transform:scale(1.08); }
 .app-title { font-size:19px; font-weight:800; color:var(--text); letter-spacing:-.2px; }
 .app-subtitle { margin-top:4px; font-size:13px; color:var(--muted); word-break:break-word; }
+.app-guide-card { display:inline-flex; align-items:center; gap:8px; padding:10px 18px; border-radius:12px; background:linear-gradient(135deg,#4f46e5,#7c3aed); color:#fff; font-size:13px; font-weight:700; text-decoration:none; box-shadow:0 2px 10px rgba(79,70,229,.25); transition:all var(--transition); flex-shrink:0; white-space:nowrap; }
+.app-guide-card:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(79,70,229,.35); }
+.app-guide-card svg { width:16px;height:16px; fill:none; stroke:#fff; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
 .app-content { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; border-bottom:1px solid rgba(0,0,0,.04); align-items:stretch; }
 .app-col { padding:32px 28px; position:relative; overflow:hidden; border-right:1px solid rgba(0,0,0,.04); display:flex; flex-direction:column; justify-content:space-between; }
 .app-col-inner { flex:1; display:flex; flex-direction:column; justify-content:flex-start; }
@@ -359,6 +362,8 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   .app-num-badge { width:30px; height:30px; font-size:12px; border-radius:10px; }
   .app-title { font-size:16px; }
   .app-subtitle { font-size:11px; }
+  .app-guide-card { padding:8px 14px; font-size:12px; gap:6px; border-radius:10px; }
+  .app-guide-card svg { width:14px; height:14px; }
 
   .app-content { grid-template-columns:1fr; }
   .app-col { padding:20px 18px; border-right:none; border-bottom:1px solid rgba(0,0,0,.04); }
@@ -785,6 +790,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
     <div class="app-block-header">
       <div class="app-num-badge" style="background:linear-gradient(135deg,#e8710a,#dc2626);font-size:13px;">AI</div>
       <div><div class="app-title">招投标AI全流程支持</div><div class="app-subtitle">招标文件解析 · 商务标书初版生成 · 投标文件检查 · 三步走全搞定</div></div>
+      
     </div>
     <div class="app-content">
       <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-pain">😩 用户痛点</div><p>招标文件动辄几百页，<strong>人工阅读分析耗时2-3天</strong>；商务标书格式繁琐，从头写起费时费力；投标前检查点多，容易遗漏导致废标风险。</p></div><div class="col-emoji-bg">😰</div></div>

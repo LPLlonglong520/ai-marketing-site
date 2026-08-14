@@ -123,6 +123,9 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .app-block:hover .app-num-badge { transform:scale(1.08); }
 .app-title { font-size:19px; font-weight:800; color:var(--text); letter-spacing:-.2px; }
 .app-subtitle { margin-top:4px; font-size:13px; color:var(--muted); word-break:break-word; }
+.app-guide-card { display:inline-flex; align-items:center; gap:8px; padding:10px 18px; border-radius:12px; background:linear-gradient(135deg,#4f46e5,#7c3aed); color:#fff; font-size:13px; font-weight:700; text-decoration:none; box-shadow:0 2px 10px rgba(79,70,229,.25); transition:all var(--transition); flex-shrink:0; white-space:nowrap; }
+.app-guide-card:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(79,70,229,.35); }
+.app-guide-card svg { width:16px;height:16px; fill:none; stroke:#fff; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
 .app-content { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; border-bottom:1px solid rgba(0,0,0,.04); align-items:stretch; }
 .app-col { padding:32px 28px; position:relative; overflow:hidden; border-right:1px solid rgba(0,0,0,.04); display:flex; flex-direction:column; justify-content:space-between; }
 .app-col-inner { flex:1; display:flex; flex-direction:column; justify-content:flex-start; }
@@ -359,6 +362,8 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   .app-num-badge { width:30px; height:30px; font-size:12px; border-radius:10px; }
   .app-title { font-size:16px; }
   .app-subtitle { font-size:11px; }
+  .app-guide-card { padding:8px 14px; font-size:12px; gap:6px; border-radius:10px; }
+  .app-guide-card svg { width:14px; height:14px; }
 
   .app-content { grid-template-columns:1fr; }
   .app-col { padding:20px 18px; border-right:none; border-bottom:1px solid rgba(0,0,0,.04); }
@@ -771,6 +776,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
     <div class="app-block-header">
       <div class="app-num-badge" style="background:linear-gradient(135deg,#0d9488,#14b8a6);">1</div>
       <div><div class="app-title">安小渠</div><div class="app-subtitle">专为渠道打造，可解答产品知识、行业打法、挖掘商机、渠道政策以及下载资料！7×24小时值守，减少重复答疑，提升渠道服务响应速度</div></div>
+      
     </div>
     <div class="app-content">
       <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-pain">😩 用户痛点</div><p>渠道伙伴咨询产品知识、行业打法、渠道政策等问题，依赖人工答疑，响应慢、重复问题多，晚上或周末遇到紧急询问更是等半天。</p></div><div class="col-emoji-bg">📈</div></div>
@@ -796,6 +802,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
     <div class="app-block-header">
       <div class="app-num-badge" style="background:linear-gradient(135deg,#14b8a6,#0ea5e9);">2</div>
       <div><div class="app-title">渠道市场分析空间</div><div class="app-subtitle">渠道地图 · 渠道运营 · 渠道市场研判 · 行业市场研判</div></div>
+      
     </div>
     <div class="app-content">
       <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-pain">😩 用户痛点</div><p>渠道市场数据分散，缺乏统一看板，渠道伙伴分布、市场覆盖、渠道运营效果难以一目了然，渠道市场研判缺乏数据支撑。</p></div><div class="col-emoji-bg">📈</div></div>

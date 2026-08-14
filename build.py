@@ -212,7 +212,7 @@ def parse_content(path):
             bid_compare_data = None
             bid_steps_data = []
             for line in ab.split('\n'):
-                m = re.match(r'\|\s*(标题|副标题|能力集截图|演示视频|视频说明|视频详情|截图(\d+)|截图(\d+)说明|演示类型|占位图标|占位文字|入口文字|入口链接|画像预览|画像标签|运营报告|运营报告标签)\s*\|\s*(.+?)\s*\|', line)
+                m = re.match(r'\|\s*(标题|副标题|能力集截图|演示视频|视频说明|视频详情|截图(\d+)|截图(\d+)说明|演示类型|占位图标|占位文字|入口文字|入口链接|画像预览|画像标签|运营报告|运营报告标签|操作指南)\s*\|\s*(.+?)\s*\|', line)
                 if m:
                     k = m.group(1)
                     v = m.group(4) if m.group(4) else ''
@@ -246,6 +246,8 @@ def parse_content(path):
                         app['report_preview'] = v
                     elif k == '运营报告标签':
                         app['report_label'] = v
+                    elif k == '操作指南':
+                        app['guide_link'] = v
                     elif k.startswith('截图') and k.endswith('说明'):
                         img_caps.append(v)
                     elif k.startswith('截图'):
@@ -518,6 +520,9 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .app-block:hover .app-num-badge { transform:scale(1.08); }
 .app-title { font-size:19px; font-weight:800; color:var(--text); letter-spacing:-.2px; }
 .app-subtitle { margin-top:4px; font-size:13px; color:var(--muted); word-break:break-word; }
+.app-guide-card { display:inline-flex; align-items:center; gap:8px; padding:10px 18px; border-radius:12px; background:linear-gradient(135deg,#4f46e5,#7c3aed); color:#fff; font-size:13px; font-weight:700; text-decoration:none; box-shadow:0 2px 10px rgba(79,70,229,.25); transition:all var(--transition); flex-shrink:0; white-space:nowrap; }
+.app-guide-card:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(79,70,229,.35); }
+.app-guide-card svg { width:16px;height:16px; fill:none; stroke:#fff; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
 .app-content { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; border-bottom:1px solid rgba(0,0,0,.04); align-items:stretch; }
 .app-col { padding:32px 28px; position:relative; overflow:hidden; border-right:1px solid rgba(0,0,0,.04); display:flex; flex-direction:column; justify-content:space-between; }
 .app-col-inner { flex:1; display:flex; flex-direction:column; justify-content:flex-start; }
@@ -754,6 +759,8 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   .app-num-badge { width:30px; height:30px; font-size:12px; border-radius:10px; }
   .app-title { font-size:16px; }
   .app-subtitle { font-size:11px; }
+  .app-guide-card { padding:8px 14px; font-size:12px; gap:6px; border-radius:10px; }
+  .app-guide-card svg { width:14px; height:14px; }
 
   .app-content { grid-template-columns:1fr; }
   .app-col { padding:20px 18px; border-right:none; border-bottom:1px solid rgba(0,0,0,.04); }
@@ -1689,6 +1696,7 @@ def render_scene(data, scene):
     <div class="app-block-header">
       <div class="app-num-badge" style="background:{badge_style};{'font-size:13px;' if badge_num=='AI' else ''}">{badge_num}</div>
       <div><div class="app-title">{app['title']}</div><div class="app-subtitle">{app.get('subtitle','')}</div></div>
+      {f'<a href="{app["guide_link"]}" class="app-guide-card" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>操作指南</a>' if app.get('guide_link') else ''}
     </div>{app_stats_html}
     <div class="app-content">
       <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-pain">😩 用户痛点</div>{pain}</div><div class="col-emoji-bg">{pe}</div></div>

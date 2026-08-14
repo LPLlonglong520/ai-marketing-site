@@ -123,6 +123,9 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .app-block:hover .app-num-badge { transform:scale(1.08); }
 .app-title { font-size:19px; font-weight:800; color:var(--text); letter-spacing:-.2px; }
 .app-subtitle { margin-top:4px; font-size:13px; color:var(--muted); word-break:break-word; }
+.app-guide-card { display:inline-flex; align-items:center; gap:8px; padding:10px 18px; border-radius:12px; background:linear-gradient(135deg,#4f46e5,#7c3aed); color:#fff; font-size:13px; font-weight:700; text-decoration:none; box-shadow:0 2px 10px rgba(79,70,229,.25); transition:all var(--transition); flex-shrink:0; white-space:nowrap; }
+.app-guide-card:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(79,70,229,.35); }
+.app-guide-card svg { width:16px;height:16px; fill:none; stroke:#fff; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
 .app-content { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; border-bottom:1px solid rgba(0,0,0,.04); align-items:stretch; }
 .app-col { padding:32px 28px; position:relative; overflow:hidden; border-right:1px solid rgba(0,0,0,.04); display:flex; flex-direction:column; justify-content:space-between; }
 .app-col-inner { flex:1; display:flex; flex-direction:column; justify-content:flex-start; }
@@ -359,6 +362,8 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   .app-num-badge { width:30px; height:30px; font-size:12px; border-radius:10px; }
   .app-title { font-size:16px; }
   .app-subtitle { font-size:11px; }
+  .app-guide-card { padding:8px 14px; font-size:12px; gap:6px; border-radius:10px; }
+  .app-guide-card svg { width:14px; height:14px; }
 
   .app-content { grid-template-columns:1fr; }
   .app-col { padding:20px 18px; border-right:none; border-bottom:1px solid rgba(0,0,0,.04); }
@@ -771,6 +776,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
     <div class="app-block-header">
       <div class="app-num-badge" style="background:linear-gradient(135deg,#0f2b5c,#5b3fd4);">1</div>
       <div><div class="app-title">营销AI小秘</div><div class="app-subtitle">10+提效Skill综合能力平台 · 适配项目推进全流程多场景</div></div>
+      <a href="https://luycloud.github.io/marketing-ai-assistant/" class="app-guide-card" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>操作指南</a>
     </div>
 <div class="app-stats-strip"><div class="app-stats-item"><div class="app-stats-num">4,739</div><div class="app-stats-label">总访问量 (PV)</div></div><div class="app-stats-item"><div class="app-stats-num">1447</div><div class="app-stats-label">总独立访客 (每日UV累加)</div></div><div class="app-stats-item"><div class="app-stats-num">65</div><div class="app-stats-label">工作日日均访问量 (PV)</div></div><div class="app-stats-item app-stats-note-inline">统计区间：2026.05.06 - 2026.08.07</div></div>
 
@@ -806,6 +812,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
     <div class="app-block-header">
       <div class="app-num-badge" style="background:linear-gradient(135deg,#5b3fd4,#e8710a);">2</div>
       <div><div class="app-title">行销数字员工</div><div class="app-subtitle">专属智能售前专家 · 7×24小时在线 · 全流程问题闭环</div></div>
+      
     </div>
 <div class="app-stats-strip"><div class="app-stats-item"><div class="app-stats-num">21,813</div><div class="app-stats-label">总访问量 (PV)</div></div><div class="app-stats-item"><div class="app-stats-num">6,784</div><div class="app-stats-label">总独立访客 (每日UV累加)</div></div><div class="app-stats-item"><div class="app-stats-num">256</div><div class="app-stats-label">工作日日均访问量 (PV)</div></div><div class="app-stats-item app-stats-note-inline">统计时间： 2026.04.10 - 2026.08.07</div></div>
 
