@@ -584,7 +584,7 @@
 | 页面标题 | AI赋能营销 · 营销中心-综合管理部     |
 | Hero大标题 | AI赋能营销                  |
 | Hero副标题 | AI用起来，业绩冲上来！            |
-| Hero描述 | 以业务赋能为导向，以AI与数字化为核心，以提质增效为目标 |
+| Hero描述 | 以<span class="text-highlight">业务赋能</span>为导向，以<span class="text-highlight">AI与数字化</span>为核心，以<span class="text-highlight">提质增效</span>为目标 |
 | Hero行动信息 | 营销中台6月已前往6个区域（广东、深圳、江苏、安徽、北京、天津）进行现场AI应用赋能及交流，8月将继续奔赴一线！ |
 | Logo图片 | media/image2.png                  |
 | 页脚部门 | 安恒信息· 营销中心 · 综合管理部        |
@@ -596,7 +596,7 @@
 | 字段 | 值 |
 |------|-----|
 | 标题 | 积极使用 AI，更有 丰厚激励 等你拿 |
-| 副标题 | 积极使用AI工具，主动反馈优化建议，甚至自建提效Skill——优秀实践可获月度激励、专项大奖及年度荣誉！ |
+| 副标题 | <span class="text-highlight-gold">积极使用</span>AI工具，<span class="text-highlight-gold">主动反馈</span>优化建议，甚至自建提效Skill——优秀实践可获<span class="text-highlight-gold">月度激励、专项大奖及年度荣誉</span>！ |
 
 ### 激励1 · 10W专项激励
 
