@@ -65,6 +65,47 @@ nav.scrolled { box-shadow:0 1px 12px rgba(0,0,0,.06); }
 .hero h1 em { background:linear-gradient(135deg,#5eead4,#818cf8,#60a5fa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-style:normal; }
 .hero-sub { font-size:16px; color:rgba(255,255,255,.5); margin:0 auto 36px; max-width:640px; line-height:1.75; }
 .hero-action { font-size:15px; color:#60a5fa; margin:-22px auto 0; max-width:760px; line-height:1.7; font-weight:500; letter-spacing:.2px; text-shadow:0 0 24px rgba(96,165,250,.35); }
+/* ── Hero 右侧：超级数字员工 圆形入口（头像 + 旋转光环 + 手指引导） ── */
+.hero-de-orb { position:absolute; right:max(34px, 3.4vw); top:118px; z-index:3; width:132px; height:188px; text-decoration:none; }
+.orb-stage { position:relative; display:block; width:132px; height:132px;
+  animation:orbIn .95s cubic-bezier(.2,.9,.3,1.18) .4s both; }
+@keyframes orbIn { from{opacity:0; transform:scale(.7) translateY(16px)} to{opacity:1; transform:scale(1) translateY(0)} }
+.orb-ring { position:absolute; inset:-9px; border-radius:50%; border:1.5px dashed rgba(125,178,255,.52);
+  animation:orbSpin 24s linear infinite; }
+@keyframes orbSpin { to { transform:rotate(360deg); } }
+.orb-halo { position:absolute; inset:0; border-radius:50%; border:1.5px solid rgba(110,168,255,.8);
+  animation:orbHalo 2.9s ease-out infinite; pointer-events:none; }
+.orb-halo.d2 { animation-delay:1.45s; }
+@keyframes orbHalo { 0%{transform:scale(.9); opacity:.75} 78%{transform:scale(1.42); opacity:0} 100%{transform:scale(1.42); opacity:0} }
+.orb-core { position:absolute; inset:0; display:block; border-radius:50%; overflow:hidden;
+  background:linear-gradient(150deg,#1b3f86,#0e2050); transform:translateZ(0);
+  box-shadow:0 12px 34px rgba(4,14,38,.58), 0 0 0 1.5px rgba(125,178,255,.42), inset 0 0 22px rgba(96,150,255,.22);
+  transition:box-shadow .34s, filter .34s; }
+.orb-core img { width:100%; height:100%; display:block; object-fit:cover; }
+.hero-de-orb:hover .orb-core { box-shadow:0 16px 46px rgba(92,142,255,.52), 0 0 0 2.5px rgba(160,200,255,.72), inset 0 0 26px rgba(120,170,255,.3); filter:brightness(1.06); }
+.orb-label { position:absolute; left:50%; top:145px; transform:translateX(-50%);
+  padding:5px 14px; border-radius:13px; font-size:12.5px; font-weight:800; color:#fff; white-space:nowrap; letter-spacing:.2px;
+  background:linear-gradient(118deg,#1f5fd0,#5b3fd4 55%,#b026d3);
+  box-shadow:0 6px 18px rgba(58,86,214,.42), inset 0 1px 0 rgba(255,255,255,.28);
+  transition:transform .3s, box-shadow .3s; }
+.hero-de-orb:hover .orb-label { transform:translateX(-50%) translateY(-2px); box-shadow:0 10px 24px rgba(58,86,214,.55), inset 0 1px 0 rgba(255,255,255,.34); }
+.orb-hand { position:absolute; right:-21px; top:40px; font-size:25px; line-height:1; pointer-events:none;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.5)); }
+.orb-hand b { display:block; font-weight:400; animation:orbTap 2.3s cubic-bezier(.4,0,.3,1) infinite; }
+@keyframes orbTap {
+  0%,60%,100% { transform:translate(0,0) rotate(-26deg) scale(1); opacity:.92; }
+  14%         { transform:translate(-4px,-9px) rotate(-34deg) scale(1.08); opacity:1; }
+  30%         { transform:translate(0,0) rotate(-26deg) scale(1); opacity:.92; }
+  44%         { transform:translate(-3px,-6px) rotate(-31deg) scale(1.04); opacity:1; }
+}
+@media (max-width:1280px) { .hero-de-orb { top:106px; } }
+@media (max-width:1180px) { .hero-de-orb { transform:scale(.86); transform-origin:top right; } }
+@media (max-width:1080px) { .hero-de-orb { right:max(26px, 2.4vw); } .orb-hand { right:-17px; font-size:23px; } }
+@media (max-width:1024px) { .hero-de-orb { display:none; } }
+@media (prefers-reduced-motion: reduce) {
+  .orb-stage, .orb-ring, .orb-halo, .orb-hand b { animation:none !important; }
+  .orb-halo { opacity:.35; }
+}
 .text-highlight { background:linear-gradient(135deg,#5eead4,#818cf8,#60a5fa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-style:normal; font-weight:700; }
 .text-highlight-gold { background:linear-gradient(135deg,#fbbf24,#f59e0b,#fb923c); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-style:normal; font-weight:700; }
 .hero-incentive-divider { width:80px; height:1px; background:rgba(255,255,255,.12); border-radius:1px; margin:44px auto 28px; }
@@ -520,6 +561,13 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .scene-detail-nav .back-btn + .back-btn { background: rgba(94,234,212,.1); border-color: rgba(94,234,212,.2); color: #5eead4; }
 .scene-detail-nav .back-btn + .back-btn:hover { background: rgba(94,234,212,.2); color: #fff; }
 .scene-detail-nav .nav-title { font-size: 18px; font-weight: 700; flex: 1; text-align: center; }
+/* 新增「超级数字员工」入口后，标题在宽屏下改为绝对居中 */
+@media (min-width: 1100px) {
+  .scene-detail-nav { position: relative; }
+  .scene-detail-nav .nav-title { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+    flex: none; text-align: center; white-space: nowrap; pointer-events: none; }
+  .scene-detail-nav .nav-de-btn { margin-left: auto; }
+}
 .scene-detail-nav .nav-pager { display: flex; gap: 10px; }
 .scene-detail-nav .pager-btn { padding: 8px 14px; border-radius: 10px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.7); font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid rgba(255,255,255,.08); transition: all var(--transition); }
 .scene-detail-nav .pager-btn:hover { background: rgba(255,255,255,.15); color: #fff; }
@@ -741,6 +789,33 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 @media (hover: none) and (pointer: coarse) {
   .video-wrapper video::-webkit-media-controls { display: flex !important; }
 }
+
+/* ============ 超级数字员工 导航入口按钮 ============ */
+.nav-actions { display:flex; align-items:center; gap:10px; }
+.nav-de-btn { position:relative; display:inline-flex; align-items:center; gap:7px; padding:7px 17px; border-radius:22px;
+  font-size:13.5px; font-weight:700; color:#fff; text-decoration:none; letter-spacing:-.1px; white-space:nowrap;
+  background:linear-gradient(118deg,#1f5fd0 0%,#5b3fd4 52%,#b026d3 100%);
+  box-shadow:0 4px 16px rgba(58,86,214,.32), inset 0 1px 0 rgba(255,255,255,.3); overflow:hidden;
+  transition:transform .28s cubic-bezier(.4,0,.2,1), box-shadow .28s; }
+.nav-de-btn::after { content:''; position:absolute; top:0; left:-70%; width:42%; height:100%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.5),transparent); transform:skewX(-18deg);
+  animation:deShine 4s ease-in-out infinite; }
+@keyframes deShine { 0%{left:-70%} 52%{left:135%} 100%{left:135%} }
+.nav-de-btn:hover { transform:translateY(-1.5px); box-shadow:0 8px 24px rgba(58,86,214,.44), inset 0 1px 0 rgba(255,255,255,.34); }
+.nav-de-btn .nde-dot { width:6px; height:6px; border-radius:50%; background:#7dffc4; box-shadow:0 0 9px #7dffc4; animation:dePulse 2.1s ease-in-out infinite; }
+@keyframes dePulse { 0%,100%{opacity:1; transform:scale(1)} 50%{opacity:.3; transform:scale(.82)} }
+.nav-de-btn.cur { background:linear-gradient(118deg,#0f2b5c,#24408c); box-shadow:0 3px 14px rgba(15,43,92,.28); }
+.nav-de-btn.cur::after { display:none; }
+.nav-back-btn { display:inline-flex; align-items:center; gap:6px; padding:7px 16px; border-radius:22px; font-size:13.5px;
+  font-weight:600; color:var(--blue); text-decoration:none; background:var(--white); border:1px solid rgba(13,37,80,.14);
+  box-shadow:var(--shadow); white-space:nowrap; transition:all .28s; }
+.nav-back-btn:hover { background:var(--blue-l); border-color:rgba(13,37,80,.28); transform:translateX(-2px); }
+@media (max-width:768px) {
+  .nav-actions { gap:7px; }
+  /* 窄屏保留文字，避免「超级数字员工」入口只剩一个小圆点 */
+  .nav-de-btn { padding:6px 11px; font-size:12px; gap:5px; }
+  .nav-de-btn .nde-dot { width:6px; height:6px; }
+}
 </style>
 </head>
 <body>
@@ -750,6 +825,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   <a href="index.html" class="back-btn">← 返回首页</a>
   <a href="index.html#landing-scenes" class="back-btn back-to-module">返回</a>
   <div class="nav-title">🛠️ Skill共享平台</div>
+  <a class="nav-de-btn" href="digital-employee.html" title="进入 超级数字员工 专页"><span class="nde-dot"></span><span class="nde-txt">超级数字员工</span></a>
   <div class="nav-pager"><a href="scene-5.html" class="pager-btn">← 上一场景</a><a href="scene-7.html" class="pager-btn">下一场景 →</a></div>
 </div>
 <script>

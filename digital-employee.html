@@ -1,551 +1,10 @@
-#!/usr/bin/env python3
-"""
-build.py v2 — 从 content.md 生成 index.html
-用法: python build.py
-修改 content.md 后运行此脚本即可更新网站内容。
-"""
-import re, os, sys
-
-# 切换工作目录 + 强制UTF-8
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
-if hasattr(sys.stdout, 'reconfigure'):
-    sys.stdout.reconfigure(encoding='utf-8')
-
-
-def media_path(path):
-    """Auto-upgrade image paths to .webp if a compressed version exists."""
-    if not path:
-        return path
-    # 自动补 media/ 前缀
-    if not path.startswith('media/'):
-        path = 'media/' + path
-    full = os.path.join(os.path.dirname(os.path.abspath(__file__)), path)
-    base, ext = os.path.splitext(path)
-    if ext.lower() in ('.png', '.jpeg', '.jpg'):
-        webp_path = base + '.webp'
-        webp_full = os.path.join(os.path.dirname(os.path.abspath(__file__)), webp_path)
-        if os.path.exists(webp_full):
-            return webp_path
-    return path
-
-
-def _de_table(block, keys):
-    """从 markdown 块中解析 | 字段 | 值 | 表，只保留 keys 中的字段"""
-    out = {}
-    for line in block.split('\n'):
-        m = re.match(r'\|\s*(.+?)\s*\|\s*(.*?)\s*\|\s*$', line)
-        if not m:
-            continue
-        k = m.group(1).strip()
-        if k in keys and k not in ('字段', ''):
-            out[k] = m.group(2).strip()
-    return out
-
-
-def parse_de_page(text):
-    """解析 ## 数字员工页 整段配置"""
-    start = text.find('## 数字员工页')
-    if start < 0:
-        return None
-    sec = text[start:]
-
-    de = {'raw': sec}
-
-    # ---- 主属性表 ----
-    m = re.search(r'## 数字员工页\s*\n\s*((?:\|.+\|\s*\n)+)', sec)
-    de['meta'] = _de_table(m.group(1), {
-        '浏览器标题', '页头眉标', '页头主标题', '页头副标题', '页头标语', '页头描述',
-        'KPI1数值', 'KPI1标签', 'KPI2数值', 'KPI2标签', 'KPI3数值', 'KPI3标签',
-        'KPI4数值', 'KPI4标签',
-        '立牌正面图', '人物层前缀', '旋转提示', '翻转按钮', '背回按钮', '放大按钮',
-        '返回按钮', '返回链接', '页尾标语',
-    }) if m else {}
-
-    def sub(name, keys=None, upto=None):
-        a = sec.find('### ' + name)
-        if a < 0:
-            return ''
-        b = len(sec)
-        for nxt in re.finditer(r'\n### ', sec[a + 4:]):
-            b = a + 4 + nxt.start()
-            break
-        return sec[a:b]
-
-    # ---- 立牌背面 ----
-    blk = sub('立牌背面')
-    de['back'] = _de_table(blk, {'背面眉标', '背面主标题', '背面副标题', '背面标语', '背面说明', '背面入口文字', '支架文字'})
-
-    # ---- KPI 明细（悬浮面板）----
-    de['kpi_meta'] = {}
-    blk = sub('KPI 明细')
-    for line in blk.split('\n'):
-        if not line.strip().startswith('|'):
-            continue
-        cells = [c.strip() for c in line.strip().strip('|').split('|')]
-        if len(cells) < 3:
-            continue
-        if cells[0] in ('键', '字段') or set(cells[0]) <= set('-: '):
-            continue
-        de['kpi_meta'][cells[0]] = {'title': cells[1], 'detail': cells[2]}
-
-    # ---- 立牌控制按钮（放大镜等）----
-    de['board_tools'] = []
-    blk = sub('立牌控制')
-    for line in blk.split('\n'):
-        if not line.strip().startswith('|'):
-            continue
-        cells = [c.strip() for c in line.strip().strip('|').split('|')]
-        if len(cells) < 3:
-            continue
-        if cells[0] in ('动作', '字段', 'id') or set(cells[0]) <= set('-: '):
-            continue
-        de['board_tools'].append({'id': cells[0], 'btn': cells[1], 'icon': cells[2]})
-
-    # ---- 人物动作 ----
-    de['actions'] = []
-    blk = sub('人物动作')
-    for line in blk.split('\n'):
-        m = re.match(r'\|\s*([a-zA-Z][\w-]*)\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*$', line)
-        if m:
-            de['actions'].append({'id': m.group(1).strip(), 'btn': m.group(2).strip(), 'say': m.group(3).strip()})
-
-    # ---- 业务流头部 ----
-    blk = sub('业务流头部')
-    de['flow'] = _de_table(blk, {
-        '眉标', '标题', '副标题', '说明', '底部说明', '日常标题', '日常说明', '日常动作',
-        '图例已建设', '图例规划中',
-    })
-
-    # ---- 业务流阶段 ----
-    de['stages'] = []
-    blk = sub('业务流阶段')
-    for line in blk.split('\n'):
-        m = re.match(r'\|\s*(\d+)\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*$', line)
-        if m:
-            de['stages'].append({
-                'no': m.group(1).strip(),
-                'name': m.group(2).strip(),
-                'actions': [a.strip() for a in m.group(3).split(',') if a.strip()],
-                'scene': m.group(4).strip(),
-                'scene_no': m.group(5).strip(),
-                'status': m.group(6).strip(),
-            })
-
-    # ---- 场景能力集头部 ----
-    blk = sub('场景能力集头部')
-    de['cap_head'] = _de_table(blk, {'眉标', '标题', '副标题', '统计'})
-
-    # ---- 场景能力 1..N ----
-    de['caps'] = []
-    heads = list(re.finditer(r'\n### (场景能力\d+ · .+)\n', sec))
-    for i, h in enumerate(heads):
-        a = h.start() + 1
-        b = heads[i + 1].start() + 1 if i + 1 < len(heads) else len(sec)
-        blk = sec[a:b]
-        title = h.group(1)
-        info = _de_table(blk, {'序号', '名称', '对应阶段', '主题色', '图标', '说明', '状态', '跳转链接', '跳转文字', '宽卡', '应用数量', '场景闭环'})
-        if not info.get('名称'):
-            nm = re.match(r'场景能力\d+\s*·\s*(.+)', title)
-            info['名称'] = nm.group(1).strip() if nm else title
-        # 能力行（表头含 skill / 功能）
-        rows = []
-        for line in blk.split('\n'):
-            if not line.strip().startswith('|'):
-                continue
-            cells = [c.strip() for c in line.strip().strip('|').split('|')]
-            if len(cells) < 4:
-                continue
-            if cells[0] in ('skill / 功能', 'skill/功能', '字段') or set(cells[0]) <= set('-: '):
-                continue
-            if cells[0] in ('序号', '名称', '对应阶段', '主题色', '图标', '说明', '状态', '跳转链接', '跳转文字', '宽卡', '应用数量', '场景闭环'):
-                continue
-            rows.append({'skill': cells[0], 'demo': cells[1], 'data': cells[2], 'entry': cells[3]})
-        info['rows'] = rows
-        de['caps'].append(info)
-
-    # ---- 页尾 ----
-    blk = sub('数字员工页尾')
-    de['footer'] = _de_table(blk, {'主标题', '副标题', '主按钮文字', '主按钮链接', '次按钮文字', '署名'})
-
-    return de
-
-
-def parse_content(path):
-    with open(path, 'r', encoding='utf-8') as f:
-        text = f.read()
-    
-    data = {'global': {}, 'scenes': [], 'heroes': []}
-    
-    # ---- 全局信息 ----
-    gm = re.search(r'## 全局信息\n\n((?:\|.+\|\n)+)', text)
-    if gm:
-        for line in gm.group(1).strip().split('\n'):
-            m = re.match(r'\|\s*(.+?)\s*\|\s*(.+?)\s*\|', line)
-            if m and m.group(1).strip() not in ('字段', ''):
-                data['global'][m.group(1).strip()] = m.group(2).strip()
-    
-    # ---- 漫画角色 ----
-    hm = re.search(r'## 漫画角色\n\n((?:\|.+\|\n)+)', text)
-    if hm:
-        for line in hm.group(1).strip().split('\n'):
-            m = re.match(r'\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|', line)
-            if m and m.group(1).strip() not in ('角色', '') and not m.group(1).startswith('--'):
-                data['heroes'].append({
-                    'name': m.group(1).strip(),
-                    'bubble': m.group(2).strip(),
-                    'avatar': m.group(3).strip()
-                })
-    
-    # ---- 点赞评论模块 ----
-    feedback = {'title': '👍 觉得有用吗？', 'subtitle': '您的反馈帮助我们持续改进'}
-    fm = re.search(r'## 点赞评论模块\n\n((?:\|.+\|\n)+)', text)
-    if fm:
-        for line in fm.group(1).strip().split('\n'):
-            m = re.match(r'\|\s*(标题|副标题)\s*\|\s*(.+?)\s*\|', line)
-            if m:
-                feedback[m.group(1)] = m.group(2).strip()
-    data['feedback'] = feedback
-    
-    # ---- 未来规划（独立模块）----
-    future = {'title': '未来规划', 'subtitle': '统一入口 · 整合资源 · 建设营销AI综合能力平台', 'status': '', 'directions': '', 'plan': ''}
-    fp_start = text.find('## 未来规划')
-    fp_end = text.find('## 点赞评论模块')
-    if fp_start >= 0 and fp_end > fp_start:
-        fp_section = text[fp_start:fp_end]
-        # 提取属性表
-        tbl_match = re.search(r'(\|.+\|\n)+', fp_section)
-        if tbl_match:
-            for line in tbl_match.group().strip().split('\n'):
-                m = re.match(r'\|\s*(标题|副标题)\s*\|\s*(.+?)\s*\|', line)
-                if m:
-                    future[m.group(1)] = m.group(2).strip()
-        # 当前现状
-        sm = re.search(r'\*\*当前现状\*\*\s*\n(.*?)(?=\*\*规划方向\*\*)', fp_section, re.DOTALL)
-        if sm: future['status'] = sm.group(1).strip()
-        # 规划方向
-        dm = re.search(r'\*\*规划方向\*\*(.*?)(?=\*\*推进计划\*\*)', fp_section, re.DOTALL)
-        if dm: future['directions'] = dm.group(1).strip()
-        # 推进计划
-        pm = re.search(r'\*\*推进计划\*\*(.*?)(?=---)', fp_section, re.DOTALL)
-        if pm: future['plan'] = pm.group(1).strip()
-    data['future_plan'] = future
-    
-    # ---- 激励模块 ----
-    inc = {'标题': '积极使用 AI，更有 丰厚激励 等你拿', '副标题': '积极使用AI工具，主动反馈优化建议，甚至自建提效Skill——优秀实践可获月度激励、专项大奖及年度荣誉！', 'cards': []}
-    inc_start = text.find('## 激励模块')
-    inc_end = text.find('## 未来规划') if text.find('## 未来规划') > inc_start else len(text)
-    if inc_start >= 0 and inc_end > inc_start:
-        inc_section = text[inc_start:inc_end]
-        # 提取模块标题/副标题
-        tbl_match = re.search(r'(\|.+\|\n)+', inc_section[:inc_section.find('### 激励1')] if '### 激励1' in inc_section else inc_section[:200])
-        if tbl_match:
-            for line in tbl_match.group().strip().split('\n'):
-                m = re.match(r'\|\s*(标题|副标题)\s*\|\s*(.+?)\s*\|', line)
-                if m:
-                    inc[m.group(1)] = m.group(2).strip()
-        # 提取各激励卡片
-        inc_card_blocks = re.split(r'\n### 激励\d+ · .+\n', inc_section)
-        inc_card_headers = re.findall(r'### 激励(\d+) · (.+)\n', inc_section)
-        for ci, (cid, cname) in enumerate(inc_card_headers):
-            cb = inc_card_blocks[ci + 1] if ci + 1 < len(inc_card_blocks) else ''
-            card = {'glow': 'gold', 'icon': '', 'title': cname.strip(), 'en': '', 'desc': '', 'stats': [], 'tags': [], 'link': '#', 'link_text': '敬请期待'}
-            # 中英文字段映射
-            field_map = {'光晕': 'glow', '图标': 'icon', '标题': 'title', '英文': 'en', '描述': 'desc', '链接': 'link', '链接文字': 'link_text'}
-            # 属性表
-            for line in cb.split('\n'):
-                m = re.match(r'\|\s*(光晕|图标|标题|英文|描述|链接|链接文字)\s*\|\s*(.+?)\s*\|', line)
-                if m:
-                    key = field_map.get(m.group(1), m.group(1))
-                    card[key] = m.group(2).strip()
-            # 重点词
-            kw_match = re.search(r'\*\*重点词\*\*\s*\n\n((?:\|.+\|\n)+)', cb)
-            if kw_match:
-                nums = []
-                labels = []
-                for line in kw_match.group(1).strip().split('\n'):
-                    m = re.match(r'\|\s*(.+?)\s*\|\s*(.+?)\s*\|', line)
-                    if m and m.group(1).strip() not in ('数字', '') and not m.group(1).strip().startswith('--'):
-                        nums.append(m.group(1).strip())
-                        labels.append(m.group(2).strip())
-                card['stats'] = list(zip(nums, labels))
-            # 标签
-            tags_match = re.search(r'\*\*标签\*\*\s*\n\n(.+)', cb)
-            if tags_match:
-                card['tags'] = [t.strip() for t in tags_match.group(1).strip().split('、') if t.strip()]
-            inc['cards'].append(card)
-    data['incentive'] = inc
-    
-    # ---- 场景拆分 ----
-    scene_blocks = re.split(r'\n## 场景\d+ · .+\n', text)
-    scene_headers = re.findall(r'## 场景(\d+) · (.+)\n', text)
-    
-    for idx, (snum_str, sname) in enumerate(scene_headers):
-        snum = int(snum_str)
-        block = scene_blocks[idx + 1] if idx + 1 < len(scene_blocks) else ''
-        # 截掉未来规划、点赞评论模块和漫画角色，避免串到场景解析中
-        tail = re.search(r'\n## (?:激励模块|未来规划|点赞评论模块|漫画角色)', block)
-        if tail:
-            block = block[:tail.start()]
-        
-        scene = {
-            'num': snum,
-            'name': sname.strip(),
-            'title': sname.strip(),
-            'subtitle': '',
-            'apps': [],
-            'stats': []
-        }
-        
-        # 场景属性表（只读到第一个 ### 之前）
-        scene_table_end = block.find('\n###')
-        scene_table = block[:scene_table_end] if scene_table_end != -1 else block
-        for line in scene_table.split('\n'):
-            m = re.match(r'\|\s*(图标|标题|副标题)\s*\|\s*(.+?)\s*\|', line)
-            if m:
-                scene[m.group(1)] = m.group(2).strip()
-        
-        if '标题' in scene:
-            scene['title'] = scene['标题']
-        if '副标题' in scene:
-            scene['subtitle'] = scene['副标题']
-        if '图标' in scene:
-            scene['icon'] = scene['图标']
-        
-        # 数据展示
-        data_block = re.search(r'### 数据展示\n\n((?:\|.+\|\n)+)', block)
-        if data_block:
-            nums = re.findall(r'\|\s*数据\d+数值\s*\|\s*(.+?)\s*\|', data_block.group(1))
-            labels = re.findall(r'\|\s*数据\d+标签\s*\|\s*(.+?)\s*\|', data_block.group(1))
-            scene['stats'] = [{'num': n, 'label': l} for n, l in zip(nums, labels)]
-        
-        # 应用拆分
-        app_blocks = re.split(r'\n### 应用[\d.]+ · .+\n', block)
-        app_headers = re.findall(r'### 应用([\d.]+) · (.+)\n', block)
-        
-        for ai, (aid, aname) in enumerate(app_headers):
-            ab = app_blocks[ai + 1] if ai + 1 < len(app_blocks) else ''
-            
-            app = {
-                'id': aid,
-                'name': aname.strip(),
-                'title': aname.strip(),
-                'subtitle': '',
-                'video': '',
-                'images': [],
-                'placeholder': None,
-                'pain': '', 'solve': '', 'how': '',
-                'paths': [], 'extra_info': [], 'stats': [], 'stats_note': ''
-            }
-            
-            # 应用数据展示
-            app_data_block = re.search(r'### 应用数据\n\n((?:\|.+\|\n)+)', ab)
-            if app_data_block:
-                data_nums = re.findall(r'\|\s*数据(\d+)数值\s*\|\s*(.+?)\s*\|', app_data_block.group(1))
-                data_labels = re.findall(r'\|\s*数据(\d+)标签\s*\|\s*(.+?)\s*\|', app_data_block.group(1))
-                data_note = re.search(r'\|\s*数据补充\s*\|\s*(.+?)\s*\|', app_data_block.group(1))
-                app['stats'] = [{'num': n, 'label': dl} for (dk, n), (dlk, dl) in zip(data_nums, data_labels) if dk == dlk]
-                if data_note:
-                    app['stats_note'] = data_note.group(1).strip()
-            
-            # 应用属性表
-            img_srcs = []
-            img_caps = []
-            bid_compare_data = None
-            bid_steps_data = []
-            for line in ab.split('\n'):
-                m = re.match(r'\|\s*(标题|副标题|能力集截图|演示视频|视频说明|视频详情|截图(\d+)|截图(\d+)说明|演示类型|占位图标|占位文字|入口文字|入口链接|画像预览|画像标签|运营报告|运营报告标签|操作指南)\s*\|\s*(.+?)\s*\|', line)
-                if m:
-                    k = m.group(1)
-                    v = m.group(4) if m.group(4) else ''
-                    if k == '标题':
-                        app['title'] = v
-                    elif k == '副标题':
-                        app['subtitle'] = v
-                    elif k == '能力集截图':
-                        app['cap_images'] = [media_path(x.strip()) for x in v.split(',') if x.strip()]
-                    elif k == '演示视频':
-                        app['video'] = v
-                    elif k == '视频说明':
-                        app['video_label'] = v
-                    elif k == '视频详情':
-                        app['video_detail'] = v
-                    elif k == '演示类型':
-                        app['placeholder'] = (v == 'placeholder')
-                    elif k == '占位图标':
-                        app['placeholder_icon'] = v
-                    elif k == '占位文字':
-                        app['placeholder_text'] = v
-                    elif k == '入口文字':
-                        app['entry_text'] = v
-                    elif k == '入口链接':
-                        app['entry_link'] = v
-                    elif k == '画像预览':
-                        app['profile_preview'] = v
-                    elif k == '画像标签':
-                        app['profile_label'] = v
-                    elif k == '运营报告':
-                        app['report_preview'] = v
-                    elif k == '运营报告标签':
-                        app['report_label'] = v
-                    elif k == '操作指南':
-                        app['guide_link'] = v
-                    elif k.startswith('截图') and k.endswith('说明'):
-                        img_caps.append(v)
-                    elif k.startswith('截图'):
-                        img_srcs.append(v)
-            
-            # 解析AI标讯对比数据（通用表格，支持任意列数）
-            bid_compare_match = re.search(r'### AI标讯对比数据\n\n((?:\|.+\|\n)+)', ab)
-            if bid_compare_match:
-                rows_raw = bid_compare_match.group(1).strip().split('\n')
-                # 过滤掉分隔符行（如 |------|------|...）
-                data_rows = [r for r in rows_raw if not re.match(r'\s*\|[-:\s|]+\|', r)]
-                if len(data_rows) >= 2:
-                    # 第一行是表头
-                    headers = [c.strip() for c in re.findall(r'\|\s*([^|]+?)\s*(?=\|)', data_rows[0]) if c.strip()]
-                    # 后续行是数据
-                    body_rows = []
-                    for row in data_rows[1:]:
-                        cells = [c.strip() for c in re.findall(r'\|\s*([^|]+?)\s*(?=\|)', row)]
-                        if any(cells):
-                            body_rows.append(cells)
-                    if headers and body_rows:
-                        bid_compare_data = {'headers': headers, 'rows': body_rows}
-            app['bid_compare'] = bid_compare_data
-
-            # 解析应用能力集（通用表格，支持任意列数，第一列空单元格自动合并到上一行）
-            capability_data = None
-            cap_match = re.search(r'### 应用能力集\n\n((?:\|.+\|\n)+)', ab)
-            if cap_match:
-                cap_rows_raw = cap_match.group(1).strip().split('\n')
-                cap_data_rows = [r for r in cap_rows_raw if not re.match(r'\s*\|[-:\s|]+\|', r)]
-                if len(cap_data_rows) >= 2:
-                    cap_headers = [c.strip() for c in re.findall(r'\|\s*([^|]+?)\s*(?=\|)', cap_data_rows[0]) if c.strip()]
-                    cap_body = []
-                    for row in cap_data_rows[1:]:
-                        cells = [c.strip() for c in re.findall(r'\|\s*([^|]+?)\s*(?=\|)', row)]
-                        if any(cells):
-                            cap_body.append(cells)
-                    if cap_headers and cap_body:
-                        capability_data = {'headers': cap_headers, 'rows': cap_body}
-            app['capability'] = capability_data
-            
-            # 解析招投标流程步骤
-            bid_steps_match = re.search(r'### 招投标流程步骤\n\n((?:\|.+\|\n)+)', ab)
-            if bid_steps_match:
-                for line in bid_steps_match.group(1).strip().split('\n'):
-                    cells = re.findall(r'\|\s*(.+?)\s*(?=\|)', line)
-                    if cells and cells[0].strip() not in ('步骤', '') and not cells[0].startswith('--'):
-                        step = {
-                            'icon': cells[1].strip() if len(cells) > 1 else '',
-                            'title': cells[2].strip() if len(cells) > 2 else '',
-                            'color': cells[3].strip() if len(cells) > 3 else '',
-                            'items': [x.strip() for x in cells[4].split(',')] if len(cells) > 4 and cells[4].strip() else []
-                        }
-                        bid_steps_data.append(step)
-            app['bid_steps'] = bid_steps_data if bid_steps_data else None
-            
-            # 解析一线增量情况
-            increment_match = re.search(r'### 一线增量情况\n\n((?:\|.+\|\n)+)', ab)
-            if increment_match:
-                inc_data = {'images': [], 'stats': []}
-                for line in increment_match.group(1).strip().split('\n'):
-                    cells = re.findall(r'\|\s*(.+?)\s*(?=\|)', line)
-                    if len(cells) >= 2:
-                        k = cells[0].strip()
-                        v = cells[1].strip()
-                        if k == '截图1':
-                            inc_data['images'].append({'src': media_path(v), 'caption': ''})
-                        elif k == '截图1说明':
-                            if inc_data['images']:
-                                inc_data['images'][-1]['caption'] = v
-                        elif k == '截图2':
-                            inc_data['images'].append({'src': media_path(v), 'caption': ''})
-                        elif k == '截图2说明':
-                            if len(inc_data['images']) >= 2:
-                                inc_data['images'][-1]['caption'] = v
-                        elif k == '标题':
-                            inc_data['title'] = v
-                        elif k.startswith('数据') and '数值' in k:
-                            num = re.search(r'数据(\d+)', k)
-                            if num:
-                                idx = int(num.group(1))
-                                inc_data['stats'].append({'idx': idx, 'num': v, 'label': ''})
-                        elif k.startswith('数据') and '标签' in k:
-                            num = re.search(r'数据(\d+)', k)
-                            if num:
-                                idx = int(num.group(1))
-                                for s in inc_data['stats']:
-                                    if s['idx'] == idx:
-                                        s['label'] = v
-                                        break
-                app['increment'] = inc_data
-            
-            if img_srcs:
-                app['images'] = [{'src': media_path(s), 'caption': img_caps[i] if i < len(img_caps) else ''} 
-                                 for i, s in enumerate(img_srcs)]
-            
-            if app.get('placeholder') and not isinstance(app['placeholder'], bool):
-                app['placeholder'] = (app['placeholder'] == 'placeholder')
-            
-            # 解析三段内容
-            pain_match = re.search(r'\*\*😩 (?:用户痛点|业务需求|当前现状)\*\*\n(.*?)(?=\n\*\*✅|\n\*\*🔧|\Z)', ab, re.DOTALL)
-            solve_match = re.search(r'\*\*✅ (?:AI能帮你|整体方案|未来规划)\*\*\n(.*?)(?=\n\*\*🔧|\Z)', ab, re.DOTALL)
-            how_match = re.search(r'\*\*🔧 (?:怎么操作|平台入口|推进计划)\*\*\n(.*?)(?=\n###|\n##|\Z)', ab, re.DOTALL)
-            
-            if pain_match:
-                app['pain'] = pain_match.group(1).strip()
-            if solve_match:
-                app['solve'] = solve_match.group(1).strip()
-            if how_match:
-                raw_how = how_match.group(1).strip()
-                # 预处理：同一行中的 "文本 | 操作路径 | xxx" 拆成两行
-                lines = raw_how.split('\n')
-                cleaned_lines = []
-                for line in lines:
-                    m_inline = re.search(r'\s*\|\s*(?:操作|快捷)路径\s*\|', line)
-                    if m_inline:
-                        desc_part = line[:m_inline.start()].strip()
-                        path_part = line[m_inline.start():].strip()
-                        if desc_part:
-                            cleaned_lines.append(desc_part)
-                        cleaned_lines.append(path_part)
-                    else:
-                        cleaned_lines.append(line)
-                how_text = []
-                paths = []
-                extra = []
-                for line in cleaned_lines:
-                    m_path = re.match(r'\|\s*(?:操作|快捷)路径(\d*)\s*\|\s*(.+?)\s*\|', line)
-                    m_extra = re.match(r'\|\s*补充说明\s*\|\s*(.+?)\s*\|', line)
-                    m_ptitle = re.match(r'\|\s*路径标题(\d*)\s*\|\s*(.+?)\s*\|', line)
-                    if m_path:
-                        paths.append(m_path.group(2).strip())
-                    elif m_extra:
-                        extra.append(m_extra.group(1).strip())
-                    elif m_ptitle:
-                        extra.append(('path_title', m_ptitle.group(2), ''))
-                    elif line.strip() and not line.startswith('|'):
-                        how_text.append(line)
-                app['how'] = '\n'.join(how_text).strip()
-                app['paths'] = paths
-                app['extra_info'] = extra
-            
-            scene['apps'].append(app)
-        
-        data['scenes'].append(scene)
-
-    # ---- 超级数字员工页 ----
-    data['de_page'] = parse_de_page(text)
-
-    return data
-
-
-# ============================================================
-# HTML模板
-# ============================================================
-
-CSS = '''<style>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>营销AI小秘 · 超级数字员工 — 安恒信息 AI赋能营销</title>
+<style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
   --brand-deep: #060f25; --brand-blue: #0d2550; --brand-teal: #00a884;
@@ -1357,14 +816,8 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   .nav-de-btn { padding:6px 11px; font-size:12px; gap:5px; }
   .nav-de-btn .nde-dot { width:6px; height:6px; }
 }
-</style>'''
-
-
-# ============================================================
-# 超级数字员工页 专用样式
-# ============================================================
-
-DE_CSS = '''<style>
+</style>
+<style>
 /* ============ 页面基础 ============ */
 .de-body { background:var(--bg); }
 .de-wrap { max-width:1280px; margin:0 auto; padding:0 32px; }
@@ -2012,10 +1465,376 @@ DE_CSS = '''<style>
   .cap-tbl td.dt::before, .cap-tbl td.ent::before, .cap-tbl td.ent-m::before {
     color:rgba(178,198,232,.74); background:rgba(255,255,255,.08); }
 }
-</style>'''
+</style>
+</head>
+<body class="de-body">
+<div id="prog"></div>
 
+<nav>
+  <a class="nav-brand" href="index.html"><img src="media/image2.png" alt="安恒信息"><span>AI赋能营销</span></a>
+  <div class="nav-actions">
+    <a class="nav-back-btn" href="index.html">← 返回 AI赋能营销</a>
+    <div class="nav-right"><img src="media/image2.png" alt=""><span class="nav-right-dept">安恒信息· 营销中心 · 综合管理部</span></div>
+  </div>
+</nav>
 
-DE_JS = '''<script>
+<div class="de-board-sec" id="de-board">
+  <div class="de-wrap">
+    <div class="de-bs-grid">
+      <div class="de-stage">
+        <div class="de-floor"></div>
+        <div class="de-persp">
+          <div class="de-board" id="deBoard">
+            <div class="de-edge l"></div>
+            <div class="de-edge r"></div>
+            <div class="de-face de-back"><div class="de-bi">
+  <div class="de-bi-top"><i></i>安恒信息 · 营销中心<span class="de-bi-back-btn" data-de-front>查看正面能力全景 →</span></div>
+  <div class="de-bi-mid">
+    <div class="n">营销AI小秘</div>
+    <div class="s">超级数字员工</div>
+    <div class="de-bi-sep"></div>
+    <div class="t">从市场洞察，到成单交付</div>
+    <div class="d">一块立牌，装下营销全流程的 AI 能力。正面是能力全景，背面是它每天在做的事。</div>
+    <div class="de-bi-spec">
+      <span><b>面板</b> 5mm 复合板</span><span><b>支架</b> 铝合金背撑</span>
+      <span><b>工艺</b> 高清微喷</span><span><b>尺寸</b> 420 × 536 mm</span>
+    </div>
+  </div>
+  <div class="de-bi-foot">
+    <span class="code">DAS-SECURITY · MARKETING AI · 2026</span>
+    <span class="mat">背面视图 · BACK</span>
+  </div>
+</div></div>
+            <div class="de-strut">
+              <div class="hinge"></div>
+              <div class="rail l"></div>
+              <div class="rail r"></div>
+              <div class="cross"></div>
+              <div class="foot l"></div>
+              <div class="foot r"></div>
+              <div class="tagline">铝合金背撑 · 稳固落地</div>
+            </div>
+            <div class="de-face de-front">
+              <img class="de-img" src="media/de_board_front.webp" alt="营销AI小秘 场景能力立牌">
+              <div class="de-char" id="deChar" title="点我切换动作"><img class="de-l de-l-body" src="media/de_char_body.webp" alt=""><img class="de-l de-l-tab" src="media/de_char_tab.webp" alt=""><img class="de-l de-l-arm" src="media/de_char_arm.webp" alt=""><img class="de-l de-l-head" src="media/de_char_head.webp" alt=""><img class="de-l de-l-arm de-arm-wave" src="media/de_char_wave_arm.webp" alt=""></div>
+              <div class="de-sheen"></div>
+            </div>
+          </div>
+          <div class="de-board-tools">
+            <button class="de-lb-btn" data-de-lightbox><span class="ic">🔍</span>放大查看</button>
+          </div>
+        </div>
+        <div class="de-bhint"><span class="k">⇄</span> 按住立牌左右拖动，可 180° 转动查看</div>
+      </div>
+
+      <div class="de-panel">
+        <h2 class="de-h2">营销AI小秘<br><em>营销的超级数字员工</em></h2>
+        <div class="de-tagline">
+          <span class="de-slogan">让每一次营销动作，都有 AI 陪跑</span>
+          <span class="de-tagsep"></span>
+          <span class="de-lead">从市场洞察到成单交付，一个会查、会写、会算、会讲的超级数字员工</span>
+        </div>
+        <div class="de-kpis"><div class="de-kpi" tabindex="0" data-kpi="KPI1"><div class="de-kpi-pop"><div class="kp-t">9 大业务场景</div><div class="kp-l"><span class="kp-i">机会点</span><span class="kp-i">客户</span><span class="kp-i">商机</span><span class="kp-i">招投标</span><span class="kp-i">合同</span><span class="kp-i">交付</span><span class="kp-i">收入</span><span class="kp-i">售后</span><span class="kp-i">日常工作</span></div></div><b>9</b><span>大业务场景</span><i class="kp-dot"></i></div><div class="de-kpi" tabindex="0" data-kpi="KPI2"><div class="de-kpi-pop"><div class="kp-t">28 项 AI 能力</div><div class="kp-l"><span class="kp-i">机会点·公开标讯</span><span class="kp-i">机会点·行业机会</span><span class="kp-i">机会点·维保机会</span><span class="kp-i">机会点·智能推送</span><span class="kp-i">客户·客户公开信息</span><span class="kp-i">客户·客户驻场绿灯条件</span><span class="kp-i">客户·查客户内部信息</span><span class="kp-i">客户·客户拜访</span><span class="kp-i">客户·客户360°画像</span><span class="kp-i">客户·AI对练</span><span class="kp-i">商机·机会点运营</span><span class="kp-i">商机·报价单</span><span class="kp-i">商机·商机跟进记录</span><span class="kp-i">商机·创建项目</span><span class="kp-i">商机·项目进展更新</span><span class="kp-i">招投标·写方案（初版）</span><span class="kp-i">招投标·查招投标所需人员</span><span class="kp-i">招投标·找案例扫描件</span><span class="kp-i">招投标·查招投标所需资质</span><span class="kp-i">招投标·招投标解析/标书/检查</span><span class="kp-i">招投标·查产品价格</span><span class="kp-i">交付·排产/发货查询</span><span class="kp-i">交付·驻场查询</span><span class="kp-i">收入·经营指标全景推送</span><span class="kp-i plan">建设中·新建客户</span><span class="kp-i plan">建设中·新建商机</span><span class="kp-i plan">建设中·业绩查询及预测</span><span class="kp-i plan">建设中·回款/逾期</span></div></div><b>28</b><span>项 AI 能力</span><i class="kp-dot"></i></div><div class="de-kpi" tabindex="0" data-kpi="KPI3"><div class="de-kpi-pop"><div class="kp-t">22 项已上线</div><div class="kp-l"><span class="kp-i">机会点·公开标讯</span><span class="kp-i">机会点·行业机会</span><span class="kp-i">机会点·维保机会</span><span class="kp-i">机会点·智能推送</span><span class="kp-i">客户·客户公开信息</span><span class="kp-i">客户·客户驻场绿灯条件</span><span class="kp-i">客户·查客户内部信息</span><span class="kp-i">客户·客户拜访</span><span class="kp-i">客户·客户360°画像</span><span class="kp-i">客户·AI对练</span><span class="kp-i">商机·机会点运营</span><span class="kp-i">商机·报价单</span><span class="kp-i">商机·商机跟进记录</span><span class="kp-i">商机·创建项目</span><span class="kp-i">商机·项目进展更新</span><span class="kp-i">招投标·写方案（初版）</span><span class="kp-i">招投标·查招投标所需人员</span><span class="kp-i">招投标·找案例扫描件</span><span class="kp-i">招投标·查招投标所需资质</span><span class="kp-i">招投标·招投标解析/标书/检查</span><span class="kp-i">招投标·查产品价格</span><span class="kp-i">交付·排产/发货查询</span></div></div><b>22</b><span>项已上线</span><i class="kp-dot"></i></div><div class="de-kpi" tabindex="0" data-kpi="KPI4"><div class="de-kpi-pop"><div class="kp-t">6 项建设中</div><div class="kp-l"><span class="kp-i">新建客户（2026Q4）</span><span class="kp-i">新建商机（2026Q4）</span><span class="kp-i">业绩查询及预测（9月底）</span><span class="kp-i">回款/逾期（2026Q4）</span><span class="kp-i">合同管理</span><span class="kp-i">合同模板</span></div></div><b>6</b><span>项建设中</span><i class="kp-dot"></i></div></div>
+        <div class="de-bubble"><span class="bb-ic">💬</span><span class="bb-tx" id="deSay">你好，我是营销AI小秘，写方案、查资质、找案例，都交给我</span></div>
+        <div class="de-acts"><button class="de-act" data-act="hello" data-say="你好，我是营销AI小秘，写方案、查资质、找案例，都交给我"><span class="ic">👋</span>打招呼</button><button class="de-act" data-act="turn" data-say="换个角度，看看我的侧身和背后的支撑结构"><span class="ic">🔄</span>转身</button><button class="de-act" data-act="back" data-say="翻到背面，看看这块立牌每天在做的事"><span class="ic">🔃</span>转到背面</button><button class="de-act" data-act="reset" data-say="视角已复位，随时可以再聊"><span class="ic">↺</span>复位</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="de-lb" id="deLb"><span class="cl">✕</span><img src="media/de_poster_full.webp" alt="营销AI小秘 场景能力立牌 全图"></div>
+</div>
+
+<section class="de-flow-sec" id="de-flow">
+  <div class="de-flow-inner">
+    <div class="de-flow-head">
+      <h2>营销全场景业务流</h2>
+      <div class="de-flow-stat"><span class="seg"><b>8</b>大业务阶段</span><span class="dot">·</span><span class="seg"><b>32</b>项关键动作</span><span class="dot">·</span><span class="seg"><b>1</b>条日常工作跨场景带</span><span class="dot">·</span><span class="seg"><b>11</b>个已建设场景</span></div>
+    </div>
+
+    <div class="de-daily">
+      <span class="lb">9. 日常</span>
+      <span class="it">资料下载</span><span class="it">查制度</span><span class="it">查接口人</span><span class="it">产品咨询</span><span class="it">行业打法</span><span class="it">公司标准</span>
+      <span class="ln"></span>
+      <span class="ds">贯穿全流程的时间维度</span>
+    </div>
+
+    <div class="flow-grid"><div class="flow-col ">
+  <div class="flow-head"><span class="n">1</span><span class="t">机会点</span></div>
+  <div class="flow-body"><div class="flow-item"><i>1.1</i><span>市场机会</span></div><div class="flow-item"><i>1.2</i><span>公开标讯</span></div><div class="flow-item"><i>1.3</i><span>行业机会</span></div><div class="flow-item"><i>1.4</i><span>维保机会</span></div></div>
+</div><div class="flow-col ">
+  <div class="flow-head"><span class="n">2</span><span class="t">客户</span></div>
+  <div class="flow-body"><div class="flow-item"><i>2.1</i><span>需求调研</span></div><div class="flow-item"><i>2.2</i><span>交流答疑</span></div><div class="flow-item"><i>2.3</i><span>客户管理</span></div></div>
+</div><div class="flow-col ">
+  <div class="flow-head"><span class="n">3</span><span class="t">商机</span></div>
+  <div class="flow-body"><div class="flow-item"><i>3.1</i><span>商机管理</span></div><div class="flow-item"><i>3.2</i><span>项目管理</span></div><div class="flow-item"><i>3.3</i><span>测试机管理</span></div><div class="flow-item"><i>3.4</i><span>申请/实施</span></div></div>
+</div><div class="flow-col ">
+  <div class="flow-head"><span class="n">4</span><span class="t">招投标</span></div>
+  <div class="flow-body"><div class="flow-item"><i>4.1</i><span>招投标管理</span></div><div class="flow-item"><i>4.2</i><span>招标/投标/讲标</span></div><div class="flow-item"><i>4.3</i><span>报价/行权</span></div><div class="flow-item"><i>4.4</i><span>成本管理</span></div><div class="flow-item"><i>4.5</i><span>POC</span></div></div>
+</div><div class="flow-col plan">
+  <div class="flow-head"><span class="n">5</span><span class="t">合同</span></div>
+  <div class="flow-body"><div class="flow-item"><i>5.1</i><span>合同管理</span></div><div class="flow-item"><i>5.2</i><span>合同模板</span></div><div class="flow-item"><i>5.3</i><span>框架/特殊合同</span></div><div class="flow-item"><i>5.4</i><span>报POS</span></div></div>
+</div><div class="flow-col ">
+  <div class="flow-head"><span class="n">6</span><span class="t">交付</span></div>
+  <div class="flow-body"><div class="flow-item"><i>6.1</i><span>交付项目</span></div><div class="flow-item"><i>6.2</i><span>外包</span></div><div class="flow-item"><i>6.3</i><span>驻场</span></div><div class="flow-item"><i>6.4</i><span>排产/发货</span></div></div>
+</div><div class="flow-col ">
+  <div class="flow-head"><span class="n">7</span><span class="t">收入</span></div>
+  <div class="flow-body"><div class="flow-item"><i>7.1</i><span>应收/确认</span></div><div class="flow-item"><i>7.2</i><span>回款/逾期</span></div><div class="flow-item"><i>7.3</i><span>开票</span></div><div class="flow-item"><i>7.4</i><span>业绩预测</span></div></div>
+</div><div class="flow-col plan">
+  <div class="flow-head"><span class="n">8</span><span class="t">售后</span></div>
+  <div class="flow-body"><div class="flow-item"><i>8.1</i><span>售后维保</span></div><div class="flow-item"><i>8.2</i><span>退换货</span></div><div class="flow-item"><i>8.3</i><span>客诉</span></div><div class="flow-item"><i>8.4</i><span>400</span></div></div>
+</div></div>
+
+    <div class="flow-foot">
+      <span class="ff-l">L1 业务阶段 × L2 业务动作</span>
+      <span class="ff-sep"></span>
+      <span class="ff-r"><b>8</b> 大阶段 · <b>32</b> 项关键动作 · <b>1</b> 条日常工作跨场景带</span>
+    </div>
+  </div>
+</section>
+
+<section class="de-cap-sec" id="de-cap">
+  <div class="de-wrap">
+    <div class="de-sec-head">
+      <span class="de-pill">🧩 能力清单</span>
+      <h2 class="de-h2">超级数字员工 · 场景能力集合</h2>
+      <p class="de-lead">11 项场景能力，每个场景一条闭环链路 —— 从你说什么，到它查哪里、从哪进入</p>
+      <p class="de-lead de-lead-sub">8 项业务场景能力 + 3 项跨阶段通用能力（渠道赋能 / 知识助手 / Skill 共享平台）</p>
+    </div>
+    <div class="cap-grid"><div class="cap-card" style="--cc:#1e6fd9">
+  <div class="cap-top">
+    <div class="cap-ico">🎯</div>
+    <div class="cap-hd">
+      <div class="cap-num">Ⅰ</div>
+      <div class="cap-name">机会点场景</div>
+      <div class="cap-stage">对应业务阶段 · <b>机会点</b></div>
+    </div>
+    <div class="cap-count"><b>4</b><span>项应用</span></div>
+  </div>
+  <div class="cap-loop"><span class="cap-loop-t">机会点场景闭环</span><div class="cap-loop-chain"><span class="cp">市场洞察</span><i>→</i><span class="cp">标讯捕捉</span><i>→</i><span class="cp">行业机会</span><i>→</i><span class="cp">维保提醒</span><i>→</i><span class="cp">线索分发</span></div></div>
+  <div class="cap-desc">把散落在多个渠道的市场机会、公开标讯、行业机会、维保机会，收拢成一线够得着的线索</div>
+  <div class="cap-tbl-wrap"><table class="cap-tbl"><thead><tr><th>skill / 功能</th><th>用户输入示例 / 介绍</th><th>数据平台</th><th>入口 / 链接</th></tr></thead><tbody><tr><td class="sk">公开标讯</td><td class="dm">①多维度的安全市场空间分析；②当日最新的公开招标标讯查询</td><td class="dt" data-l="数据平台">此平台小秘入口已集成</td><td class="ent" data-l="入口"><span>营销AI小秘-挖商机（PC）</span></td></tr><tr><td class="sk">行业机会</td><td class="dm">行业、客户等热门机会点查询</td><td class="dt" data-l="数据平台">行业侧梳理的机会点清单</td><td class="ent ent-span" rowspan="3" data-l="入口"><span>营销AI小秘</span></td></tr><tr><td class="sk">维保机会</td><td class="dm">合同号、序列号等维保时间查询</td><td class="dt" data-l="数据平台">维保信息库</td><td class="ent-m" data-l="入口"><span>营销AI小秘</span></td></tr><tr><td class="sk">智能推送</td><td class="dm">标杆案例、市场活动等精准推送一线</td><td class="dt" data-l="数据平台">各业务单位负责人</td><td class="ent-m" data-l="入口"><span>营销AI小秘</span></td></tr></tbody></table></div>
+  
+</div><div class="cap-card" style="--cc:#7c4dff">
+  <div class="cap-top">
+    <div class="cap-ico">🤝</div>
+    <div class="cap-hd">
+      <div class="cap-num">Ⅱ</div>
+      <div class="cap-name">客户场景</div>
+      <div class="cap-stage">对应业务阶段 · <b>客户</b></div>
+    </div>
+    <div class="cap-count"><b>7</b><span>项应用</span></div>
+  </div>
+  <div class="cap-loop"><span class="cap-loop-t">客户场景闭环</span><div class="cap-loop-chain"><span class="cp">公开信息</span><i>→</i><span class="cp">内部档案</span><i>→</i><span class="cp">拜访记录</span><i>→</i><span class="cp">360°画像</span><i>→</i><span class="cp">AI对练</span></div></div>
+  <div class="cap-desc">从公开信息到内部信息，从拜访录入到 AI 对练，拜访前把功课做足，拜访后把记录补齐</div>
+  <div class="cap-tbl-wrap"><table class="cap-tbl"><thead><tr><th>skill / 功能</th><th>用户输入示例 / 介绍</th><th>数据平台</th><th>入口 / 链接</th></tr></thead><tbody><tr><td class="sk">客户公开信息</td><td class="dm">客户风险、关联关系、法人等公开信息查询</td><td class="dt" data-l="数据平台">企查查等</td><td class="ent ent-span" rowspan="6" data-l="入口"><span>营销AI小秘</span></td></tr><tr><td class="sk">客户驻场绿灯条件</td><td class="dm">客户是否满足内部驻场条件查询</td><td class="dt" data-l="数据平台">驻场信息判断</td><td class="ent-m" data-l="入口"><span>营销AI小秘</span></td></tr><tr><td class="sk">查客户内部信息</td><td class="dm">内部客户等级、类型、负责人等查询</td><td class="dt" data-l="数据平台">客户管理系统</td><td class="ent-m" data-l="入口"><span>营销AI小秘</span></td></tr><tr><td class="sk">新建客户<i class="plan-tag">2026Q4上线</i></td><td class="dm">客户文字/语音快速输入创建</td><td class="dt" data-l="数据平台">客户管理系统</td><td class="ent-m" data-l="入口"><span>营销AI小秘</span></td></tr><tr><td class="sk">客户拜访</td><td class="dm">客户拜访信息快速文字/语音完成录入</td><td class="dt" data-l="数据平台">客户管理系统</td><td class="ent-m" data-l="入口"><span>营销AI小秘</span></td></tr><tr><td class="sk">客户360°画像</td><td class="dm">1分钟生成全方位的客户画像信息</td><td class="dt" data-l="数据平台">内外部数据集成</td><td class="ent-m" data-l="入口"><span>营销AI小秘</span></td></tr><tr><td class="sk">AI对练</td><td class="dm">客户拜访前和AI客户实战模拟沟通，提前打磨沟通话术</td><td class="dt" data-l="数据平台">此平台小秘入口已集成</td><td class="ent" data-l="入口"><span>营销AI小秘-练话术</span></td></tr></tbody></table></div>
+  
+</div><div class="cap-card" style="--cc:#0ea5a4">
+  <div class="cap-top">
+    <div class="cap-ico">📈</div>
+    <div class="cap-hd">
+      <div class="cap-num">Ⅲ</div>
+      <div class="cap-name">商机场景</div>
+      <div class="cap-stage">对应业务阶段 · <b>商机</b></div>
+    </div>
+    <div class="cap-count"><b>6</b><span>项应用</span></div>
+  </div>
+  <div class="cap-loop"><span class="cap-loop-t">商机场景闭环</span><div class="cap-loop-chain"><span class="cp">线索转商机</span><i>→</i><span class="cp">报价生成</span><i>→</i><span class="cp">跟进记录</span><i>→</i><span class="cp">项目创建</span><i>→</i><span class="cp">进展更新</span></div></div>
+  <div class="cap-desc">机会点转商机、报价单生成、跟进记录、项目创建与进展更新，全部从「手录」变成「说一句」</div>
+  <div class="cap-tbl-wrap"><table class="cap-tbl"><thead><tr><th>skill / 功能</th><th>用户输入示例 / 介绍</th><th>数据平台</th><th>入口 / 链接</th></tr></thead><tbody><tr><td class="sk">机会点运营</td><td class="dm">公开招标标讯给到销售进行线索分析（转商机-增量）</td><td class="dt" data-l="数据平台">市场情报分析平台</td><td class="ent" data-l="入口"><span>LTC-机会点</span></td></tr><tr><td class="sk">报价单（研发/试用-销售）</td><td class="dm">依据招标参数要求生成报价单初版</td><td class="dt" data-l="数据平台">报价器</td><td class="ent ent-span" rowspan="5" data-l="入口"><span>营销AI小秘</span></td></tr><tr><td class="sk">新建商机<i class="plan-tag">2026Q4上线-销售</i></td><td class="dm">文字/语音快速输入创建商机</td><td class="dt" data-l="数据平台">商机管理系统</td><td class="ent-m" data-l="入口"><span>营销AI小秘</span></td></tr><tr><td class="sk">商机跟进记录（仅限销售使用）</td><td class="dm">文字/语音完成商机跟进记录创建</td><td class="dt" data-l="数据平台">—</td><td class="ent-m" data-l="入口"><span>营销AI小秘</span></td></tr><tr><td class="sk">创建项目（仅限行销使用）</td><td class="dm">输入：客户XXX，XX背景...帮我在IPM创建对应的项目</td><td class="dt" data-l="数据平台">LTC-IPM</td><td class="ent-m" data-l="入口"><span>营销AI小秘</span></td></tr><tr><td class="sk">项目进展更新（仅限行销使用）</td><td class="dm">输入：XXX重点项目，主要进展XXXX，帮我更新项目进展</td><td class="dt" data-l="数据平台">—</td><td class="ent-m" data-l="入口"><span>营销AI小秘</span></td></tr></tbody></table></div>
+  
+</div><div class="cap-card" style="--cc:#dc2626">
+  <div class="cap-top">
+    <div class="cap-ico">📝</div>
+    <div class="cap-hd">
+      <div class="cap-num">Ⅳ</div>
+      <div class="cap-name">招投标场景</div>
+      <div class="cap-stage">对应业务阶段 · <b>招投标</b></div>
+    </div>
+    <div class="cap-count"><b>6</b><span>项应用</span></div>
+  </div>
+  <div class="cap-loop"><span class="cap-loop-t">招投标场景闭环</span><div class="cap-loop-chain"><span class="cp">标书解析</span><i>→</i><span class="cp">方案初版</span><i>→</i><span class="cp">人员/案例/资质检索</span><i>→</i><span class="cp">标前检查</span><i>→</i><span class="cp">价格核对</span></div></div>
+  <div class="cap-desc">写方案、查人员、找案例、查资质、解析标书、查价格，投标资料不再靠翻库，说出条件就能下载</div>
+  <div class="cap-tbl-wrap"><table class="cap-tbl"><thead><tr><th>skill / 功能</th><th>用户输入示例 / 介绍</th><th>数据平台</th><th>入口 / 链接</th></tr></thead><tbody><tr><td class="sk">写方案（初版）（PPT/word）</td><td class="dm">输入：面对金融93号文检查要求，输出安恒建议应对PPT/word方案（下载即可）</td><td class="dt" data-l="数据平台">——</td><td class="ent ent-span" rowspan="4" data-l="入口"><span>营销AI小秘</span></td></tr><tr><td class="sk">查招投标所需人员</td><td class="dm">输入：人员符合XXXXX条件；XXX人员的资质；XXX人员的信息；XXX身份证复印件；XXXX学历证明；XXX人员的社保（输入我要下载，可直接下载）</td><td class="dt" data-l="数据平台">人员信息库</td><td class="ent-m" data-l="入口"><span>营销AI小秘</span></td></tr><tr><td class="sk">找招投标所需案例扫描件</td><td class="dm">输入：行业/区域/金额/产品/客户等符合条件案例合同、回单、中标通知书等扫描件（输入我要下载，可直接下载）</td><td class="dt" data-l="数据平台">OA经典案例</td><td class="ent-m" data-l="入口"><span>营销AI小秘</span></td></tr><tr><td class="sk">查招投标所需资质</td><td class="dm">输入：XX产品/XX名称/XX漏洞证明等（输入我要下载，可直接下载）</td><td class="dt" data-l="数据平台">OA资质库</td><td class="ent-m" data-l="入口"><span>营销AI小秘</span></td></tr><tr><td class="sk">招投标解析、标书、检查</td><td class="dm">招标文件智能解析-智写商务标初版-标前智能检查-文件智能查重四大AI功能（下载初版标书）</td><td class="dt" data-l="数据平台">小秘入口已集成</td><td class="ent" data-l="入口"><span>营销AI小秘-写标书</span></td></tr><tr><td class="sk">查产品价格</td><td class="dm">输入：查询XXXXX型号的价格、查询某渠道的XX型号的价格</td><td class="dt" data-l="数据平台">报价器</td><td class="ent" data-l="入口"><span>营销AI小秘</span></td></tr></tbody></table></div>
+  
+</div><div class="cap-card" style="--cc:#64748b">
+  <div class="cap-top">
+    <div class="cap-ico">📄</div>
+    <div class="cap-hd">
+      <div class="cap-num">Ⅴ</div>
+      <div class="cap-name">合同场景</div>
+      <div class="cap-stage">对应业务阶段 · <b>合同</b></div>
+    </div>
+    <div class="cap-count plan"><b>0</b><span>本期未建设</span></div>
+  </div>
+  <div class="cap-loop"><span class="cap-loop-t">合同场景闭环</span><div class="cap-loop-chain"><span class="cp">合同管理</span><i>→</i><span class="cp">合同模板</span><i>→</i><span class="cp">框架/特殊合同</span><i>→</i><span class="cp">报POS（本期建设中）</span></div></div>
+  <div class="cap-desc">合同管理、合同模板、框架/特殊合同、报POS —— 本期暂未建设，能力清单持续补充中</div>
+  <div class="cap-empty"><b>本期暂未建设</b><span>该阶段能力正在规划中，上线后将持续补充到本清单</span></div>
+  
+</div><div class="cap-card" style="--cc:#0d9488">
+  <div class="cap-top">
+    <div class="cap-ico">🚚</div>
+    <div class="cap-hd">
+      <div class="cap-num">Ⅵ</div>
+      <div class="cap-name">交付场景</div>
+      <div class="cap-stage">对应业务阶段 · <b>交付</b></div>
+    </div>
+    <div class="cap-count"><b>2</b><span>项应用</span></div>
+  </div>
+  <div class="cap-loop"><span class="cap-loop-t">交付场景闭环</span><div class="cap-loop-chain"><span class="cp">合同归档</span><i>→</i><span class="cp">排产发货</span><i>→</i><span class="cp">驻场跟踪</span></div></div>
+  <div class="cap-desc">报个合同号就能查排产发货，按客户/商机/项目/销售多维度查驻场，进度自己心里有数</div>
+  <div class="cap-tbl-wrap"><table class="cap-tbl"><thead><tr><th>skill / 功能</th><th>用户输入示例 / 介绍</th><th>数据平台</th><th>入口 / 链接</th></tr></thead><tbody><tr><td class="sk">排产/发货查询</td><td class="dm">输入：合同号，即可查询对应合同下排产、发货进度</td><td class="dt" data-l="数据平台">帆软-排产/发货</td><td class="ent ent-span" rowspan="2" data-l="入口"><span>营销AI小秘</span></td></tr><tr><td class="sk">驻场查询</td><td class="dm">输入：客户名称、商机编号、项目名称、销售、驻场人员维度查询驻场信息</td><td class="dt" data-l="数据平台">OA-驻场项目管理表-查询</td><td class="ent-m" data-l="入口"><span>营销AI小秘</span></td></tr></tbody></table></div>
+  
+</div><div class="cap-card" style="--cc:#b45309">
+  <div class="cap-top">
+    <div class="cap-ico">💰</div>
+    <div class="cap-hd">
+      <div class="cap-num">Ⅶ</div>
+      <div class="cap-name">收入/经营场景</div>
+      <div class="cap-stage">对应业务阶段 · <b>收入</b></div>
+    </div>
+    <div class="cap-count"><b>3</b><span>项应用</span></div>
+  </div>
+  <div class="cap-loop"><span class="cap-loop-t">收入/经营场景闭环</span><div class="cap-loop-chain"><span class="cp">业绩查询</span><i>→</i><span class="cp">智能预测</span><i>→</i><span class="cp">指标推送</span><i>→</i><span class="cp">回款提醒</span></div></div>
+  <div class="cap-desc">业绩完成情况按个人/区域/战区多视角呈现并智能预测，经营指标定期推送，回款逾期主动提醒</div>
+  <div class="cap-tbl-wrap"><table class="cap-tbl"><thead><tr><th>skill / 功能</th><th>用户输入示例 / 介绍</th><th>数据平台</th><th>入口 / 链接</th></tr></thead><tbody><tr><td class="sk">业绩查询及预测<i class="plan-tag">9月底上线</i></td><td class="dm">个人、区域、战区等视角的业绩完成情况，智能预测本年完成情况</td><td class="dt" data-l="数据平台">经营预测数据</td><td class="ent ent-span" rowspan="3" data-l="入口"><span>营销AI小秘</span></td></tr><tr><td class="sk">经营指标全景推送</td><td class="dm">依据业务考核系列指标定期推送经营情况</td><td class="dt" data-l="数据平台">经营指标数据</td><td class="ent-m" data-l="入口"><span>营销AI小秘</span></td></tr><tr><td class="sk">回款/逾期<i class="plan-tag">2026Q4上线</i></td><td class="dm">回款及逾期查询及精准推送/提醒</td><td class="dt" data-l="数据平台">回款/逾期数据</td><td class="ent-m" data-l="入口"><span>营销AI小秘</span></td></tr></tbody></table></div>
+  
+</div><div class="cap-card" style="--cc:#2563eb">
+  <div class="cap-top">
+    <div class="cap-ico">🧰</div>
+    <div class="cap-hd">
+      <div class="cap-num">Ⅷ</div>
+      <div class="cap-name">日常工作</div>
+      <div class="cap-stage">对应业务阶段 · <b>日常工作（跨场景）</b></div>
+    </div>
+    <div class="cap-count"><b>6</b><span>项应用</span></div>
+  </div>
+  <div class="cap-loop"><span class="cap-loop-t">日常工作闭环</span><div class="cap-loop-chain"><span class="cp">找资料</span><i>→</i><span class="cp">查制度</span><i>→</i><span class="cp">找人</span><i>→</i><span class="cp">问产品</span><i>→</i><span class="cp">问行业</span><i>→</i><span class="cp">查标准</span></div></div>
+  <div class="cap-desc">不属于任何主流程阶段，在任意环节都能随时调用：找资料、查制度、找人、问产品、问行业、查标准</div>
+  <div class="cap-tbl-wrap"><table class="cap-tbl"><thead><tr><th>skill / 功能</th><th>用户输入示例 / 介绍</th><th>数据平台</th><th>入口 / 链接</th></tr></thead><tbody><tr><td class="sk">资料下载</td><td class="dm">输入：下载XXXX（文档名称/产品名称等）的XXXX（如主打PPT、白皮书、解决方案等）</td><td class="dt" data-l="数据平台">知识中心</td><td class="ent ent-span" rowspan="6" data-l="入口"><span>营销AI小秘</span></td></tr><tr><td class="sk">查制度</td><td class="dm">输入：销售费用是如何进行额度释放的</td><td class="dt" data-l="数据平台">销售、渠道最新政策</td><td class="ent-m" data-l="入口"><span>营销AI小秘</span></td></tr><tr><td class="sk">查接口人</td><td class="dm">输入：XX产品经理是谁、XXX区域行销负责人是谁等</td><td class="dt" data-l="数据平台">知识中心-接口人信息总表</td><td class="ent-m" data-l="入口"><span>营销AI小秘</span></td></tr><tr><td class="sk">产品能力咨询</td><td class="dm">输入：日志审计的日志有完整性保护机制吗？</td><td class="dt" data-l="数据平台">产品最新资料库</td><td class="ent-m" data-l="入口"><span>营销AI小秘</span></td></tr><tr><td class="sk">行业打法查询</td><td class="dm">输入：四川区域金融行业的案例资料有哪些？</td><td class="dt" data-l="数据平台">行业资料库</td><td class="ent-m" data-l="入口"><span>营销AI小秘</span></td></tr><tr><td class="sk">公司标准查找</td><td class="dm">输入：我司参与编制的国家标准有哪些？</td><td class="dt" data-l="数据平台">公司参与标准库</td><td class="ent-m" data-l="入口"><span>营销AI小秘</span></td></tr></tbody></table></div>
+  
+</div></div>
+    <div class="de-sub-head"><span>跨阶段 · 通用能力</span></div>
+    <div class="cap-sub-grid"><div class="cap-card compact" style="--cc:#059669">
+  <div class="cap-top">
+    <div class="cap-ico">🏭</div>
+    <div class="cap-hd">
+      <div class="cap-num">Ⅸ</div>
+      <div class="cap-name">渠道赋能</div>
+    </div>
+    <div class="cap-count"><b>2</b><span>项应用</span></div>
+  </div>
+  <div class="cap-loop"><span class="cap-loop-t">渠道赋能闭环</span><div class="cap-loop-chain"><span class="cp">渠道答疑</span><i>→</i><span class="cp">商机挖掘</span><i>→</i><span class="cp">市场研判</span></div></div>
+  <div class="cap-desc">渠道 AI 数字员工 + 渠道市场分析空间，7×24 小时值守，减少重复答疑，赋能渠道伙伴提质增效</div>
+  <div class="cap-rows"><div class="cap-row"><div class="cap-row-h"><b>安小渠</b><span class="ent">钉钉 → 安小渠（安恒信息组织）</span></div><div class="cap-row-d">专为渠道打造，解答产品知识、行业打法、挖掘商机、渠道政策以及下载资料，7×24小时值守</div><div class="cap-row-m">数据平台 · 渠道专属知识库</div></div><div class="cap-row"><div class="cap-row-h"><b>渠道市场分析空间</b><span class="ent">DASLink → 帆软 → 渠道市场空间分析</span></div><div class="cap-row-d">渠道地图、渠道运营、渠道市场研判、行业市场研判</div><div class="cap-row-m">数据平台 · 渠道市场数据</div></div></div>
+  <a class="cap-jump" href="scene-5.html">查看渠道赋能完整介绍 →</a>
+</div><div class="cap-card compact" style="--cc:#7c3aed">
+  <div class="cap-top">
+    <div class="cap-ico">🧠</div>
+    <div class="cap-hd">
+      <div class="cap-num">Ⅹ</div>
+      <div class="cap-name">知识助手</div>
+    </div>
+    <div class="cap-count"><b>1</b><span>项应用</span></div>
+  </div>
+  <div class="cap-loop"><span class="cap-loop-t">知识助手闭环</span><div class="cap-loop-chain"><span class="cp">知识问答</span><i>→</i><span class="cp">文档溯源</span><i>→</i><span class="cp">出处定位</span></div></div>
+  <div class="cap-desc">把零散文档、制度、案例沉淀成可检索的知识底座，问一句就能定位到出处</div>
+  <div class="cap-rows"><div class="cap-row"><div class="cap-row-h"><b>知识AI问答</b><span class="ent">营销AI小秘</span></div><div class="cap-row-d">基于营销知识库的问答检索，支持文档溯源</div><div class="cap-row-m">数据平台 · 营销知识库</div></div></div>
+  <a class="cap-jump" href="scene-7.html">查看知识助手完整介绍 →</a>
+</div><div class="cap-card compact" style="--cc:#db2777">
+  <div class="cap-top">
+    <div class="cap-ico">🛠️</div>
+    <div class="cap-hd">
+      <div class="cap-num">Ⅺ</div>
+      <div class="cap-name">Skill共享平台</div>
+    </div>
+    <div class="cap-count"><b>1</b><span>项应用</span></div>
+  </div>
+  <div class="cap-loop"><span class="cap-loop-t">Skill共享平台闭环</span><div class="cap-loop-chain"><span class="cp">经验沉淀</span><i>→</i><span class="cp">Skill共享</span><i>→</i><span class="cp">激励闭环</span></div></div>
+  <div class="cap-desc">基础 Skill + 业务专属 Skill，一线实战经验沉淀到公司平台，30+ 比武案例、40+ 提效案例持续共享</div>
+  <div class="cap-rows"><div class="cap-row"><div class="cap-row-h"><b>Skill上传与共享</b><span class="ent">营销AI小秘 → Skill共享平台</span></div><div class="cap-row-d">一线员工上传实战经验与优秀 Skill，获奖项激励</div><div class="cap-row-m">数据平台 · 公司统一 Skill 平台</div></div></div>
+  <a class="cap-jump" href="scene-6.html">查看 Skill共享平台完整介绍 →</a>
+</div></div>
+  </div>
+</section>
+
+<section class="inc-section">
+  <div class="inc-inner">
+    <div class="inc-header">
+      <div class="inc-title">积极使用 AI，更有 丰厚激励 等你拿</div>
+      <div class="inc-sub"><span class="text-highlight-gold">积极使用</span>AI工具，<span class="text-highlight-gold">主动反馈</span>优化建议，甚至自建提效Skill——优秀实践可获<span class="text-highlight-gold">月度激励、专项大奖及年度荣誉</span>！</div>
+    </div>
+    <div class="inc-grid">
+<a href="https://365.kdocs.cn/l/cqQpJWaDnycr" target="_blank" class="inc-card" data-glow="gold">
+  <div class="inc-card-icon">🏆</div>
+  <div class="inc-card-title">10W专项激励</div>
+  <div class="inc-card-en">SPECIAL AWARD</div>
+  <div class="inc-card-desc">针对AI应用有突出贡献的个人/团队，提供10万元专项激励基金，授予年度AI应用先锋荣誉。</div>
+  <div class="inc-card-stats"><div><div class="inc-stat-num">10W</div><div class="inc-stat-label">专项基金</div></div><div><div class="inc-stat-num">营销全员</div><div class="inc-stat-label">参与范围</div></div></div>
+  <div class="inc-card-tags"><span class="inc-card-tag">突出贡献</span><span class="inc-card-tag">先锋团队</span><span class="inc-card-tag">专项基金</span></div>
+  <div class="inc-card-cta">查看激励详情</div>
+</a>
+<a href="https://ah-marketing-2026.github.io/honor/" target="_blank" class="inc-card" data-glow="blue">
+  <div class="inc-card-icon">📅</div>
+  <div class="inc-card-title">常态化月度激励</div>
+  <div class="inc-card-en">MONTHLY AWARD</div>
+  <div class="inc-card-desc">每月评选AI应用之星，月度公示、月度激励，让AI使用习惯持续渗透到每一个一线团队。</div>
+  <div class="inc-card-stats"><div><div class="inc-stat-num">月度</div><div class="inc-stat-label">评选节奏</div></div><div><div class="inc-stat-num">全国助理</div><div class="inc-stat-label">综合管理部激励</div></div><div><div class="inc-stat-num">行销部全员</div><div class="inc-stat-label">行销激励</div></div></div>
+  <div class="inc-card-tags"><span class="inc-card-tag">月度之星</span><span class="inc-card-tag">持续激励</span><span class="inc-card-tag">全员覆盖</span></div>
+  <div class="inc-card-cta">查看荣誉榜单</div>
+</a>
+<div class="inc-card" data-glow="purple">
+  <div class="inc-card-icon">🎯</div>
+  <div class="inc-card-title">年底综合激励</div>
+  <div class="inc-card-en">YEAR-END AWARD</div>
+  <div class="inc-card-desc">年底综合评定，AI应用标杆团队/个人额外奖励，颁发年度AI赋能营销奖项，纳入绩效考核。</div>
+  <div class="inc-card-stats"><div><div class="inc-stat-num">年度</div><div class="inc-stat-label">综合评优</div></div><div><div class="inc-stat-num">标杆</div><div class="inc-stat-label">示范效应</div></div></div>
+  <div class="inc-card-tags"><span class="inc-card-tag">年度评优</span><span class="inc-card-tag">绩效加分</span><span class="inc-card-tag">示范标杆</span></div>
+  <div class="inc-card-cta no-arrow">敬请期待</div>
+</div>
+    </div>
+    <div class="inc-action">营销中台已进行 8 个区域（广东、深圳、江苏、安徽、北京、天津、浙江、四川）的 AI 应用赋能及交流，持续更新中</div>
+  </div>
+</section>
+
+<section class="future-home-section" id="future-home">
+  <div class="future-home-inner">
+    <div class="future-home-header">
+      <div class="future-home-pill">FUTURE PLAN</div>
+      <div class="future-home-title">未来规划</div>
+      <div class="future-home-subtitle">统一入口 · 整合资源 · 建设营销AI综合能力平台</div>
+    </div>
+    <a href="future.html" class="future-home-card">
+      <div class="future-home-icon">🚀</div>
+      <div class="future-home-card-body">
+        <div class="future-home-card-title">建设营销AI综合能力平台</div>
+        <div class="future-home-card-desc">各类AI应用分散在不同平台，一线员工在外部AI工具上积累了大量实战经验，亟需统一整合、沉淀推广。</div>
+        <div class="future-home-tags">
+          <span class="future-home-tag">统一入口</span>
+          <span class="future-home-tag">整合资源</span>
+          <span class="future-home-tag">持续迭代</span>
+        </div>
+        <div class="future-home-cta">查看未来规划</div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<section class="de-cta">
+  <div class="de-cta-in de-wrap">
+    <h3>让每一次营销动作，都有 AI 陪跑</h3>
+    <p>营销AI小秘 · 超级数字员工 —— 从市场洞察，到成单交付</p>
+    <div class="de-cta-btns">
+      <a class="de-cta-a pri" href="index.html">← 返回 AI赋能营销完整版</a>
+      <a class="de-cta-a sec" href="#de-board">回到顶部 ↑</a>
+    </div>
+  </div>
+</section>
+
+<footer style="background:linear-gradient(180deg,#0a1638,#070e2a);border-top:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.4);">
+  <div class="ft-logo" style="color:rgba(255,255,255,.8);"><img src="media/image2.png" alt="安恒信息" style="height:32px;vertical-align:middle;margin-right:6px;filter:brightness(1.2);">AI赋能营销</div>
+  <p>安恒信息 · 营销中心 · 综合管理部 | 2026</p>
+</footer>
+
+<script>
 (function(){
   /* ---------- 滚动进度条 ---------- */
   var prog = document.getElementById('prog');
@@ -2167,1442 +1986,6 @@ DE_JS = '''<script>
     setTimeout(function(){ play('hello'); ci = 0; }, 2400);
   }
 })();
-</script>'''
-
-
-def build_increment_board(increment_data):
-    if not increment_data:
-        return ''
-    imgs = increment_data.get('images', [])
-    if not imgs:
-        return ''
-    
-    # 两张截图并排网格
-    figures = ''
-    for img in imgs[:2]:
-        cap = img.get('caption', '')
-        figures += f'<figure><img src="{img["src"]}" alt="">{"<figcaption>"+cap+"</figcaption>" if cap else ""}</figure>'
-    
-    title = increment_data.get('title', '一线增量情况')
-    grid_style = 'grid-template-columns:repeat(2, 1fr);' if len(imgs) >= 2 else ''
-    
-    return f'''      <div class="increment-board">
-        <div class="increment-title"><span class="ai-dot"></span>{title}</div>
-        <div class="img-gallery col2" style="{grid_style}">{figures}</div>
-      </div>'''
-
-
-def build_bid_steps(bid_steps_data):
-    if not bid_steps_data:
-        return ''
-    colors_all = [('#fecdd3','#be123c'),('#bbf7d0','#15803d'),('#bfdbfe','#1d4ed8')]
-    cards = []
-    for i, step in enumerate(bid_steps_data):
-        bc, tc = colors_all[i] if i < len(colors_all) else colors_all[0]
-        items = ''.join(f'<li>{item}</li>' for item in step['items'])
-        cards.append(f'''<div class="bid-step-card" style="border-color:{bc}">
-<div style="font-size:28px;margin-bottom:6px">{step['icon']}</div>
-<div class="bid-step-title" style="color:{tc}">{step['title'].replace('·','<br>')}</div>
-<ul class="bid-step-list">{items}</ul></div>''')
-    arrows_html = '<div class="bid-step-arrow">→</div>'
-    return f'<div class="bid-steps-grid">\n{cards[0]}\n{arrows_html}\n{cards[1]}\n{arrows_html}\n{cards[2]}</div>'
-
-
-JS = '''<script>
-window.addEventListener('scroll',()=>{const h=document.documentElement.scrollHeight-window.innerHeight;document.getElementById('prog').style.width=(h>0?window.scrollY/h*100:0)+'%'});
-function gotoScene(id){const el=document.getElementById(id);if(!el)return;const top=el.getBoundingClientRect().top+window.scrollY-118;window.scrollTo({top,behavior:'smooth'})}
-// 场景导航按钮 — 用 addEventListener 避免 CSP 拦截 onclick
-document.querySelectorAll('.scene-nav-btn').forEach(function(btn){
-  btn.addEventListener('click',function(){var sid=this.getAttribute('data-scene');if(sid) gotoScene(sid);});
-});
-// 场景折叠/展开 — 点击标题旁 ▼ 按钮收起内容
-document.querySelectorAll('.scene-toggle').forEach(function(btn){
-  btn.addEventListener('click',function(){
-    var targetId=this.getAttribute('data-target');
-    var body=document.getElementById(targetId);
-    if(!body) return;
-    var isCollapsed=body.classList.toggle('collapsed');
-    this.classList.toggle('collapsed',isCollapsed);
-  });
-});
-const navLinks=document.querySelectorAll('.nav-tabs a');
-const sceneButtons=document.querySelectorAll('.scene-nav-btn');
-const scenes=[{id:'scene-opp',navIdx:0},{id:'scene-visit',navIdx:1},{id:'scene-proj',navIdx:2},{id:'scene-bid',navIdx:3},{id:'scene-channel',navIdx:4},{id:'scene-skill',navIdx:5},{id:'scene-knowledge',navIdx:6}];
-const io=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){const idx=scenes.findIndex(s=>s.id===e.target.id);if(idx===-1)return;navLinks.forEach(a=>a.classList.remove('active'));sceneButtons.forEach(b=>b.classList.remove('active'));if(navLinks[idx])navLinks[idx].classList.add('active');if(sceneButtons[idx])sceneButtons[idx].classList.add('active')}})},{threshold:0.25});
-scenes.forEach(s=>{const el=document.getElementById(s.id);if(el)io.observe(el)});
-
-// 视频懒加载 + 进度指示 + 移动端友好
-function loadVideo(wrapper){
-  if(wrapper.dataset.loading==='1') return;
-  var vid=wrapper.querySelector('video'),src=wrapper.getAttribute('data-video-src');
-  if(!vid||!src) return;
-  wrapper.dataset.loading='1';
-  wrapper.classList.add('loading');
-  wrapper.classList.remove('error');
-  vid.innerHTML='<source src="'+src+'" type="video/mp4">';
-  vid.load();
-  vid.addEventListener('canplay',function(){
-    wrapper.classList.remove('loading');
-    wrapper.classList.add('playing');
-    // 不自动播放，等待用户点击
-  },{once:true});
-  vid.addEventListener('error',function(){
-    wrapper.classList.remove('loading');wrapper.classList.add('error');
-    wrapper.dataset.loading='0';
-  },{once:true});
-}
-// 进入视口附近时触发加载
-var videoObs=new IntersectionObserver(function(entries){
-  entries.forEach(function(e){ if(e.isIntersecting) loadVideo(e.target); });
-},{rootMargin:'400px'});
-document.querySelectorAll('.video-wrapper').forEach(function(w){videoObs.observe(w);});
-// 点击占位区域触发加载 + 播放（pointerdown 同时覆盖 mouse + touch，无 300ms 延迟）
-document.addEventListener('pointerdown',function(e){
-  var ph=e.target.closest('.video-placeholder');
-  if(!ph) return;
-  var w=ph.closest('.video-wrapper');
-  if(!w||w.dataset.loading==='1') return;
-  if(e.target.classList.contains('vp-retry')){ loadVideo(w); return; }
-  loadVideo(w);
-  // 利用用户手势立即尝试播放（如果已缓存则直接播，否则 canplay 后再播）
-  var vid=w.querySelector('video');
-  if(vid) vid.play().catch(function(){});
-});
-const cards=document.querySelectorAll('.app-block');
-const cardIO=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)'}})},{threshold:0.06});
-cards.forEach(c=>{c.style.opacity='0';c.style.transform='translateY(24px)';c.style.transition='opacity .45s ease,transform .45s ease,box-shadow .25s';cardIO.observe(c)});
-// 点赞评论模块 — MantleDB云端共享存储，所有人可见可累加
-var FB_URL='https://mantledb.sh/v2/ah-mkt-feedback/data';
-var FB_LIKE_URL='https://mantledb.sh/v2/increment/ah-mkt-feedback/data';
-var fbLikedKey='fb-liked-'+new Date().toISOString().slice(0,10);
-var fbLiked=localStorage.getItem(fbLikedKey)==='1';
-var fbLikes=0,fbComments=[];
-
-function fbGet(){
-  return fetch(FB_URL).then(function(r){return r.json();}).then(function(d){
-    // 兜底：如果MantleDB数据为空，尝试从localStorage恢复
-    if((!d.likes&&!d.comments)||(d.likes===0&&(!d.comments||d.comments.length===0))){
-      var backup=localStorage.getItem('fb-backup');
-      if(backup){try{var b=JSON.parse(backup);if(b.likes||(b.comments&&b.comments.length)){return b;}}catch(e){}}
-    }
-    return d;
-  });
-}
-function fbPut(data){
-  return fetch(FB_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}).then(function(r){return r.json();});
-}
-function fbIncrement(key,by){
-  return fetch(FB_LIKE_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:key,by:by})}).then(function(r){return r.json();});
-}
-
-// 检测用户是否正在输入（避免同步时重绘DOM导致滚动/焦点丢失）
-var fbTyping=false;
-document.addEventListener('focusin',function(e){
-  if(e.target.closest('#fb-name')||e.target.closest('#fb-text')||e.target.closest('.fb-reply-area textarea')) fbTyping=true;
-});
-document.addEventListener('focusout',function(e){
-  if(e.target.closest('#fb-name')||e.target.closest('#fb-text')||e.target.closest('.fb-reply-area textarea')){
-    setTimeout(function(){ fbTyping=false; },200);
-  }
-});
-
-function syncFromCloud(){
-  fbGet().then(function(d){
-    fbLikes=d.likes||0; fbComments=d.comments||[];
-    if(!fbTyping) renderFeedback();
-    // 成功后写入localStorage备份
-    try{localStorage.setItem('fb-backup',JSON.stringify({likes:fbLikes,comments:fbComments}));}catch(e){}
-  }).catch(function(){});
-}
-
-function renderFeedback(){
-  var lc=document.getElementById('fb-like-count'); if(!lc) return;
-  lc.textContent=fbLikes+' 人觉得很赞';
-  document.getElementById('fb-cmt-count').textContent=fbComments.length;
-  var btn=document.getElementById('fb-like-btn');
-  if(btn){ if(fbLiked) btn.classList.add('liked'); else btn.classList.remove('liked'); }
-  var list=document.getElementById('fb-comment-list');
-  if(!list) return;
-  if(!fbComments.length){ list.innerHTML='<div class="fb-empty">暂无评论，来坐沙发吧 ☕</div>'; return; }
-  list.innerHTML=fbComments.slice().reverse().map(function(c){
-    var t=new Date(c.time),ts=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0')+' '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
-    var rs=(c.replies||[]).map(function(r){var rt=new Date(r.time),rts=rt.getFullYear()+'-'+String(rt.getMonth()+1).padStart(2,'0')+'-'+String(rt.getDate()).padStart(2,'0')+' '+String(rt.getHours()).padStart(2,'0')+':'+String(rt.getMinutes()).padStart(2,'0');return '<div class="fb-reply-item"><strong>'+esc(r.name)+'</strong><span>'+rts+'</span>：'+esc(r.text)+'</div>';}).join('');
-    return '<div class="fb-comment-item" data-cid="'+c.id+'"><div class="fb-comment-meta"><strong>'+esc(c.name)+'</strong><span>'+ts+'<button class="fb-reply-btn" data-cid="'+c.id+'" title="回复">💬 回复</button><button class="fb-comment-del" data-cid="'+c.id+'" title="删除">✕</button></span></div><div class="fb-comment-text">'+esc(c.text)+'</div>'+rs+'<div class="fb-reply-area" id="reply-area-'+c.id+'"><textarea id="reply-text-'+c.id+'" placeholder="写下回复…" rows="2" maxlength="200"></textarea><button data-cid="'+c.id+'" class="fb-reply-submit">回复</button></div></div>';
-  }).join('');
-}
-function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
-
-// 点赞按钮 — 原子递增，并发安全
-var _fbLikeBtn=document.getElementById('fb-like-btn');
-if(_fbLikeBtn) _fbLikeBtn.addEventListener('click',function(){
-  if(fbLiked) return;
-  fbLiked=true; fbLikes++;
-  localStorage.setItem(fbLikedKey,'1');
-  renderFeedback();
-  fbIncrement('likes',1).then(function(d){
-    if(d&&d.likes!==undefined) fbLikes=d.likes;
-    renderFeedback();
-    try{localStorage.setItem('fb-backup',JSON.stringify({likes:fbLikes,comments:fbComments}));}catch(e){}
-  }).catch(function(){ syncFromCloud(); });
-});
-
-// 初始加载 + 15秒定时同步（仅在反馈模块存在时）
-if(document.getElementById('fb-like-btn')){ syncFromCloud(); setInterval(syncFromCloud,15000); }
-
-function submitComment(){
-  var nameEl=document.getElementById('fb-name'),textEl=document.getElementById('fb-text');
-  var name=nameEl.value.trim(),text=textEl.value.trim();
-  if(!name||!text){alert('请填写昵称和评论内容');return}
-  if(name.length>20||text.length>500){alert('昵称或内容超出限制');return}
-  var c={id:'c_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),name:name,text:text,time:new Date().toISOString(),replies:[]};
-  // 乐观更新 + 云端同步 + localStorage备份
-  fbComments.push(c); renderFeedback();
-  nameEl.value=''; textEl.value=''; fbTyping=false;
-  var data={likes:fbLikes,comments:fbComments};
-  fbPut(data).then(function(){
-    try{localStorage.setItem('fb-backup',JSON.stringify({likes:fbLikes,comments:fbComments}));}catch(e){}
-  }).catch(function(){ syncFromCloud(); });
-}
-var _fbSubmitBtn=document.getElementById('fb-submit-btn');
-if(_fbSubmitBtn) _fbSubmitBtn.addEventListener('click',submitComment);
-
-function delComment(id){
-  if(!confirm('确定删除这条评论吗？')) return;
-  fbComments=fbComments.filter(function(c){return c.id!==id});
-  renderFeedback();
-  var data={likes:fbLikes,comments:fbComments};
-  fbPut(data).then(function(){
-    try{localStorage.setItem('fb-backup',JSON.stringify({likes:fbLikes,comments:fbComments}));}catch(e){}
-  }).catch(function(){ syncFromCloud(); });
-}
-
-// 评论列表事件代理
-var _fbCmtList=document.getElementById('fb-comment-list');
-if(_fbCmtList) _fbCmtList.addEventListener('click',function(e){
-  var delBtn=e.target.closest('.fb-comment-del');
-  if(delBtn){ var cid=delBtn.getAttribute('data-cid'); if(cid) delComment(cid); return; }
-  var replyBtn=e.target.closest('.fb-reply-btn');
-  if(replyBtn){ var cid=replyBtn.getAttribute('data-cid'); if(cid) toggleReply(cid); return; }
-  var replySubmit=e.target.closest('.fb-reply-submit');
-  if(replySubmit){ var cid=replySubmit.getAttribute('data-cid'); if(cid) submitReply(cid); return; }
-});
-
-function toggleReply(cid){
-  var area=document.getElementById('reply-area-'+cid);
-  if(!area) return;
-  area.classList.toggle('show');
-  if(area.classList.contains('show')){ var ta=document.getElementById('reply-text-'+cid); if(ta) setTimeout(function(){ta.focus()},100); }
-}
-function submitReply(cid){
-  var ta=document.getElementById('reply-text-'+cid);
-  if(!ta) return;
-  var text=ta.value.trim();
-  if(!text){alert('请输入回复内容');return}
-  if(text.length>200){alert('回复不能超过200字');return}
-  var cmt=fbComments.find(function(c){return c.id===cid});
-  if(!cmt) return;
-  if(!cmt.replies) cmt.replies=[];
-  var r={id:'r_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),name:'网友',text:text,time:new Date().toISOString()};
-  cmt.replies.push(r); renderFeedback(); fbTyping=false;
-  var data={likes:fbLikes,comments:fbComments};
-  fbPut(data).then(function(){
-    try{localStorage.setItem('fb-backup',JSON.stringify({likes:fbLikes,comments:fbComments}));}catch(e){}
-  }).catch(function(){ syncFromCloud();   });
-}
-// ---- 图片点击放大 Lightbox ----
-(function(){
-  var overlay=document.createElement('div');
-  overlay.className='lightbox-overlay';
-  overlay.innerHTML='<button class="lb-close" type="button">&times;</button><img src="" alt=""><div class="lb-caption"></div>';
-  document.body.appendChild(overlay);
-  var lbImg=overlay.querySelector('img');
-  var lbCap=overlay.querySelector('.lb-caption');
-  var lbClose=overlay.querySelector('.lb-close');
-  function open(src,cap){
-    lbImg.src=src; lbCap.textContent=cap||'';
-    overlay.classList.add('active');
-    document.body.style.overflow='hidden';
-  }
-  function close(){
-    overlay.classList.remove('active');
-    document.body.style.overflow='';
-    lbImg.src='';
-  }
-  overlay.addEventListener('click',function(e){ if(e.target===overlay||e.target===lbClose) close(); });
-  document.addEventListener('keydown',function(e){ if(e.key==='Escape') close(); });
-  document.addEventListener('click',function(e){
-    var fig=e.target.closest('.img-gallery figure');
-    if(!fig) return;
-    var img=fig.querySelector('img');
-    if(!img) return;
-    var cap=fig.querySelector('figcaption');
-    open(img.src, cap?cap.textContent:'');
-  });
-})();
-</script>'''
-
-
-def md_to_html(md_text):
-    """将markdown格式文本转为HTML片段"""
-    text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', md_text)
-    parts = text.split('\n\n')
-    result = []
-    for p in parts:
-        p = p.strip()
-        if not p: continue
-        lines = p.split('\n')
-        if lines[0].startswith('- '):
-            items = [li[2:] for li in lines if li.startswith('- ')]
-            result.append('<ul>\n          ' + '\n          '.join(f'<li>{item}</li>' for item in items) + '\n        </ul>')
-        elif any(li.startswith('- ') for li in lines):
-            out = []
-            buf = []
-            for li in lines:
-                li = li.strip()
-                if li.startswith('- '):
-                    buf.append(li[2:])
-                else:
-                    if buf:
-                        out.append('<ul>\n          ' + '\n          '.join(f'<li>{item}</li>' for item in buf) + '\n        </ul>')
-                        buf = []
-                    if li:
-                        out.append(f'<p>{li}</p>')
-            if buf:
-                out.append('<ul>\n          ' + '\n          '.join(f'<li>{item}</li>' for item in buf) + '\n        </ul>')
-            result.extend(out)
-        elif len(lines) > 1:
-            result.append(f'<p>{"<br>".join(lines)}</p>')
-        else:
-            result.append(f'<p>{p}</p>')
-    return '\n        '.join(result)
-
-
-def build_bid_compare(bid_compare_data):
-    if not bid_compare_data:
-        return ''
-    headers = bid_compare_data['headers']
-    rows = bid_compare_data['rows']
-    if not headers or not rows:
-        return ''
-    
-    # 表头（第一列留空作为行标签列）
-    headers_html = ''.join(f'<th>{h}</th>' for h in headers[1:])  # 跳过第一列（版本/上线时间）
-    
-    # 数据行
-    rows_html = ''
-    for cells in rows:
-        if not cells:
-            continue
-        # 第一列作为行标签（带版本标签样式）
-        row_label = cells[0] if len(cells) > 0 else ''
-        label_cls = 'new'
-        if 'V1.0' in row_label or '治理前' in row_label:
-            label_cls = 'old'
-        label_html = f'<span class="bid-ver-tag {label_cls}">{row_label}</span>'
-        
-        # 其余列
-        data_cells = ''
-        for i, cell in enumerate(cells[1:], 1):
-            # 数据治理列、数量列等较长文本用 td-desc
-            if i < len(headers) and headers[i] in ('数据治理', '数量'):
-                data_cells += f'<td class="td-desc">{cell}</td>'
-            else:
-                data_cells += f'<td>{cell}</td>'
-        
-        rows_html += f'\n            <tr class="{label_cls}-row"><td>{label_html}</td>{data_cells}</tr>'
-    
-    return f'''      <div class="bid-compare">
-        <div class="bid-compare-title"><span class="ai-dot"></span>AI助力高价值标讯</div>
-        <table class="bid-table">
-          <thead><tr><th></th>{headers_html}</tr></thead>
-          <tbody>{rows_html}
-          </tbody>
-        </table>
-      </div>'''
-
-
-def build_capability_table(capability_data):
-    """渲染应用能力集表格：支持第一列空单元格合并（rowspan），放在视频上方"""
-    if not capability_data:
-        return ''
-    headers = capability_data['headers']
-    rows = capability_data['rows']
-    if not headers or not rows:
-        return ''
-
-    ncols = len(headers)
-    # 第一列做合并分组
-    groups = []  # (label, rows_list)
-    for cells in rows:
-        if len(cells) < ncols:
-            cells = cells + [''] * (ncols - len(cells))
-        label = cells[0].strip()
-        if label:
-            groups.append({'label': label, 'items': [cells[1:]]})
-        else:
-            if groups:
-                groups[-1]['items'].append(cells[1:])
-            else:
-                groups.append({'label': '', 'items': [cells[1:]]})
-
-    rows_html = ''
-    for gi, g in enumerate(groups):
-        items = g['items']
-        rowspan = len(items)
-        # 第一列单元格（跨行）
-        first_td = f'<td class="cap-cat" rowspan="{rowspan}"><span class="cap-cat-tag">{g["label"]}</span></td>' if rowspan > 1 else f'<td class="cap-cat"><span class="cap-cat-tag">{g["label"]}</span></td>'
-        for ii, cells in enumerate(items):
-            tds = ''
-            for ci, cell in enumerate(cells):
-                if ci == 0:
-                    tds += f'<td class="cap-skill">{cell}</td>'
-                else:
-                    cls = 'cap-src' if ci == len(cells) - 1 else ''
-                    tds += f'<td class="{cls}">{cell}</td>'
-            if ii == 0:
-                rows_html += f'<tr>{first_td}{tds}</tr>\n            '
-            else:
-                rows_html += f'<tr>{tds}</tr>\n            '
-
-    headers_html = ''.join(f'<th>{h}</th>' for h in headers)
-
-    return f'''      <div class="cap-board">
-        <div class="cap-title"><span class="ai-dot"></span>应用能力集</div>
-        <div class="cap-table-wrap">
-          <table class="cap-table">
-            <thead><tr>{headers_html}</tr></thead>
-            <tbody>{rows_html}
-            </tbody>
-          </table>
-        </div>
-      </div>'''
-
-
-def render_scene(data, scene):
-    """渲染单个场景为 HTML 字符串（详情页用）"""
-    scene_id_map = {1:'scene-opp',2:'scene-visit',3:'scene-proj',4:'scene-bid',5:'scene-channel',6:'scene-skill',7:'scene-knowledge'}
-    bg_map = {1:'bg-opp',2:'bg-visit',3:'bg-proj',4:'bg-bid',5:'bg-channel',6:'bg-skill',7:'bg-knowledge'}
-    icon_colors = ["linear-gradient(135deg,#0f2b5c,#1e4f8a)","linear-gradient(135deg,#00a884,#00b894)","linear-gradient(135deg,#0f2b5c,#5b3fd4)","linear-gradient(135deg,#e8710a,#dc2626)","linear-gradient(135deg,#0d9488,#14b8a6)","linear-gradient(135deg,#0ea5e9,#0284c7)","linear-gradient(135deg,#6366f1,#8b5cf6)"]
-    badge_maps = {
-        1: [("linear-gradient(135deg,#0f2b5c,#1e4f8a)","1"),("linear-gradient(135deg,#0284c7,#0891b2)","2"),("linear-gradient(135deg,#0891b2,#0e7490)","3"),("linear-gradient(135deg,#0e7490,#059669)","4")],
-        2: [("linear-gradient(135deg,#00a884,#00b894)","1"),("linear-gradient(135deg,#0284c7,#4f46e5)","2")],
-        3: [("linear-gradient(135deg,#0f2b5c,#5b3fd4)","1"),("linear-gradient(135deg,#5b3fd4,#e8710a)","2")],
-        4: [("linear-gradient(135deg,#e8710a,#dc2626)","AI")],
-        5: [("linear-gradient(135deg,#0d9488,#14b8a6)","1"),("linear-gradient(135deg,#14b8a6,#0ea5e9)","2")],
-        6: [("linear-gradient(135deg,#0ea5e9,#0284c7)","1"),("linear-gradient(135deg,#0284c7,#0891b2)","2")],
-        7: [("linear-gradient(135deg,#6366f1,#8b5cf6)","AI")]
-    }
-    pain_emojis = {1:'📊',2:'🔍',3:'🔀',4:'😰',5:'📈',6:'🛠️',7:'📚'}
-    solve_emojis = {1:'⚡',2:'✨',3:'⚡',4:'🏆',5:'⚡',6:'✨',7:'💡'}
-    how_emojis = {1:'🗺️',2:'🎯',3:'🗝️',4:'🗝️',5:'🏭',6:'🔧',7:'🔮'}
-
-    profile_preview = '''    <div class="profile-preview">
-      <div class="profile-preview-label"><span class="pdot"></span>{profile_label} <span class="pbeta">NEW</span> — 下滑查看最新画像内容</div>
-      <div class="profile-preview-frame"><iframe src="{profile_src}" title="客户安全画像"></iframe></div>
-    </div>'''
-
-    report_preview = '''    <div class="report-preview">
-      <div class="report-preview-label"><span class="pdot"></span>{report_label} <span class="pbeta">REPORT</span> — 下滑查看完整报告</div>
-      <div class="report-preview-frame"><img src="{report_src}" alt="{report_label}" loading="lazy"></div>
-    </div>'''
-
-    snum = scene['num']
-    sid = scene_id_map.get(snum, f'scene-{snum}')
-    bg = bg_map.get(snum,'')
-    icon = scene.get('icon','🎯')
-    title = scene.get('title','')
-    subtitle = scene.get('subtitle','')
-    icon_color = icon_colors[min(snum-1, len(icon_colors)-1)]
-    count = f'{len(scene["apps"])}个应用' if snum not in (4,) else '3大能力'
-
-    stats = ''
-    if scene.get('stats'):
-        items = [f'<div class="ss-item"><div class="ss-num">{st["num"]}</div><div class="ss-label">{st["label"]}</div></div>' for st in scene['stats']]
-        stats = f'\n<div class="stats-strip">{"" .join(items)}</div>\n'
-
-    bid_steps = ''
-    if snum == 4:
-        bid_app = next((a for a in scene['apps'] if a.get('bid_steps')), None)
-        bid_steps = build_bid_steps(bid_app['bid_steps']) if bid_app else ''
-
-    apps_html = ''
-    for ai, app in enumerate(scene['apps']):
-        bc = badge_maps.get(snum, [])
-        badge_style, badge_num = bc[ai] if ai < len(bc) else bc[0] if bc else ('linear-gradient(135deg,#0f2b5c,#1e4f8a)','1')
-
-        pain = md_to_html(app.get('pain',''))
-        solve = md_to_html(app.get('solve',''))
-
-        how_parts = []
-        if app.get('how'):
-            how_parts.append(f'<p>{re.sub(r"\*\*(.+?)\*\*",r"<strong>\1</strong>",app["how"])}</p>')
-        for p in app.get('paths', []):
-            tag_html = ' <span class="arr">→</span> '.join(f'<span>{tp.strip()}</span>' for tp in p.split('→'))
-            how_parts.append(f'<div class="path-tag">{tag_html}</div>')
-        for e in app.get('extra_info', []):
-            if isinstance(e,tuple) and e[0]=='path_title':
-                how_parts.append(f'<p style="font-weight:700;margin:10px 0 4px;">{e[1]}</p>')
-            else:
-                how_parts.append(f'<p style="font-size:12px;color:var(--muted);margin-top:8px;">{e}</p>')
-        # 入口链接（可点击跳转）
-        if app.get('entry_link') and app.get('entry_text'):
-            how_parts.append(f'<a href="{app["entry_link"]}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:10px 20px;background:linear-gradient(135deg,#0d2550,#1a3d6e);color:#fff;border-radius:10px;font-weight:600;font-size:14px;text-decoration:none;transition:all .28s;">{app["entry_text"]} <span style="font-size:12px;">↗</span></a>')
-        how_html = '\n        '.join(how_parts)
-
-        pe = pain_emojis.get(snum,'📊')
-        se = solve_emojis.get(snum,'⚡')
-        he = how_emojis.get(snum,'🗝️')
-
-        app_stats_html = ''
-        if app.get('stats'):
-            stats_items = [f'<div class="app-stats-item"><div class="app-stats-num">{st["num"]}</div><div class="app-stats-label">{st["label"]}</div></div>' for st in app['stats']]
-            note = f'<div class="app-stats-item app-stats-note-inline">{app["stats_note"]}</div>' if app.get('stats_note') else ''
-            app_stats_html = f'\n<div class="app-stats-strip">{"" .join(stats_items)}{note}</div>\n'
-
-        video_panel = ''
-        # 应用能力集（图片优先，否则表格）
-        if app.get('cap_images'):
-            cap_imgs_html = '\n          '.join(f'<img src="{img}" alt="应用能力集" style="width:100%;display:block;border:none;">' for img in app['cap_images'])
-            video_panel += f'''    <div class="cap-board">
-      <div class="cap-title"><span class="ai-dot"></span>应用能力集</div>
-      <div class="cap-img-wrap">
-        {cap_imgs_html}
-      </div>
-    </div>\n'''
-        else:
-            _cap = build_capability_table(app.get('capability'))
-            if _cap:
-                video_panel += _cap + '\n'
-        # 渲染视频（如果有）
-        if app.get('placeholder'):
-            video_panel += f'''    <div class="app-video-panel">
-      <div class="app-video-label"><span class="vdot"></span>应用演示视频（移动端演示）</div>
-      <div class="no-video"><div class="nv-ico">{app.get('placeholder_icon','📱')}</div><p>{app.get('placeholder_text','')}</p></div>
-    </div>'''
-        elif app.get('video'):
-            vlabel = app.get('video_label', '应用演示视频')
-            video_panel += f'''    <div class="app-video-panel">
-      <div class="app-video-label"><span class="vdot"></span>{vlabel}</div>
-      <div class="video-wrapper" data-video-src="media/{app['video']}"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'><rect fill='%230a0d14' width='16' height='9'/></svg>"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
-    </div>'''
-        
-        # 渲染截图（如果有）——可与视频同时存在
-        if app.get('images') and not app.get('placeholder'):
-            imgs = app['images']
-            _bid = build_bid_compare(app.get('bid_compare'))
-            if _bid and len(imgs) >= 2:
-                video_panel += f'''    <div class="bid-flow-platform">
-      <div class="app-video-panel">
-        <div class="app-video-label"><span class="vdot" style="background:#38bdf8;"></span>业务流</div>
-        <div class="img-gallery img-gallery-single"><figure><img src="{imgs[0]["src"]}" alt=""><figcaption>{imgs[0].get("caption","")}</figcaption></figure></div>
-      </div>
-      <div class="app-video-panel">
-        <div class="app-video-label"><span class="vdot" style="background:#f59e0b;"></span>平台</div>
-        <div class="img-gallery img-gallery-single"><figure><img src="{imgs[1]["src"]}" alt=""><figcaption>{imgs[1].get("caption","")}</figcaption></figure></div>
-      </div>
-    </div>'''
-                if _bid: video_panel += '\n' + _bid
-            else:
-                # 区分移动端和PC端截图
-                figs = []
-                for img in imgs:
-                    cap = img.get('caption', '')
-                    # 根据说明中的emoji判断是移动端还是PC端
-                    is_mobile = '📱' in cap
-                    is_pc = '💻' in cap
-                    mobile_cls = ' mobile-screenshot' if is_mobile else ''
-                    pc_cls = ' pc-screenshot' if is_pc else ''
-                    fig_cls = mobile_cls + pc_cls
-                    figs.append(f'<figure class="{fig_cls.strip()}"><img src="{img["src"]}" alt="">{"<figcaption>"+cap+"</figcaption>" if cap else ""}</figure>')
-                n = len(imgs)
-                gcol = 'col1' if n==1 else ('col2' if n==2 else ('col5' if n==5 else ''))
-                video_panel += f'''    <div class="app-video-panel">
-      <div class="app-video-label"><span class="vdot" style="background:#38bdf8;"></span>应用演示截图</div>
-      <div class="img-gallery {gcol}">{chr(10).join(figs)}</div>
-    </div>'''
-
-        apps_html += f'''
-  <div class="app-block" id="app-s{snum}-{ai+1}">
-    <div class="app-block-header">
-      <div class="app-num-badge" style="background:{badge_style};{'font-size:13px;' if badge_num=='AI' else ''}">{badge_num}</div>
-      <div><div class="app-title">{app['title']}</div><div class="app-subtitle">{app.get('subtitle','')}</div></div>
-      {f'<a href="{app["guide_link"]}" class="app-guide-card" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>操作指南</a>' if app.get('guide_link') else ''}
-    </div>{app_stats_html}
-    <div class="app-content">
-      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-pain">😩 用户痛点</div>{pain}</div><div class="col-emoji-bg">{pe}</div></div>
-      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-solve">✅ AI能帮你</div>{solve}</div><div class="col-emoji-bg">{se}</div></div>
-      <div class="app-col"><div class="app-col-inner"><div class="col-label col-label-how">🔧 平台入口</div>{how_html}</div><div class="col-emoji-bg">{he}</div></div>
-    </div>
-{video_panel}
-    {report_preview.format(report_src=media_path(app.get('report_preview','')), report_label=app.get('report_label','运营报告')) if app.get('report_preview') else ''}
-    {profile_preview.format(profile_src=app.get('profile_preview','media/天津大学_安全画像.html'), profile_label=app.get('profile_label','客户画像 2.0 优化中')) if (snum==2 and ai==0 and app.get('profile_preview')) else ''}  </div>'''
-        
-        # 渲染一线增量情况（如果该应用有）
-        if app.get('increment'):
-            apps_html += '\n' + build_increment_board(app['increment'])
-
-    return f'''<div class="scene-timeline-item" id="{sid}">
-<div class="{bg}">
-<div class="scene-section">
-  <div class="scene-header">
-    <div class="scene-header-ico" style="background:{icon_color};color:#fff;">{icon}</div>
-    <div><div class="scene-title">{title}</div><div class="scene-sub">{subtitle}</div></div>
-    <div class="scene-count">{count}</div>
-  </div>
-  <div class="scene-body">
-{stats}{bid_steps}{apps_html}
-  </div>
-</div>
-</div>
-</div>'''
-
-
-def build_arch_section():
-    """AI应用矩阵section：中央Hub + 4个维度分支（按PPT 1:1文案，带跳转链接）"""
-    dimensions = [
-        {
-            'color': 'blue', 'icon': '🚀', 'name': '抓增量', 'en': 'GROWTH',
-            'desc': '看清市场空间、数据驱动作战',
-            'apps': [('市场空间报告', None), ('标讯推送', None), ('......', None)],
-            'card_link': 'scene-1.html'  # 整卡跳转机会点增量
-        },
-        {
-            'color': 'purple', 'icon': '✨', 'name': '抓质量', 'en': 'QUALITY',
-            'desc': '提升拜访、招投标方案质量',
-            'apps': [('AI对练', 'scene-2.html#app-s2-2'), ('标书制作及检查', 'scene-4.html'), ('......', None)],
-            'card_link': None  # 不整卡跳转，各app独立跳转
-        },
-        {
-            'color': 'orange', 'icon': '⚡', 'name': '提能效', 'en': 'EFFICIENCY',
-            'desc': '整合行销能力，全面搜集客户信息',
-            'apps': [('行销数字员工', 'scene-3.html#app-s3-2'), ('客户画像', 'scene-2.html#app-s2-1'), ('......', None)],
-            'card_link': None  # 不整卡跳转
-        },
-        {
-            'color': 'teal', 'icon': '🛠️', 'name': '助管理', 'en': 'MANAGEMENT',
-            'desc': '辅助管理决策、业务关键信息查询',
-            'apps': [('营销AI小秘', None), ('查企业、查价格', None), ('......', None)],
-            'card_link': 'scene-3.html#app-s3-1'  # 整卡跳转营销AI小秘
-        }
-    ]
-
-    def with_source(link):
-        if not link:
-            return link
-        if '?' in link:
-            if '#' in link:
-                base_q, frag = link.split('#', 1)
-                return f'{base_q}&from=ai-arch#{frag}'
-            return f'{link}&from=ai-arch'
-        if '#' in link:
-            base, frag = link.split('#', 1)
-            return f'{base}?from=ai-arch#{frag}'
-        return f'{link}?from=ai-arch'
-
-    cards_html = ''
-    for d in dimensions:
-        apps_html = ''
-        for app_name, app_link in d['apps']:
-            if app_link:
-                apps_html += f'<div class="ac-app"><span class="ac-app-dot"></span><a href="{with_source(app_link)}" class="ac-app-link">{app_name}</a></div>\n'
-            else:
-                apps_html += f'<div class="ac-app"><span class="ac-app-dot"></span>{app_name}</div>\n'
-
-        if d.get('card_link'):
-            card_link = with_source(d['card_link'])
-            cards_html += (
-                f'<a href="{card_link}" class="arch-card arch-card-linkable" data-color="{d["color"]}">\n'
-                f'  <div class="arch-card-top">\n'
-                f'    <div class="ac-icon">{d["icon"]}</div>\n'
-                f'    <div>\n'
-                f'      <div class="ac-name">{d["name"]}</div>\n'
-                f'      <div class="ac-en">{d["en"]}</div>\n'
-                f'    </div>\n'
-                f'  </div>\n'
-                f'  <div class="ac-desc">{d["desc"]}</div>\n'
-                f'  <div class="ac-divider"></div>\n'
-                f'  <div class="ac-divider-label">AI 应用</div>\n'
-                f'  <div class="ac-apps">\n'
-                f'{apps_html}\n'
-                f'  </div>\n'
-                f'</a>\n'
-            )
-        else:
-            cards_html += (
-                f'<div class="arch-card" data-color="{d["color"]}">\n'
-                f'  <div class="arch-card-top">\n'
-                f'    <div class="ac-icon">{d["icon"]}</div>\n'
-                f'    <div>\n'
-                f'      <div class="ac-name">{d["name"]}</div>\n'
-                f'      <div class="ac-en">{d["en"]}</div>\n'
-                f'    </div>\n'
-                f'  </div>\n'
-                f'  <div class="ac-desc">{d["desc"]}</div>\n'
-                f'  <div class="ac-divider"></div>\n'
-                f'  <div class="ac-divider-label">AI 应用</div>\n'
-                f'  <div class="ac-apps">\n'
-                f'{apps_html}\n'
-                f'  </div>\n'
-                f'</div>\n'
-            )
-
-    return (
-        '<section class="arch-section" id="ai-arch">\n'
-        '  <div class="arch-inner">\n'
-        '    <div class="arch-title">\n'
-        '      <span class="at-pill">AI应用矩阵</span>\n'
-        '    </div>\n'
-        '    <div class="arch-sub">围绕提升<strong>增量、质量、能效、管理</strong>四大目标，设计营销AI应用，<strong>赋能全链路营销业务</strong></div>\n'
-        '    <div class="arch-grid">\n'
-        + cards_html +
-        '    </div>\n'
-        '  </div>\n'
-        '</section>'
-    )
-
-
-def build_incentive_section(data=None):
-    """激励section：3张大卡片（与6场景卡片同尺寸）+ 底部行动信息 — 从content.md读取配置"""
-    action_text = ''
-    if data and data.get('global', {}).get('Hero行动信息'):
-        action_text = data['global']['Hero行动信息']
-    
-    # 从 data['incentive'] 读取，fallback到硬编码
-    inc_data = data.get('incentive', {}) if data else {}
-    inc_title = inc_data.get('标题', '积极使用 AI，更有 丰厚激励 等你拿')
-    inc_sub = inc_data.get('副标题', '积极使用AI工具，主动反馈优化建议，甚至自建提效Skill——优秀实践可获月度激励、专项大奖及年度荣誉！')
-    cards = inc_data.get('cards', [
-        {
-            'glow': 'gold', 'icon': '🏆', 'title': '10W专项激励', 'en': 'SPECIAL AWARD',
-            'desc': '针对AI应用有突出贡献的个人/团队，提供10万元专项激励基金，授予年度AI应用先锋荣誉。',
-            'stats': [('10W', '专项基金'), ('营销全员', '参与范围')],
-            'tags': ['突出贡献', '先锋团队', '专项基金'],
-            'link': 'https://365.kdocs.cn/l/cqQpJWaDnycr', 'link_text': '查看激励详情'
-        },
-        {
-            'glow': 'blue', 'icon': '📅', 'title': '常态化月度激励', 'en': 'MONTHLY AWARD',
-            'desc': '每月评选AI应用之星，月度公示、月度激励，让AI使用习惯持续渗透到每一个一线团队。',
-            'stats': [('月度', '评选节奏'), ('全国助理', '综合管理部激励'), ('行销部全员', '行销激励')],
-            'tags': ['月度之星', '持续激励', '全员覆盖'],
-            'link': 'https://ah-marketing-2026.github.io/honor/', 'link_text': '查看荣誉榜单'
-        },
-        {
-            'glow': 'purple', 'icon': '🎯', 'title': '年底综合激励', 'en': 'YEAR-END AWARD',
-            'desc': '年底综合评定，AI应用标杆团队/个人额外奖励，颁发年度AI赋能营销奖项，纳入绩效考核。',
-            'stats': [('年度', '综合评优'), ('标杆', '示范效应')],
-            'tags': ['年度评优', '绩效加分', '示范标杆'],
-            'link': '#', 'link_text': '敬请期待'
-        }
-    ])
-
-    cards_html = ''
-    for c in cards:
-        stats_html = ''.join(
-            f'<div><div class="inc-stat-num">{n}</div><div class="inc-stat-label">{l}</div></div>'
-            for n, l in c['stats']
-        )
-        tags_html = ''.join(
-            f'<span class="inc-card-tag">{t}</span>' for t in c['tags']
-        )
-        card_link = c.get('link', '') or '#'
-        is_disabled = card_link == '#' or not card_link.strip() or card_link.strip() == '敬请期待'
-        cta_class = 'inc-card-cta no-arrow' if is_disabled else 'inc-card-cta'
-        cta_html = f'<div class="{cta_class}">{c["link_text"]}</div>'
-        if is_disabled:
-            # 无跳转：普通 div 卡片
-            cards_html += (
-                f'<div class="inc-card" data-glow="{c["glow"]}">\n'
-                f'  <div class="inc-card-icon">{c["icon"]}</div>\n'
-                f'  <div class="inc-card-title">{c["title"]}</div>\n'
-                f'  <div class="inc-card-en">{c["en"]}</div>\n'
-                f'  <div class="inc-card-desc">{c["desc"]}</div>\n'
-                f'  <div class="inc-card-stats">{stats_html}</div>\n'
-                f'  <div class="inc-card-tags">{tags_html}</div>\n'
-                f'  {cta_html}\n'
-                f'</div>\n'
-            )
-        else:
-            cards_html += (
-                f'<a href="{card_link}" target="_blank" class="inc-card" data-glow="{c["glow"]}">\n'
-                f'  <div class="inc-card-icon">{c["icon"]}</div>\n'
-                f'  <div class="inc-card-title">{c["title"]}</div>\n'
-                f'  <div class="inc-card-en">{c["en"]}</div>\n'
-                f'  <div class="inc-card-desc">{c["desc"]}</div>\n'
-                f'  <div class="inc-card-stats">{stats_html}</div>\n'
-                f'  <div class="inc-card-tags">{tags_html}</div>\n'
-                f'  {cta_html}\n'
-                f'</a>\n'
-            )
-
-    action_line = f'    <div class="inc-action">{action_text}</div>\n' if action_text else ''
-
-    return (
-        '<section class="inc-section">\n'
-        '  <div class="inc-inner">\n'
-        '    <div class="inc-header">\n'
-        f'      <div class="inc-title">{inc_title}</div>\n'
-        f'      <div class="inc-sub">{inc_sub}</div>\n'
-        '    </div>\n'
-        '    <div class="inc-grid">\n'
-        + cards_html +
-        '    </div>\n'
-        + action_line +
-        '  </div>\n'
-        '</section>'
-    )
-
-
-def build_future_section_home(data):
-    """未来规划 首页独立模块：放在激励模块下方"""
-    g = data['global']
-    fp = data.get('future_plan', {})
-    title = fp.get('标题', '未来规划')
-    subtitle = fp.get('副标题', '统一入口 · 整合资源 · 建设营销AI综合能力平台')
-    status = fp.get('status', '')
-    if not status:
-        status = '当前各类AI应用分散在不同平台，一线员工在外部AI工具上积累了大量实战经验。未来我们将统一整合、沉淀推广，形成完整营销AI工具矩阵。'
-
-    return (
-        '<section class="future-home-section" id="future-home">\n'
-        '  <div class="future-home-inner">\n'
-        '    <div class="future-home-header">\n'
-        '      <div class="future-home-pill">FUTURE PLAN</div>\n'
-        '      <div class="future-home-title">' + title + '</div>\n'
-        '      <div class="future-home-subtitle">' + subtitle + '</div>\n'
-        '    </div>\n'
-        '    <a href="future.html" class="future-home-card">\n'
-        '      <div class="future-home-icon">🚀</div>\n'
-        '      <div class="future-home-card-body">\n'
-        '        <div class="future-home-card-title">建设营销AI综合能力平台</div>\n'
-        '        <div class="future-home-card-desc">' + status + '</div>\n'
-        '        <div class="future-home-tags">\n'
-        '          <span class="future-home-tag">统一入口</span>\n'
-        '          <span class="future-home-tag">整合资源</span>\n'
-        '          <span class="future-home-tag">持续迭代</span>\n'
-        '        </div>\n'
-        '        <div class="future-home-cta">查看未来规划</div>\n'
-        '      </div>\n'
-        '    </a>\n'
-        '  </div>\n'
-        '</section>'
-    )
-
-
-def build_home(data):
-    """生成首页 index.html — Hero + 卡片网格"""
-    g = data['global']
-    logo = media_path(g.get('Logo图片', 'media/image2.png'))
-
-    nav = f'''<nav>
-  <a class="nav-brand" href="index.html"><img src="{logo}" alt="安恒信息"><span>AI赋能营销</span></a>
-  <div class="nav-actions">
-    <a class="nav-de-btn" href="digital-employee.html" title="进入 超级数字员工 专页"><span class="nde-dot"></span><span class="nde-txt">超级数字员工</span></a>
-    <div class="nav-right"><img src="{logo}" alt=""><span class="nav-right-dept">{g.get('页脚部门','安恒信息 · 营销中心 · 综合管理部')}</span></div>
-  </div>
-</nav>'''
-
-    hero = f'''<section class="hero" id="hero" style="min-height:auto;padding:80px 40px 24px;">
-  <div class="hero-bg-circles"><span></span><span></span><span></span></div>
-  <a class="hero-de-orb" href="digital-employee.html" title="点击查看 超级数字员工" aria-label="点击查看超级数字员工">
-    <span class="orb-stage">
-      <span class="orb-halo"></span><span class="orb-halo d2"></span>
-      <span class="orb-ring"></span>
-      <span class="orb-core"><img src="{media_path('media/de_orb_face.png')}" alt="超级数字员工"></span>
-      <span class="orb-hand"><b>👆</b></span>
-    </span>
-    <span class="orb-label">超级数字员工</span>
-  </a>
-  <div class="hero-inner">
-    <h1>{g.get('Hero大标题','AI赋能营销')}<br><em>{g.get('Hero副标题','让每一线都更强')}</em></h1>
-    <p class="hero-sub">{g.get('Hero描述','')}</p>
-  </div>
-</section>'''
-
-    cards_data = [
-        ('scene-1.html','📈','机会点增量','Opportunity Growth','市场空间 · 价值线索 · 精细化运营','4个AI应用',['市场分析','标讯运营','市场报告','标讯AI分析'],'linear-gradient(135deg,#0f2b5c,#1e4f8a)'),
-        ('scene-2.html','🤝','客户拜访','Customer Visit','拜访前充分准备，现场沟通稳定发挥','2个AI应用',['客户画像','AI对练','支持移动端'],'linear-gradient(135deg,#00a884,#00b894)'),
-        ('scene-3.html','🚀','项目推进','Project Delivery','7×24h智能支持，适配项目推进全流程','2个AI应用',['营销AI小秘','行销数字员工'],'linear-gradient(135deg,#0f2b5c,#5b3fd4)'),
-        ('scene-4.html','📋','招投标','Bidding','招标文件解析→商务标生成→投标检查','3大AI能力',['招标解析','商务标生成','投标检查'],'linear-gradient(135deg,#e8710a,#dc2626)'),
-        ('scene-5.html','🏭','渠道赋能','Channel Empowerment','渠道AI数字员工 · 渠道市场分析空间','2个AI应用',['安小渠','渠道市场分析'],'linear-gradient(135deg,#0d9488,#14b8a6)'),
-        ('scene-6.html','🛠️','Skill共享','Skill Sharing','整合一线实战经验，共建共享工具箱','1个应用',['30+大比武','40+提质增效','共建共享'],'linear-gradient(135deg,#0ea5e9,#0284c7)'),
-        ('scene-7.html','🧠','知识助手','Knowledge AI','20s获答，效率提升100%','1个AI应用',['5万+文档','20s获答','效率提升100%'],'linear-gradient(135deg,#6366f1,#8b5cf6)'),
-    ]
-
-    cards_html = ''
-    for href, icon, title, en, desc, app_count, tags, grad in cards_data:
-        tags_html = ''.join(f'<span class="card-tag">{t}</span>' for t in tags)
-        count_badge = f'<span class="card-count">{app_count}</span>' if app_count else ''
-        cards_html += (
-            '    <a href="' + href + '" class="card-item">\n'
-            '      <div class="card-icon-wrap">\n'
-            '        <div class="card-icon" style="background:' + grad + ';">' + icon + '</div>\n'
-            '        <div class="card-title-group">\n'
-            '          <div class="card-title">' + title + count_badge + '</div>\n'
-            '          <div class="card-en">' + en + '</div>\n'
-            '        </div>\n'
-            '      </div>\n'
-            '      <div class="card-desc">' + desc + '</div>\n'
-            '      <div class="card-tags">' + tags_html + '</div>\n'
-            '      <div class="card-arrow">→</div>\n'
-            '    </a>\n'
-        )
-
-    cards_section = (
-        '<section class="landing-section" id="landing-scenes">\n'
-        '  <div class="landing-inner">\n'
-        '    <div class="landing-title">七大场景，<em>全面覆盖</em></div>\n'
-        '    <div class="landing-sub">点击<span class="text-highlight">卡片</span>深入了解每个场景的<span class="text-highlight">应用与操作</span></div>\n'
-        '    <div class="cards-grid">\n'
-        + cards_html +
-        '    </div>\n'
-        '  </div>\n'
-        '</section>'
-    )
-
-    footer = (
-        '<footer style="background:linear-gradient(180deg,#0a1638,#070e2a);border-top:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.4);">\n'
-        '  <div class="ft-logo" style="color:rgba(255,255,255,.8);"><img src="' + logo + '" alt="安恒信息" style="height:32px;vertical-align:middle;margin-right:6px;filter:brightness(1.2);">AI赋能营销</div>\n'
-        '  <p>' + g.get("页脚部门","营销中心") + ' · ' + g.get("页脚日期","2026年") + '</p>\n'
-        '  <section class="view-counter" style="margin-top:12px;"><span class="vc-icon">👁️</span><span>本页已浏览</span><span class="vc-num">99+</span><span>次</span></section>\n'
-        '</footer>'
-    )
-
-    title = g.get('页面标题','AI赋能营销 · 营销中心综合管理部')
-    arch_section = build_arch_section()
-    incentive_section = build_incentive_section(data)
-    future_home_section = build_future_section_home(data)
-    return '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1.0">\n<title>' + title + '</title>\n' + CSS + '\n</head>\n<body>\n<div id="prog"></div>\n\n' + nav + '\n\n' + hero + '\n\n' + cards_section + '\n\n' + arch_section + '\n\n' + incentive_section + '\n\n' + future_home_section + '\n\n' + footer + '\n\n<script>window.addEventListener(\'scroll\',()=>{const h=document.documentElement.scrollHeight-window.innerHeight;document.getElementById(\'prog\').style.width=(h>0?window.scrollY/h*100:0)+\'%\'});</script>\n</body>\n</html>'
-
-
-def build_scene_page(data, scene, prev_scene=None, next_scene=None):
-    """生成单个场景详情页"""
-    g = data['global']
-    logo = media_path(g.get('Logo图片', 'media/image2.png'))
-
-    prev_link = f'<a href="scene-{prev_scene["num"]}.html" class="pager-btn">← 上一场景</a>' if prev_scene else '<span class="pager-btn disabled">← 上一场景</span>'
-    next_link = f'<a href="scene-{next_scene["num"]}.html" class="pager-btn">下一场景 →</a>' if next_scene else '<span class="pager-btn disabled">下一场景 →</span>'
-
-    detail_nav = f'''<div class="scene-detail-nav">
-  <a href="index.html" class="back-btn">← 返回首页</a>
-  <a href="index.html#landing-scenes" class="back-btn back-to-module">返回</a>
-  <div class="nav-title">{scene.get("icon","")} {scene.get("title","")}</div>
-  <a class="nav-de-btn" href="digital-employee.html" title="进入 超级数字员工 专页"><span class="nde-dot"></span><span class="nde-txt">超级数字员工</span></a>
-  <div class="nav-pager">{prev_link}{next_link}</div>
-</div>
-<script>
-(function() {{
-  var params = new URLSearchParams(window.location.search);
-  var back = document.querySelector('.back-to-module');
-  if (back && params.get('from') === 'ai-arch') {{
-    back.href = 'index.html#ai-arch';
-  }}
-}})();
-</script>'''
-
-    scene_html = render_scene(data, scene)
-
-    footer = f'''<footer style="border-top:1px solid rgba(0,0,0,.05);">
-  <div class="ft-logo"><img src="{logo}" alt="安恒信息" style="height:32px;vertical-align:middle;margin-right:6px;">AI赋能营销</div>
-  <p>{g.get("页脚部门","营销中心")} · {g.get("页脚日期","2026年")}</p>
-</footer>'''
-
-    title = f'{scene.get("title","")} — AI赋能营销'
-    return f'''<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1.0">\n<title>{title}</title>\n{CSS}\n</head>\n<body>\n<div id="prog"></div>\n\n{detail_nav}\n\n<div class="detail-wrap">\n{scene_html}\n</div>\n\n{footer}\n\n{JS}\n</body>\n</html>'''
-
-
-def build_future_page(data):
-    """生成未来规划详情页"""
-    g = data['global']
-    logo = media_path(g.get('Logo图片', 'media/image2.png'))
-
-    detail_nav = f'''<div class="scene-detail-nav">
-  <a href="index.html" class="back-btn">← 返回首页</a>
-  <a href="index.html#future-home" class="back-btn">返回</a>
-  <div class="nav-title">🚀 未来规划</div>
-  <a class="nav-de-btn" href="digital-employee.html" title="进入 超级数字员工 专页"><span class="nde-dot"></span><span class="nde-txt">超级数字员工</span></a>
-  <div class="nav-pager"></div>
-</div>'''
-
-    fp = data.get('future_plan', {})
-    import html as _html_mod
-    def md2html(txt):
-        if not txt: return ''
-        r = _html_mod.escape(txt)
-        r = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', r)
-        lines = r.split('\n')
-        out = []
-        in_ul = False
-        for line in lines:
-            s = line.strip()
-            if s.startswith('- '):
-                if not in_ul: out.append('<ul>'); in_ul = True
-                out.append(f'<li>{s[2:]}</li>')
-            else:
-                if in_ul: out.append('</ul>'); in_ul = False
-                if s: out.append(f'<p>{s}</p>')
-        if in_ul: out.append('</ul>')
-        return '\n'.join(out)
-
-    status_html = md2html(fp.get('status',''))
-    dirs_html = md2html(fp.get('directions',''))
-    plan_html = md2html(fp.get('plan',''))
-
-    future_html = f'''<section class="future-section" style="margin-top:0;">
-  <div class="future-card">
-    <div class="future-header">
-      <div class="future-header-inner">
-        <h2>🚀 {fp.get("title","未来规划")}</h2>
-        <p>{fp.get("subtitle","统一入口 · 整合资源 · 建设营销AI综合能力平台")}</p>
-      </div>
-    </div>
-    <div class="future-body">
-      <div class="fp-item">
-        <div class="fp-label">🔍 当前现状</div>
-        {status_html}
-      </div>
-      <div class="fp-item">
-        <div class="fp-label">✅ 规划方向</div>
-        {dirs_html}
-      </div>
-      <div class="fp-item">
-        <div class="fp-label">🎯 推进计划</div>
-        {plan_html}
-      </div>
-    </div>
-  </div>
-</section>'''
-
-    footer = f'''<footer style="border-top:1px solid rgba(0,0,0,.05);">
-  <div class="ft-logo"><img src="{logo}" alt="安恒信息" style="height:32px;vertical-align:middle;margin-right:6px;">AI赋能营销</div>
-  <p>{g.get("页脚部门","营销中心")} · {g.get("页脚日期","2026年")}</p>
-</footer>'''
-
-    title = '未来规划 — AI赋能营销'
-    return f'''<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1.0">\n<title>{title}</title>\n{CSS}\n</head>\n<body>\n<div id="prog"></div>\n\n{detail_nav}\n\n<div class="detail-wrap">\n{future_html}\n</div>\n\n{footer}\n\n{JS}\n</body>\n</html>'''
-
-
-# 能力表中的「上线时间」标注：如 新建客户（2026Q4上线）→ 拆成小字红标签
-_PLAN_TAG = re.compile(r'[（(]\s*([^（()）]{0,24}?上线[^（()）]{0,24}?)\s*[)）]')
-
-
-def build_digital_employee_page(data):
-    """生成超级数字员工独立页 digital-employee.html"""
-    g = data['global']
-    de = data.get('de_page') or {}
-    meta = de.get('meta', {})
-    back = de.get('back', {})
-    fl = de.get('flow', {})
-    ch = de.get('cap_head', {})
-    ft = de.get('footer', {})
-    logo = media_path(g.get('Logo图片', 'media/image2.png'))
-    dept = g.get('页脚部门', '安恒信息 · 营销中心 · 综合管理部')
-
-    # ---------- 导航 ----------
-    nav = f'''<nav>
-  <a class="nav-brand" href="index.html"><img src="{logo}" alt="安恒信息"><span>AI赋能营销</span></a>
-  <div class="nav-actions">
-    <a class="nav-back-btn" href="{meta.get('返回链接','index.html')}">{meta.get('返回按钮','← 返回 AI赋能营销')}</a>
-    <div class="nav-right"><img src="{logo}" alt=""><span class="nav-right-dept">{dept}</span></div>
-  </div>
-</nav>'''
-
-    # ---------- 1. 立牌 ----------
-    board_img = media_path(meta.get('立牌正面图', 'media/de_board_front.webp'))
-    prefix = meta.get('人物层前缀', 'media/de_char_')
-    poster_full = media_path('media/de_poster_full.png')
-    layers = ''
-    for nm in ('body', 'tab', 'arm', 'head'):
-        layers += f'<img class="de-l de-l-{nm}" src="{media_path(prefix + nm + ".png")}" alt="">'
-    # 挥手版手臂（打招呼时切换显示，去掉手中的笔）
-    layers += f'<img class="de-l de-l-arm de-arm-wave" src="{media_path(prefix + "wave_arm.png")}" alt="">'
-
-    kpi_meta = de.get('kpi_meta', {})
-    kpi = ''
-    for i in (1, 2, 3, 4):
-        v = meta.get(f'KPI{i}数值', '').strip()
-        lb = meta.get(f'KPI{i}标签', '').strip()
-        if not v:
-            continue
-        det = kpi_meta.get(f'KPI{i}', {})
-        dt = det.get('title') or f'{v} {lb}'
-        items = [x.strip() for x in det.get('detail', '').split(',') if x.strip()]
-        chips = ''
-        for it in items:
-            chips += f'<span class="kp-i{" plan" if it.startswith("建设中·") else ""}">{it}</span>'
-        if not chips:
-            chips = f'<span class="kp-i">{dt}</span>'
-        pop = (f'<div class="de-kpi-pop"><div class="kp-t">{dt}</div>'
-               f'<div class="kp-l">{chips}</div></div>')
-        kpi += f'<div class="de-kpi" tabindex="0" data-kpi="KPI{i}">{pop}<b>{v}</b><span>{lb}</span><i class="kp-dot"></i></div>'
-
-    acts = de.get('actions', [])
-    act_btns = ''
-    act_icons = {'hello': '👋', 'turn': '🔄', 'back': '🔃', 'reset': '↺', 'idle': '💤'}
-    for a in acts:
-        aid = a['id']
-        ic = act_icons.get(aid, '✨')
-        lb = a.get('btn') or a.get('say', '')[:4]
-        act_btns += (f'<button class="de-act" data-act="{aid}" data-say="{a.get("say","")}">'
-                     f'<span class="ic">{ic}</span>{lb}</button>')
-
-    bubble_say = acts[0]['say'] if acts else ''
-    lb_label = meta.get('放大按钮', '放大查看')
-
-    back_panel = f'''<div class="de-bi">
-  <div class="de-bi-top"><i></i>{back.get('背面眉标','')}<span class="de-bi-back-btn" data-de-front>{back.get('背面入口文字','查看正面能力全景 →')}</span></div>
-  <div class="de-bi-mid">
-    <div class="n">{back.get('背面主标题','')}</div>
-    <div class="s">{back.get('背面副标题','')}</div>
-    <div class="de-bi-sep"></div>
-    <div class="t">{back.get('背面标语','')}</div>
-    <div class="d">{back.get('背面说明','')}</div>
-    <div class="de-bi-spec">
-      <span><b>面板</b> 5mm 复合板</span><span><b>支架</b> 铝合金背撑</span>
-      <span><b>工艺</b> 高清微喷</span><span><b>尺寸</b> 420 × 536 mm</span>
-    </div>
-  </div>
-  <div class="de-bi-foot">
-    <span class="code">DAS-SECURITY · MARKETING AI · 2026</span>
-    <span class="mat">背面视图 · BACK</span>
-  </div>
-</div>'''
-
-    board_html = f'''<div class="de-board-sec" id="de-board">
-  <div class="de-wrap">
-    <div class="de-bs-grid">
-      <div class="de-stage">
-        <div class="de-floor"></div>
-        <div class="de-persp">
-          <div class="de-board" id="deBoard">
-            <div class="de-edge l"></div>
-            <div class="de-edge r"></div>
-            <div class="de-face de-back">{back_panel}</div>
-            <div class="de-strut">
-              <div class="hinge"></div>
-              <div class="rail l"></div>
-              <div class="rail r"></div>
-              <div class="cross"></div>
-              <div class="foot l"></div>
-              <div class="foot r"></div>
-              <div class="tagline">{back.get('支架文字','')}</div>
-            </div>
-            <div class="de-face de-front">
-              <img class="de-img" src="{board_img}" alt="营销AI小秘 场景能力立牌">
-              <div class="de-char" id="deChar" title="点我切换动作">{layers}</div>
-              <div class="de-sheen"></div>
-            </div>
-          </div>
-          <div class="de-board-tools">
-            <button class="de-lb-btn" data-de-lightbox><span class="ic">🔍</span>{lb_label}</button>
-          </div>
-        </div>
-        <div class="de-bhint"><span class="k">⇄</span> {meta.get('旋转提示','按住立牌左右拖动，可 180° 转动查看')}</div>
-      </div>
-
-      <div class="de-panel">
-        <h2 class="de-h2">{meta.get('页头主标题','')}<br><em>{meta.get('页头副标题','')}</em></h2>
-        <div class="de-tagline">
-          <span class="de-slogan">{meta.get('页头标语','')}</span>
-          <span class="de-tagsep"></span>
-          <span class="de-lead">{meta.get('页头描述','')}</span>
-        </div>
-        <div class="de-kpis">{kpi}</div>
-        <div class="de-bubble"><span class="bb-ic">💬</span><span class="bb-tx" id="deSay">{bubble_say}</span></div>
-        <div class="de-acts">{act_btns}</div>
-      </div>
-    </div>
-  </div>
-  <div class="de-lb" id="deLb"><span class="cl">✕</span><img src="{poster_full}" alt="营销AI小秘 场景能力立牌 全图"></div>
-</div>'''
-
-    # ---------- 2. 业务流 ----------
-    daily_items = [x.strip() for x in fl.get('日常动作', '').split(',') if x.strip()]
-    daily_html = ''.join(f'<span class="it">{x}</span>' for x in daily_items)
-
-    cols = ''
-    for st in de.get('stages', []):
-        plan = 'plan' if st.get('status') != '已建设' else ''
-        items = ''
-        for i, a in enumerate(st['actions'], 1):
-            items += f'<div class="flow-item"><i>{st["no"]}.{i}</i><span>{a}</span></div>'
-        cols += f'''<div class="flow-col {plan}">
-  <div class="flow-head"><span class="n">{st['no']}</span><span class="t">{st['name']}</span></div>
-  <div class="flow-body">{items}</div>
-</div>'''
-
-    # 说明行：拆成「数字 + 单位」片段，数字高亮
-    segs = [x.strip() for x in fl.get('说明', '').split('·') if x.strip()]
-    parts = []
-    for seg in segs:
-        mm = re.match(r'^(\d+)\s*(.*)$', seg)
-        if mm:
-            parts.append(f'<span class="seg"><b>{mm.group(1)}</b>{mm.group(2)}</span>')
-        else:
-            parts.append(f'<span class="seg">{seg}</span>')
-    stat_html = '<span class="dot">·</span>'.join(parts)
-
-    # 底部说明带
-    ff_raw = fl.get('底部说明', 'L1 业务阶段 × L2 业务动作')
-    if '｜' in ff_raw:
-        ff_a, ff_b = [x.strip() for x in ff_raw.split('｜', 1)]
-    else:
-        ff_a, ff_b = ff_raw.strip(), ''
-    ff_b_html = re.sub(r'(\d+)', r'<b>\1</b>', ff_b)
-
-    flow_html = f'''<section class="de-flow-sec" id="de-flow">
-  <div class="de-flow-inner">
-    <div class="de-flow-head">
-      <h2>{fl.get('标题','营销全场景业务流')}</h2>
-      <div class="de-flow-stat">{stat_html}</div>
-    </div>
-
-    <div class="de-daily">
-      <span class="lb">{fl.get('日常标题','9. 日常')}</span>
-      {daily_html}
-      <span class="ln"></span>
-      <span class="ds">{fl.get('日常说明','贯穿全流程的时间维度')}</span>
-    </div>
-
-    <div class="flow-grid">{cols}</div>
-
-    <div class="flow-foot">
-      <span class="ff-l">{ff_a}</span>
-      <span class="ff-sep"></span>
-      <span class="ff-r">{ff_b_html}</span>
-    </div>
-  </div>
-</section>'''
-
-    # ---------- 3. 场景能力集合 ----------
-    def skill_html(name):
-        """skill 名中的「（XXXX上线）」拆成小字红色标签。"""
-        m = _PLAN_TAG.search(name)
-        if not m:
-            return name
-        main = (name[:m.start()] + name[m.end():]).strip()
-        return f'{main}<i class="plan-tag">{m.group(1)}</i>'
-
-    def cap_card(c, wide=False, compact=False):
-        cc = c.get('主题色', '#1e6fd9')
-        rows = c.get('rows', [])
-        if rows and not compact:
-            # 入口列：空值向上继承上一行的入口，连续同值合并为一格（rowspan）
-            ent_vals, last = [], ''
-            for r in rows:
-                e = (r.get('entry') or '').strip()
-                if e:
-                    last = e
-                ent_vals.append(last)
-            spans = [1] * len(rows)
-            i = 0
-            while i < len(rows):
-                if not ent_vals[i]:
-                    i += 1
-                    continue
-                j = i
-                while j + 1 < len(rows) and ent_vals[j + 1] == ent_vals[i]:
-                    j += 1
-                spans[i] = j - i + 1
-                for k in range(i + 1, j + 1):
-                    spans[k] = 0          # 被上一格的 rowspan 覆盖
-                i = j + 1
-
-            body = ('<div class="cap-tbl-wrap"><table class="cap-tbl">'
-                    '<thead><tr><th>skill / 功能</th><th>用户输入示例 / 介绍</th>'
-                    '<th>数据平台</th><th>入口 / 链接</th></tr></thead><tbody>')
-            for idx, r in enumerate(rows):
-                ent = ent_vals[idx]
-                if spans[idx] > 1:
-                    ent_html = (f'<td class="ent ent-span" rowspan="{spans[idx]}" data-l="入口">'
-                                f'<span>{ent}</span></td>')
-                elif spans[idx] == 1:
-                    inner = f'<span>{ent}</span>' if ent else '—'
-                    ent_html = f'<td class="ent" data-l="入口">{inner}</td>'
-                else:
-                    # 桌面端由 rowspan 覆盖，移动端堆叠时补一份（保证每张卡都带入口）
-                    inner = f'<span>{ent}</span>' if ent else '—'
-                    ent_html = f'<td class="ent-m" data-l="入口">{inner}</td>'
-                body += (f'<tr><td class="sk">{skill_html(r["skill"])}</td><td class="dm">{r["demo"]}</td>'
-                         f'<td class="dt" data-l="数据平台">{r["data"] or "—"}</td>'
-                         f'{ent_html}</tr>')
-            body += '</tbody></table></div>'
-        elif compact:
-            body = '<div class="cap-rows">'
-            for r in c['rows']:
-                ent = ('<span class="ent">%s</span>' % r['entry']) if r['entry'] else ''
-                dat = ('<div class="cap-row-m">数据平台 · %s</div>' % r['data']) if r['data'] else ''
-                body += ('<div class="cap-row"><div class="cap-row-h"><b>%s</b>%s</div>'
-                         '<div class="cap-row-d">%s</div>%s</div>') % (skill_html(r['skill']), ent, r['demo'], dat)
-            body += '</div>'
-        else:
-            body = ('<div class="cap-empty"><b>本期暂未建设</b>'
-                    '<span>该阶段能力正在规划中，上线后将持续补充到本清单</span></div>')
-        jump = ''
-        if c.get('跳转链接'):
-            jump = f'<a class="cap-jump" href="{c["跳转链接"]}">{c.get("跳转文字","查看完整介绍 →")}</a>'
-        stage = c.get('对应阶段', '')
-        stage_html = f'<div class="cap-stage">对应业务阶段 · <b>{stage}</b></div>' if stage else ''
-
-        # 应用数量
-        cnt = str(c.get('应用数量', '')).strip()
-        is_plan = (c.get('状态', '') == '本期未建设') or cnt in ('0', '')
-        if cnt:
-            count_html = (f'<div class="cap-count{" plan" if is_plan else ""}">'
-                          f'<b>{cnt}</b><span>{"本期未建设" if is_plan else "项应用"}</span></div>')
-        else:
-            count_html = ''
-        # 场景闭环链
-        loop = str(c.get('场景闭环', '')).strip()
-        loop_html = ''
-        if loop:
-            nodes = [x.strip() for x in loop.split('→') if x.strip()]
-            chain = '<i>→</i>'.join(f'<span class="cp">{n}</span>' for n in nodes)
-            loop_html = (f'<div class="cap-loop"><span class="cap-loop-t">{c.get("名称","")}闭环</span>'
-                         f'<div class="cap-loop-chain">{chain}</div></div>')
-
-        if compact:
-            # 跨阶段紧凑卡：闭环链放在头部下方
-            return f'''<div class="cap-card compact" style="--cc:{cc}">
-  <div class="cap-top">
-    <div class="cap-ico">{c.get('图标','')}</div>
-    <div class="cap-hd">
-      <div class="cap-num">{c.get('序号','')}</div>
-      <div class="cap-name">{c.get('名称','')}</div>
-    </div>
-    {count_html}
-  </div>
-  {loop_html}
-  <div class="cap-desc">{c.get('说明','')}</div>
-  {body}
-  {jump}
-</div>'''
-        return f'''<div class="cap-card{' wide' if wide else ''}" style="--cc:{cc}">
-  <div class="cap-top">
-    <div class="cap-ico">{c.get('图标','')}</div>
-    <div class="cap-hd">
-      <div class="cap-num">{c.get('序号','')}</div>
-      <div class="cap-name">{c.get('名称','')}</div>
-      {stage_html}
-    </div>
-    {count_html}
-  </div>
-  {loop_html}
-  <div class="cap-desc">{c.get('说明','')}</div>
-  {body}
-  {jump}
-</div>'''
-
-    caps = de.get('caps', [])
-    main_caps = caps[:8]
-    sub_caps = caps[8:]
-    main_html = ''.join(cap_card(c) for c in main_caps)
-    sub_html = ''.join(cap_card(c, compact=True) for c in sub_caps)
-
-    cap_html = f'''<section class="de-cap-sec" id="de-cap">
-  <div class="de-wrap">
-    <div class="de-sec-head">
-      <span class="de-pill">🧩 {ch.get('眉标','能力清单')}</span>
-      <h2 class="de-h2">{ch.get('标题','超级数字员工 · 场景能力集合')}</h2>
-      <p class="de-lead">{ch.get('副标题','')}</p>
-      <p class="de-lead de-lead-sub">{ch.get('统计','')}</p>
-    </div>
-    <div class="cap-grid">{main_html}</div>
-    <div class="de-sub-head"><span>跨阶段 · 通用能力</span></div>
-    <div class="cap-sub-grid">{sub_html}</div>
-  </div>
-</section>'''
-
-    # ---------- 4. 页尾 CTA ----------
-    cta = f'''<section class="de-cta">
-  <div class="de-cta-in de-wrap">
-    <h3>{ft.get('主标题','')}</h3>
-    <p>{ft.get('副标题','')}</p>
-    <div class="de-cta-btns">
-      <a class="de-cta-a pri" href="{ft.get('主按钮链接','index.html')}">{ft.get('主按钮文字','← 返回 AI赋能营销完整版')}</a>
-      <a class="de-cta-a sec" href="#de-board">{ft.get('次按钮文字','回到顶部 ↑')}</a>
-    </div>
-  </div>
-</section>'''
-
-    footer = f'''<footer style="background:linear-gradient(180deg,#0a1638,#070e2a);border-top:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.4);">
-  <div class="ft-logo" style="color:rgba(255,255,255,.8);"><img src="{logo}" alt="安恒信息" style="height:32px;vertical-align:middle;margin-right:6px;filter:brightness(1.2);">AI赋能营销</div>
-  <p>{ft.get('署名', dept)}</p>
-</footer>'''
-
-    incentive_section = build_incentive_section(data)
-    future_section = build_future_section_home(data)
-
-    title = meta.get('浏览器标题', '超级数字员工 — 安恒信息 AI赋能营销')
-    return ('<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n'
-            '<meta name="viewport" content="width=device-width,initial-scale=1.0">\n'
-            f'<title>{title}</title>\n{CSS}\n{DE_CSS}\n</head>\n<body class="de-body">\n'
-            '<div id="prog"></div>\n\n' + nav + '\n\n' + board_html + '\n\n' + flow_html + '\n\n'
-            + cap_html + '\n\n' + incentive_section + '\n\n' + future_section + '\n\n'
-            + cta + '\n\n' + footer + '\n\n' + DE_JS + '\n</body>\n</html>')
-
-
-def build(data):
-    """保留旧版单页生成（兼容用）"""
-    return build_home(data)
-
-
-def main():
-    from datetime import datetime
-    print('='*50)
-    print(f'  生成时间：{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
-    print(f'  读取文件：content.md')
-    print('='*50)
-    data = parse_content('content.md')
-
-    # 1. 首页
-    home_html = build_home(data)
-    with open('index.html', 'w', encoding='utf-8') as f:
-        f.write(home_html)
-    print(f'\n✅ 首页生成成功！index.html ({len(home_html):,} 字节)')
-
-    # 2. 场景详情页
-    scenes = data['scenes']
-    for i, s in enumerate(scenes):
-        prev = scenes[i-1] if i > 0 else None
-        next_s = scenes[i+1] if i < len(scenes)-1 else None
-        scene_html = build_scene_page(data, s, prev, next_s)
-        fname = f'scene-{s["num"]}.html'
-        with open(fname, 'w', encoding='utf-8') as f:
-            f.write(scene_html)
-        print(f'  ✅ {fname} ({len(scene_html):,} 字节) — {s.get("title","?")}')
-
-    # 3. 未来规划页
-    future_html = build_future_page(data)
-    with open('future.html', 'w', encoding='utf-8') as f:
-        f.write(future_html)
-    print(f'  ✅ future.html ({len(future_html):,} 字节) — 未来规划')
-
-    # 4. 超级数字员工专页
-    if data.get('de_page'):
-        de_html = build_digital_employee_page(data)
-        with open('digital-employee.html', 'w', encoding='utf-8') as f:
-            f.write(de_html)
-        de = data['de_page']
-        print(f'  ✅ digital-employee.html ({len(de_html):,} 字节) — 超级数字员工'
-              f'（{len(de.get("stages", []))} 阶段 / {len(de.get("caps", []))} 场景能力集）')
-    else:
-        print('  ⚠️  未在 content.md 中找到「## 数字员工页」，跳过 digital-employee.html')
-
-    print(f'\n总计：{1 + len(scenes) + 1 + (1 if data.get("de_page") else 0)} 个文件')
-    for s in data['scenes']:
-        print(f'  Scene {s["num"]}: {s.get("title","?")} ({len(s["apps"])} apps)')
-
-
-if __name__ == '__main__':
-    try:
-        main()
-    except Exception as e:
-        print(f'\n❌ 出错：{e}')
-        import traceback
-        traceback.print_exc()
-    finally:
-        import os
-        if os.name == 'nt' and sys.stdin and sys.stdin.isatty():
-            print('\n按回车键关闭窗口...')
-            try: input()
-            except EOFError: pass
+</script>
+</body>
+</html>
