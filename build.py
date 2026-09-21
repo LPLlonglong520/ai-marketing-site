@@ -71,8 +71,8 @@ def parse_de_page(text):
         'KPI4数值', 'KPI4标签',
         '立牌正面图', '立牌正面图小图', '立牌全图', '立牌显示宽度', '人物层前缀', '立牌占位图',
         '旋转提示', '翻转按钮', '背回按钮', '放大按钮',
-        '入口体验文字', '入口提示图标',
         '返回按钮', '返回链接', '来源参数', '来源返回文字', '页尾标语',
+        '能力集列数', '能力集容器宽度', '能力集上间距',
     }) if m else {}
 
     def sub(name, keys=None, upto=None):
@@ -175,7 +175,7 @@ def parse_de_page(text):
         b = heads[i + 1].start() + 1 if i + 1 < len(heads) else len(sec)
         blk = sec[a:b]
         title = h.group(1)
-        info = _de_table(blk, {'序号', '名称', '对应阶段', '主题色', '图标', '说明', '状态', '跳转链接', '跳转文字', '宽卡', '应用数量', '场景闭环'})
+        info = _de_table(blk, {'序号', '名称', '对应阶段', '主题色', '图标', '说明', '状态', '跳转链接', '跳转文字', '宽卡', '应用数量', '场景闭环', '操作路径'})
         if not info.get('名称'):
             nm = re.match(r'场景能力\d+\s*·\s*(.+)', title)
             info['名称'] = nm.group(1).strip() if nm else title
@@ -189,7 +189,7 @@ def parse_de_page(text):
                 continue
             if cells[0] in ('skill / 功能', 'skill/功能', '字段') or set(cells[0]) <= set('-: '):
                 continue
-            if cells[0] in ('序号', '名称', '对应阶段', '主题色', '图标', '说明', '状态', '跳转链接', '跳转文字', '宽卡', '应用数量', '场景闭环'):
+            if cells[0] in ('序号', '名称', '对应阶段', '主题色', '图标', '说明', '状态', '跳转链接', '跳转文字', '宽卡', '应用数量', '场景闭环', '操作路径'):
                 continue
             rows.append({'skill': cells[0], 'demo': cells[1], 'data': cells[2], 'entry': cells[3]})
         info['rows'] = rows
@@ -547,19 +547,27 @@ def parse_content(path):
                         cleaned_lines.append(line)
                 how_text = []
                 paths = []
+                path_links = {}
                 extra = []
                 for line in cleaned_lines:
+                    # 路径链接N：给第 N 条「操作/快捷路径」配跳转（值可以是网址，也可以是「入口链接映射」里的入口名称）
+                    m_plink = re.match(r'\|\s*路径链接(\d+)\s*\|\s*(.+?)\s*\|', line)
                     m_path = re.match(r'\|\s*(?:操作|快捷)路径(\d*)\s*\|\s*(.+?)\s*\|', line)
                     m_extra = re.match(r'\|\s*补充说明\s*\|\s*(.+?)\s*\|', line)
                     m_ptitle = re.match(r'\|\s*路径标题(\d*)\s*\|\s*(.+?)\s*\|', line)
-                    if m_path:
-                        paths.append(m_path.group(2).strip())
+                    if m_plink:
+                        path_links[int(m_plink.group(1))] = m_plink.group(2).strip()
+                    elif m_path:
+                        paths.append({'text': m_path.group(2).strip(), 'link': ''})
                     elif m_extra:
                         extra.append(m_extra.group(1).strip())
                     elif m_ptitle:
                         extra.append(('path_title', m_ptitle.group(2), ''))
                     elif line.strip() and not line.startswith('|'):
                         how_text.append(line)
+                for _i, _p in enumerate(paths, 1):
+                    if path_links.get(_i):
+                        _p['link'] = path_links[_i]
                 app['how'] = '\n'.join(how_text).strip()
                 app['paths'] = paths
                 app['extra_info'] = extra
@@ -786,6 +794,16 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .path-tag { display:inline-block; padding:8px 16px; border-radius:12px; font-size:13px; font-weight:700; background:linear-gradient(135deg,#eaf2ff,#dbe9ff); color:var(--blue); margin-top:12px; letter-spacing:.3px; border:1px solid rgba(59,130,246,.15); transition:all var(--transition); }
 .path-tag:hover { transform:translateX(2px); box-shadow:0 2px 8px rgba(13,37,80,.08); }
 .path-tag .arr { color:var(--muted); margin:0 3px; }
+/* 可跳转的路径标签：深色实心 + ↗，和不可点的浅蓝标签一眼区分 */
+a.path-tag-link { display:inline-block; text-decoration:none; cursor:pointer;
+  background:linear-gradient(135deg,#0d2550,#1a3d6e); color:#fff; border-color:transparent;
+  box-shadow:0 6px 16px rgba(13,37,80,.18); }
+a.path-tag-link .arr { color:rgba(255,255,255,.55); }
+a.path-tag-link .pt-arw { display:inline-block; font-style:normal; font-size:12px; color:#8fc0ff;
+  margin-left:6px; transition:transform .25s; }
+a.path-tag-link:hover { transform:translateX(3px); box-shadow:0 10px 24px rgba(13,37,80,.3); }
+a.path-tag-link:hover .pt-arw { transform:translate(2px,-2px); }
+a.path-tag-link:focus-visible { outline:2px solid #7fb2ff; outline-offset:2px; }
 /* ---- 视频面板 ---- */
 .app-video-panel { background:#f6f8fc; padding:24px 32px 28px; border-top:1px solid rgba(0,0,0,.05); }
 .app-video-detail { background:#fff; padding:20px 32px; border-top:1px solid rgba(0,0,0,.04); }
@@ -885,8 +903,15 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 /* ---- 应用能力集表格 ---- */
 .cap-board { margin:22px 32px 0; background:#fff; border-radius:14px; border:1px solid rgba(0,0,0,.05); overflow:hidden; box-shadow:var(--shadow); }
 .cap-title { padding:16px 22px; font-size:17px; font-weight:700; color:#fff; background:linear-gradient(135deg,#0d2550,#1a3d6e,#235491); display:flex; align-items:center; gap:10px; }
+.cap-title .ct-hint { margin-left:auto; font-size:11.5px; font-weight:600; color:rgba(196,216,250,.72); letter-spacing:.2px; }
 .cap-title .ai-dot { width:10px; height:10px; background:#60a5fa; border-radius:50%; box-shadow:0 0 10px #60a5fa,0 0 4px #60a5fa; animation:pulse-dot 2s infinite; }
-.cap-img-wrap { border-radius:0 0 12px 12px; overflow:hidden; }
+/* 能力集图片：长表格放进固定高度的滚动框里（和「客户画像」一样的下滑查看方式），避免整页被拉太长 */
+.cap-img-wrap { border-radius:0 0 12px 12px; overflow-y:auto; overflow-x:hidden; max-height:660px;
+  overscroll-behavior:contain; background:#fff; scrollbar-width:thin; }
+.cap-img-wrap::-webkit-scrollbar { width:9px; }
+.cap-img-wrap::-webkit-scrollbar-track { background:rgba(15,35,80,.045); }
+.cap-img-wrap::-webkit-scrollbar-thumb { background:rgba(20,40,90,.2); border-radius:5px; }
+.cap-img-wrap::-webkit-scrollbar-thumb:hover { background:rgba(20,40,90,.32); }
 .cap-img-wrap img { width:100%; display:block; border:none; }
 .cap-img-wrap img + img { margin-top:2px; }
 .cap-table-wrap { overflow-x:auto; border-radius:0 0 12px 12px; }
@@ -1666,7 +1691,7 @@ DE_CSS = '''<style>
 .de-lb .cl:hover { opacity:1; }
 
 /* ============ 2. 业务流（深色） ============ */
-.de-flow-sec { position:relative; padding:86px 0 78px; overflow:hidden;
+.de-flow-sec { position:relative; padding:86px 0 56px; overflow:hidden;
   background:linear-gradient(168deg,#061027 0%,#0b1e46 26%,#0e2a5e 52%,#0a1c3f 76%,#050c1e 100%); }
 .de-flow-sec::before { content:''; position:absolute; inset:0; pointer-events:none; opacity:.34;
   background-image:linear-gradient(rgba(120,170,255,.09) 1px,transparent 1px),linear-gradient(90deg,rgba(120,170,255,.09) 1px,transparent 1px);
@@ -1702,7 +1727,7 @@ DE_CSS = '''<style>
 .de-daily .ds { flex:none; font-size:12px; color:rgba(180,205,255,.72); font-weight:600; }
 
 /* 8 阶段列 */
-.flow-grid { display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:11px; }
+.flow-grid { display:grid; grid-template-columns:repeat(var(--flow-cols,8),minmax(0,1fr)); gap:11px; }
 .flow-col { display:flex; flex-direction:column; border-radius:14px; overflow:hidden; transition:transform .3s, box-shadow .3s; }
 .flow-col:hover { transform:translateY(-4px); box-shadow:0 14px 34px rgba(0,20,60,.42); }
 .flow-head { position:relative; padding:14px 6px 12px; text-align:center; border-radius:14px 14px 0 0; overflow:hidden;
@@ -1735,8 +1760,14 @@ DE_CSS = '''<style>
 .flow-cap { text-align:center; margin-top:18px; font-size:11.5px; color:rgba(150,175,220,.5); letter-spacing:.2px; line-height:1.9; }
 
 /* ============ 3. 场景能力集合 ============ */
-.de-cap-sec { padding:88px 0 76px; background:linear-gradient(180deg,#f7f9fd,#eef2f9); }
-.cap-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+.de-cap-sec { padding:__CAP_PT__px 0 76px; background:linear-gradient(180deg,#f7f9fd,#eef2f9); }
+/* 场景能力集合这一屏单独放宽：表格 4 列，窄容器会把「介绍 / 输入示例」挤成一条。
+   宽度与列数由 content.md「能力集容器宽度 / 能力集列数」控制（注入下面的 __CAP_W__ / __CAP_COLS__ 占位符） */
+.de-cap-sec .de-wrap { max-width:__CAP_W__; }
+/* 主能力卡：默认一行两张（`能力集列数`）。每张卡至少 ~660px 才放得下 4 列表格，
+   视口窄于「列数 × 660 + 64」就自动收成一行一张（断点由 __CAP_BP__ 注入） */
+.cap-grid { display:grid; grid-template-columns:repeat(__CAP_COLS__,minmax(0,1fr)); gap:20px; }
+@media (max-width:__CAP_BP__px) { .cap-grid { grid-template-columns:1fr; } }
 .cap-card { position:relative; background:var(--white); border:1px solid rgba(15,35,80,.07); border-radius:20px; overflow:hidden;
   box-shadow:var(--shadow); transition:transform .34s cubic-bezier(.4,0,.2,1), box-shadow .34s; display:flex; flex-direction:column; }
 .cap-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:var(--cc,#1e6fd9); }
@@ -1771,7 +1802,10 @@ DE_CSS = '''<style>
 .cap-desc { padding:0 24px 18px; font-size:13.5px; color:var(--muted); line-height:1.78; }
 /* 表格撑满卡片剩余高度：并排两卡行数不同时，行数少的一侧自动加大行距，使两表底部对齐 */
 .cap-tbl-wrap { padding:0 14px 14px; overflow-x:auto; flex:1 1 auto; display:flex; flex-direction:column; }
-.cap-tbl { width:100%; flex:1 1 auto; min-height:0; border-collapse:separate; border-spacing:0; font-size:12.5px; }
+.cap-tbl { width:100%; flex:1 1 auto; min-height:0; border-collapse:separate; border-spacing:0; font-size:12.5px; table-layout:auto; }
+.cap-tbl th:nth-child(1), .cap-tbl td.sk { width:17%; }
+.cap-tbl th:nth-child(3), .cap-tbl td.dt { width:14%; }
+.cap-tbl th:nth-child(4), .cap-tbl td.ent, .cap-tbl td.ent-m { width:16%; }
 .cap-tbl th { background:color-mix(in srgb, var(--cc,#1e6fd9) 8%, #fff); color:#43506b; font-weight:700; font-size:11.5px; text-align:left;
   padding:10px 12px; border-bottom:1px solid rgba(15,35,80,.08); white-space:nowrap; }
 .cap-tbl th:first-child { border-radius:10px 0 0 0; }
@@ -1781,29 +1815,22 @@ DE_CSS = '''<style>
 .cap-tbl td.sk { font-weight:700; color:#1f2c48; min-width:104px; }
 .cap-tbl td.sk .plan-tag, .plan-tag { display:block; font-style:normal; font-weight:700; font-size:10px; line-height:1.4;
   color:#e02b3c; margin-top:3px; letter-spacing:.1px; }
-.cap-tbl td.ent { white-space:nowrap; font-size:11.5px; font-weight:700; color:var(--cc,#1e6fd9); }
+.cap-tbl td.ent { white-space:nowrap; font-size:12px; font-weight:700; color:var(--cc,#1e6fd9); }
 /* 入口标签：没配链接的走「纯文字」，不做按钮外观，避免误导点击 */
-.ent-chip { display:inline-flex; align-items:center; gap:0; border-radius:9px; }
+.ent-chip { display:inline-flex; align-items:center; gap:4px; border-radius:9px; }
 .ent-n { line-height:1.42; }
-/* ── 可点击入口标签（配了链接的）：整体做成一颗按钮 ── */
-a.ent-a { display:inline-flex; align-items:center; gap:9px; padding:3px 3px 3px 11px; text-decoration:none;
-  border-radius:9px; border:1px solid color-mix(in srgb, var(--cc,#1e6fd9) 22%, #fff);
-  background:color-mix(in srgb, var(--cc,#1e6fd9) 8%, #fff);
-  transition:background .2s, border-color .2s, box-shadow .2s, transform .2s; }
-a.ent-a .ent-n { color:#13224a; }
-.ent-go { display:inline-flex; align-items:center; gap:3px; flex:none;
-  font-size:10.5px; font-weight:800; letter-spacing:.35px; line-height:1; white-space:nowrap;
-  padding:4.5px 8px; border-radius:7px; color:#fff;
-  background:linear-gradient(135deg, color-mix(in srgb, var(--cc,#1e6fd9) 92%, #16224a), color-mix(in srgb, var(--cc,#1e6fd9) 64%, #16224a));
-  box-shadow:0 2px 6px color-mix(in srgb, var(--cc,#1e6fd9) 26%, transparent);
-  transition:box-shadow .2s, filter .2s; }
-.ent-arw { font-style:normal; font-size:10.5px; line-height:1; transition:transform .2s; }
-a.ent-a:hover, a.ent-a:focus-visible { transform:translateY(-1.5px); outline:none;
-  background:color-mix(in srgb, var(--cc,#1e6fd9) 15%, #fff);
-  border-color:color-mix(in srgb, var(--cc,#1e6fd9) 46%, #fff);
-  box-shadow:0 7px 18px color-mix(in srgb, var(--cc,#1e6fd9) 24%, transparent); }
+/* ── 可点击入口（配了链接的）：直接是文字链接，带虚线底 + ↗ ── */
+a.ent-a { display:inline-flex; align-items:center; gap:4px; padding:0 0 1px; text-decoration:none;
+  color:var(--cc,#1e6fd9);
+  border-bottom:1px dashed color-mix(in srgb, var(--cc,#1e6fd9) 48%, #fff);
+  transition:border-color .2s, border-bottom-style .2s; }
+a.ent-a .ent-n { color:inherit; }
+.ent-arw { font-style:normal; font-size:10px; line-height:1; flex:none;
+  color:color-mix(in srgb, var(--cc,#1e6fd9) 78%, #6b7a9b); transition:transform .2s; }
+a.ent-a:hover, a.ent-a:focus-visible { outline:none;
+  border-bottom-style:solid; border-bottom-color:var(--cc,#1e6fd9); }
 a.ent-a:hover .ent-arw, a.ent-a:focus-visible .ent-arw { transform:translate(1.5px,-1.5px); }
-/* 入口列提示条 */
+/* 入口列提示条（content.md 里「入口提示」留空即不显示） */
 .cap-ent-hint { display:flex; align-items:center; gap:7px; margin:0 24px 12px; padding:8px 12px; border-radius:9px;
   font-size:11.5px; font-weight:700; line-height:1.5; color:color-mix(in srgb, var(--cc,#1e6fd9) 62%, #4b5670);
   background:color-mix(in srgb, var(--cc,#1e6fd9) 6%, #fff);
@@ -1811,7 +1838,6 @@ a.ent-a:hover .ent-arw, a.ent-a:focus-visible .ent-arw { transform:translate(1.5
 .cap-ent-hint .ic { font-size:12px; line-height:1; }
 /* 同入口合并单元格：垂直居中 + 极淡底色，弱化“每行重复入口” */
 .cap-tbl td.ent-span { vertical-align:middle; background:color-mix(in srgb, var(--cc,#1e6fd9) 3.2%, #fff); }
-.cap-tbl td.ent-span a.ent-a { background:color-mix(in srgb, var(--cc,#1e6fd9) 11%, #fff); }
 .cap-tbl td.ent-m { display:none; }
 .cap-tbl tbody tr { transition:background .2s; }
 .cap-tbl tbody tr:hover { background:color-mix(in srgb, var(--cc,#1e6fd9) 4.5%, #fff); }
@@ -1879,6 +1905,18 @@ a.ent-a:hover .ent-arw, a.ent-a:focus-visible .ent-arw { transform:translate(1.5
 .cap-row-d { font-size:12.5px; color:#5a6579; line-height:1.72; }
 .cap-row-m { font-size:11px; color:#98a2b3; margin-top:8px; display:flex; align-items:flex-start; gap:7px; line-height:1.6; }
 .cap-row-m::before { content:'▸'; color:var(--cc,#1e6fd9); font-size:10px; flex:none; line-height:1.7; }
+/* 紧凑卡底部「操作路径」：和「数据来源」同一位置风格，路径每段是独立小标签 */
+.cap-row-path { margin-top:9px; padding-top:9px; border-top:1px dashed rgba(15,35,80,.1);
+  display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap; }
+.cap-row-path .crp-l { flex:none; font-size:10.5px; font-weight:800; letter-spacing:.3px; color:#98a2b3; line-height:1.9; }
+.cap-row-path .crp-c { display:flex; align-items:center; flex-wrap:wrap; gap:5px; }
+.cap-row-path .pth { font-size:11px; font-weight:600; color:var(--cc,#1e6fd9);
+  background:color-mix(in srgb, var(--cc,#1e6fd9) 8%, #fff);
+  border:1px solid color-mix(in srgb, var(--cc,#1e6fd9) 18%, #fff);
+  border-radius:7px; padding:3px 9px; line-height:1.4; text-decoration:none; }
+.cap-row-path .pth-sep { font-style:normal; color:#b6c0d0; font-size:11px; }
+a.pth-a:hover { background:color-mix(in srgb, var(--cc,#1e6fd9) 16%, #fff); }
+a.pth-a .ent-arw { margin-left:3px; font-size:9px; }
 /* 并排两卡等高拉伸，配合 .cap-tbl-wrap 的 flex:1 让行数少的一侧自动加大行距、两表底部对齐 */
 .cap-grid { align-items:stretch; }
 .cap-card > .cap-tbl-wrap { min-height:0; }
@@ -1979,15 +2017,17 @@ a.ent-a:hover .ent-arw, a.ent-a:focus-visible .ent-arw { transform:translate(1.5
   .cap-tbl tr:last-child { margin-bottom:0; }
   .cap-tbl tbody tr:hover { background:#fff; box-shadow:0 6px 18px rgba(15,35,80,.07); }
   .cap-tbl td { display:block; padding:0; border:none; }
+  /* 桌面端的百分比列宽在堆叠卡片里必须清掉，否则 skill 列会被挤到只剩 17% 宽，中文逐字换行 */
+  .cap-tbl th:nth-child(n), .cap-tbl td, .cap-tbl td.sk, .cap-tbl td.dm,
+  .cap-tbl td.dt, .cap-tbl td.ent, .cap-tbl td.ent-m { width:auto; max-width:none; min-width:0; }
   .cap-tbl td.sk { font-size:14px; font-weight:800; color:#1f2c48; margin-bottom:7px; letter-spacing:-.2px; }
   .cap-tbl td.dm { font-size:12.5px; color:#5a6579; line-height:1.72; }
   .cap-tbl td.dt, .cap-tbl td.ent, .cap-tbl td.ent-m { margin-top:9px; display:flex; align-items:flex-start; gap:8px;
-    font-size:11.5px; color:#8a94a6; line-height:1.6; }
+    width:auto; max-width:none; font-size:11.5px; color:#8a94a6; line-height:1.6; }
   .cap-tbl td.dt::before, .cap-tbl td.ent::before, .cap-tbl td.ent-m::before { content:attr(data-l); flex:none; font-size:10.5px; font-weight:700;
     color:#aab2c0; padding:1px 7px; border-radius:6px; background:#f3f5f9; }
-  .cap-tbl td.ent a.ent-a, .cap-tbl td.ent-m a.ent-a { white-space:normal; padding:3px 3px 3px 10px; gap:7px; }
-  .cap-tbl td.ent .ent-n, .cap-tbl td.ent-m .ent-n { font-size:11px; line-height:1.45; }
-  .cap-tbl td.ent .ent-go, .cap-tbl td.ent-m .ent-go { font-size:10px; padding:4px 7px; }
+  .cap-tbl td.ent a.ent-a, .cap-tbl td.ent-m a.ent-a { white-space:normal; gap:5px; }
+  .cap-tbl td.ent .ent-n, .cap-tbl td.ent-m .ent-n { font-size:12px; line-height:1.45; }
   .cap-tbl td.ent-span { background:transparent; }
 }
 @media (max-width:480px) {
@@ -2112,18 +2152,12 @@ a.ent-a:hover .ent-arw, a.ent-a:focus-visible .ent-arw { transform:translate(1.5
 .plan-tag { color:#ff7583; }
 .cap-tbl td.ent { color:rgba(214,230,255,.62); }
 .cap-tbl td.ent-span { background:rgba(255,255,255,.035); }
-/* 可点击入口标签：深色底下的高亮按钮（保证文字对比度） */
-a.ent-a { background:rgba(255,255,255,.075);
-  border-color:color-mix(in srgb, var(--cc,#1e6fd9) 42%, rgba(255,255,255,.14)); }
+/* 可点击入口（深色底）：纯白文字 + 亮色虚线下划，和不可点的灰字拉开对比 */
+a.ent-a { color:#fff;
+  border-bottom-color:rgba(150,185,255,.6); }
 a.ent-a .ent-n { color:#fff; }
-.cap-tbl td.ent-span a.ent-a { background:rgba(255,255,255,.09); }
-.ent-go { color:#0d1a37;
-  background:linear-gradient(135deg, color-mix(in srgb, var(--cc,#1e6fd9) 50%, #fff), color-mix(in srgb, var(--cc,#1e6fd9) 24%, #fff));
-  box-shadow:0 2px 8px rgba(0,0,0,.32); }
-a.ent-a:hover, a.ent-a:focus-visible { background:rgba(255,255,255,.13);
-  border-color:color-mix(in srgb, var(--cc,#1e6fd9) 72%, #fff);
-  box-shadow:0 8px 22px color-mix(in srgb, var(--cc,#1e6fd9) 48%, transparent); }
-a.ent-a:hover .ent-go, a.ent-a:focus-visible .ent-go { filter:brightness(1.08); }
+a.ent-a .ent-arw { color:#7fb2ff; }
+a.ent-a:hover, a.ent-a:focus-visible { border-bottom-color:#9dc4ff; }
 .cap-ent-hint { color:rgba(228,240,255,.92); background:rgba(255,255,255,.055);
   border-color:color-mix(in srgb, var(--cc,#1e6fd9) 44%, transparent); }
 
@@ -2139,6 +2173,11 @@ a.ent-a:hover .ent-go, a.ent-a:focus-visible .ent-go { filter:brightness(1.08); 
 .cap-row-d { color:rgba(198,214,244,.76); }
 .cap-row-m { color:rgba(158,180,218,.62); }
 .cap-row-m::before { color:color-mix(in srgb, var(--cc,#1e6fd9) 40%, #9fb6e8); }
+.cap-row-path { border-top-color:rgba(255,255,255,.12); }
+.cap-row-path .crp-l { color:rgba(158,180,218,.62); }
+.cap-row-path .pth { color:rgba(214,230,255,.9); background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.13); }
+.cap-row-path .pth-sep { color:rgba(166,188,224,.48); }
+a.pth-a:hover { background:rgba(255,255,255,.13); }
 
 /* 深色下重定义 ≤640px 堆叠卡配色 */
 @media (max-width:640px) {
@@ -2828,6 +2867,8 @@ def render_scene(data, scene):
     pain_emojis = {1:'📊',2:'🔍',3:'🔀',4:'😰',5:'📈',6:'🛠️',7:'📚'}
     solve_emojis = {1:'⚡',2:'✨',3:'⚡',4:'🏆',5:'⚡',6:'✨',7:'💡'}
     how_emojis = {1:'🗺️',2:'🎯',3:'🗝️',4:'🗝️',5:'🏭',6:'🔧',7:'🔮'}
+    # 路径链接可以写网址，也可以写「入口链接映射」里的入口名称 → 这里统一取一次映射表
+    entry_links = ((data.get('de_page') or {}).get('entry_links') or {})
 
     profile_preview = '''    <div class="profile-preview">
       <div class="profile-preview-label"><span class="pdot"></span>{profile_label} <span class="pbeta">NEW</span> — 下滑查看最新画像内容</div>
@@ -2870,8 +2911,19 @@ def render_scene(data, scene):
         if app.get('how'):
             how_parts.append(f'<p>{re.sub(r"\*\*(.+?)\*\*",r"<strong>\1</strong>",app["how"])}</p>')
         for p in app.get('paths', []):
-            tag_html = ' <span class="arr">→</span> '.join(f'<span>{tp.strip()}</span>' for tp in p.split('→'))
-            how_parts.append(f'<div class="path-tag">{tag_html}</div>')
+            if isinstance(p, str):
+                p = {'text': p, 'link': ''}
+            tag_html = ' <span class="arr">→</span> '.join(f'<span>{tp.strip()}</span>' for tp in p['text'].split('→'))
+            _lk = (p.get('link') or '').strip()
+            if _lk and not re.match(r'(?:https?|dingtalk)://', _lk, re.I):
+                _lk = entry_links.get(_lk, '')          # 写的是入口名称 → 查映射表
+            if _lk:
+                how_parts.append(
+                    f'<a class="path-tag path-tag-link" href="{_lk.replace("&", "&amp;")}"'
+                    f' target="_blank" rel="noopener noreferrer" title="点击跳转前往体验">'
+                    f'{tag_html}<i class="pt-arw">↗</i></a>')
+            else:
+                how_parts.append(f'<div class="path-tag">{tag_html}</div>')
         for e in app.get('extra_info', []):
             if isinstance(e,tuple) and e[0]=='path_title':
                 how_parts.append(f'<p style="font-weight:700;margin:10px 0 4px;">{e[1]}</p>')
@@ -2895,9 +2947,11 @@ def render_scene(data, scene):
         video_panel = ''
         # 应用能力集（图片优先，否则表格）
         if app.get('cap_images'):
-            cap_imgs_html = '\n          '.join(f'<img src="{img}" alt="应用能力集" style="width:100%;display:block;border:none;">' for img in app['cap_images'])
+            cap_imgs_html = '\n          '.join(f'<img src="{img}" alt="应用能力集" loading="lazy" style="width:100%;display:block;border:none;">' for img in app['cap_images'])
+            _n = len(app['cap_images'])
+            _hint = (f'<span class="ct-hint">共 {_n} 张 · 框内下滑查看 ⇅</span>' if _n > 1 else '')
             video_panel += f'''    <div class="cap-board">
-      <div class="cap-title"><span class="ai-dot"></span>应用能力集</div>
+      <div class="cap-title"><span class="ai-dot"></span>应用能力集{_hint}</div>
       <div class="cap-img-wrap">
         {cap_imgs_html}
       </div>
@@ -3476,8 +3530,10 @@ def build_future_page(data):
     return f'''<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width,initial-scale=1.0">\n<title>{title}</title>\n{CSS}\n</head>\n<body>\n<div id="prog"></div>\n\n{detail_nav}\n\n<div class="detail-wrap">\n{future_html}\n</div>\n\n{footer}\n\n{JS}\n</body>\n</html>'''
 
 
-# 能力表中的「上线时间」标注：如 新建客户（2026Q4上线）→ 拆成小字红标签
-_PLAN_TAG = re.compile(r'[（(]\s*([^（()）]{0,24}?上线[^（()）]{0,24}?)\s*[)）]')
+# 能力表 skill 名后的「圆形备注」统一拆成名字下方的小字标签（同字号/位置/颜色），涵盖：
+#   新建客户（2026Q4上线） / 报价单（试用中） / 商机跟进记录（仅限销售使用） / 创建项目（仅限行销使用）
+_PLAN_TAG = re.compile(
+    r'[（(]\s*([^（()）]{0,20}?(?:上线|试用中|试用|仅限[^（()）]{0,10}?使用))\s*[)）]')
 
 
 def build_digital_employee_page(data):
@@ -3545,7 +3601,9 @@ def build_digital_employee_page(data):
         items = [x.strip() for x in det.get('detail', '').split(',') if x.strip()]
         chips = ''
         for it in items:
-            chips += f'<span class="kp-i{" plan" if it.startswith("建设中·") else ""}">{it}</span>'
+            # 「建设中」这颗的全部条目都走橙色（plan）样式；其它 KPI 里以「建设中·」开头的手写前缀也认
+            is_plan = it.startswith('建设中·') or i == 4
+            chips += f'<span class="kp-i{" plan" if is_plan else ""}">{it}</span>'
         if not chips:
             chips = f'<span class="kp-i">{dt}</span>'
         pop = (f'<div class="de-kpi-pop"><div class="kp-t">{dt}</div>'
@@ -3706,7 +3764,7 @@ def build_digital_employee_page(data):
       <span class="ds">{fl.get('日常说明','贯穿全流程的时间维度')}</span>
     </div>
 
-    <div class="flow-grid">{cols}</div>
+    <div class="flow-grid" style="--flow-cols:{max(1, len(de.get('stages', [])))}">{cols}</div>
 
     <div class="flow-foot">
       <span class="ff-l">{ff_a}</span>
@@ -3718,37 +3776,62 @@ def build_digital_employee_page(data):
 
     # ---------- 3. 场景能力集合 ----------
     def skill_html(name):
-        """skill 名中的「（XXXX上线）」拆成小字红色标签。"""
-        m = _PLAN_TAG.search(name)
-        if not m:
+        """skill 名里的圆形备注（2026Q4上线 / 试用中 / 仅限销售使用…）统一拆成名字下方的小字标签。
+        一行里可以带多个备注（如「商机跟进记录（2026Q4上线）（仅限销售使用）」），全部拆出来。"""
+        tags = []
+
+        def _take(m):
+            tags.append(m.group(1))
+            return ''
+
+        main = _PLAN_TAG.sub(_take, name).strip()
+        if not tags:
             return name
-        main = (name[:m.start()] + name[m.end():]).strip()
-        return f'{main}<i class="plan-tag">{m.group(1)}</i>'
+        return main + ''.join(f'<i class="plan-tag">{t}</i>' for t in tags)
 
     entry_links = de.get('entry_links', {})
-    go_txt = (meta.get('入口体验文字', '') or '去体验').strip()   # 可点击入口标签右侧的引导文字
     SRC = (meta.get('来源参数', '') or '').strip()               # 跳去详情页时带的 ?from=xx
     BACK_TXT = (meta.get('来源返回文字', '') or '').strip()      # 目标页「返回」按钮文案
 
-    def ent_tag(name):
-        """入口标签：配了链接的 → 可点击「去体验 ↗」外链标签；没配的 → 普通文字标签。"""
+    def ent_tag(name, no_link=False):
+        """入口：配了链接的 → 文字本身就是链接（可直接点跳转）；没配的 → 普通灰字。
+        no_link=True：强制纯文字（极少用）。
+            - 跨阶段紧凑卡（渠道赋能/知识助手/Skill共享平台）与主卡一致：走「入口链接映射」。
+              想保持纯文字 → 不把该入口名登记进映射表即可（渠道赋能的两条入口就是这样）。
+            - 只有需要「无论如何都不给链接」（如同一句话在不同卡要区别对待）才传 no_link=True。"""
         if not name:
             return '—'
-        url = entry_links.get(name)
+        url = None if no_link else entry_links.get(name)
         if not url:
             return f'<span class="ent ent-chip"><span class="ent-n">{name}</span></span>'
         href = url.replace('&', '&amp;')      # 链接里带 & 时按 HTML 规范转义
         return ('<a class="ent ent-chip ent-a" href="%s" target="_blank" rel="noopener noreferrer"'
                 ' title="点击跳转前往体验">'
-                '<span class="ent-n">%s</span>'
-                '<span class="ent-go">%s<i class="ent-arw">↗</i></span></a>') % (href, name, go_txt)
+                '<span class="ent-n">%s</span><i class="ent-arw">↗</i></a>') % (href, name)
+
+    def path_tag(name):
+        """操作路径里的一段：配了链接 → 可点标签；没配 → 纯文字标签。"""
+        url = entry_links.get(name)
+        if not url:
+            return f'<span class="pth">{name}</span>'
+        href = url.replace('&', '&amp;')
+        return ('<a class="pth pth-a" href="%s" target="_blank" rel="noopener noreferrer"'
+                ' title="点击跳转">%s<i class="ent-arw">↗</i></a>') % (href, name)
+
+    def path_chain(raw):
+        """把「A → B → C」渲染成一串路径标签。"""
+        nodes = [x.strip() for x in (raw or '').split('→') if x.strip()]
+        if not nodes:
+            return ''
+        return '<i class="pth-sep">→</i>'.join(path_tag(n) for n in nodes)
 
     def cap_card(c, wide=False, compact=False):
         cc = c.get('主题色', '#1e6fd9')
         rows = c.get('rows', [])
         has_link = any((r.get('entry') or '').strip() in entry_links for r in rows)
-        hint_html = (f'<div class="cap-ent-hint"><span class="ic">💡</span>'
-                     f'{ch.get("入口提示","点击带 ↗ 的「入口」标签，可直接跳转前往体验")}</div>') if has_link else ''
+        _hint = (ch.get('入口提示', '') or '').strip()
+        hint_html = (f'<div class="cap-ent-hint"><span class="ic">💡</span>{_hint}</div>'
+                     ) if (_hint and has_link) else ''
         if rows and not compact:
             # 入口列：空值向上继承上一行的入口，连续同值合并为一格（rowspan）
             ent_vals, last = [], ''
@@ -3772,8 +3855,8 @@ def build_digital_employee_page(data):
                 i = j + 1
 
             body = ('<div class="cap-tbl-wrap"><table class="cap-tbl">'
-                    '<thead><tr><th>skill / 功能</th><th>用户输入示例 / 介绍</th>'
-                    '<th>数据平台</th><th>入口 / 链接</th></tr></thead><tbody>')
+                    '<thead><tr><th>skill / 功能</th><th>介绍 / 输入示例</th>'
+                    '<th>数据来源</th><th>入口 / 链接</th></tr></thead><tbody>')
             for idx, r in enumerate(rows):
                 ent = ent_vals[idx]
                 inner = ent_tag(ent)
@@ -3786,23 +3869,26 @@ def build_digital_employee_page(data):
                     # 桌面端由 rowspan 覆盖，移动端堆叠时补一份（保证每张卡都带入口）
                     ent_html = f'<td class="ent-m" data-l="入口">{inner}</td>'
                 body += (f'<tr><td class="sk">{skill_html(r["skill"])}</td><td class="dm">{r["demo"]}</td>'
-                         f'<td class="dt" data-l="数据平台">{r["data"] or "—"}</td>'
+                         f'<td class="dt" data-l="数据来源">{r["data"] or "—"}</td>'
                          f'{ent_html}</tr>')
             body += '</tbody></table></div>'
         elif compact:
             body = '<div class="cap-rows">'
             for r in c['rows']:
-                ent = ent_tag(r['entry'])
-                dat = ('<div class="cap-row-m">数据平台 · %s</div>' % r['data']) if r['data'] else ''
+                ent = ent_tag(r['entry'])   # 跨阶段紧凑卡：入口名走「入口链接映射」；渠道赋能刻意不配链接 → 保持纯文字
+                dat = ('<div class="cap-row-m">数据来源 · %s</div>' % r['data']) if r['data'] else ''
                 body += ('<div class="cap-row"><div class="cap-row-h"><b>%s</b>%s</div>'
                          '<div class="cap-row-d">%s</div>%s</div>') % (skill_html(r['skill']), ent, r['demo'], dat)
+            _pth = (c.get('操作路径', '') or '').strip()
+            if _pth:
+                body += ('<div class="cap-row-path"><span class="crp-l">操作路径</span>'
+                         '<span class="crp-c">%s</span></div>') % path_chain(_pth)
             body += '</div>'
         else:
             body = ('<div class="cap-empty"><b>本期暂未建设</b>'
                     '<span>该阶段能力正在规划中，上线后将持续补充到本清单</span></div>')
         jump = ''
-        if c.get('跳转链接'):
-            # 从本页跳去详情页时带上 ?from=xx&to=<卡名>：
+        if c.get('跳转链接'):            # 从本页跳去详情页时带上 ?from=xx&to=<卡名>：
             # 目标页的「返回」据此指回超级数字员工页，并定位到本卡位置
             jump_url = c['跳转链接']
             if SRC and not jump_url.startswith('#'):
@@ -3813,8 +3899,6 @@ def build_digital_employee_page(data):
                     jump_url += ('&' if '?' in jump_url else '?') + 'to=' + quote(_nm)
             _hu = jump_url.replace('&', '&amp;')   # 链接里带 & 时按 HTML 规范转义
             jump = f'<a class="cap-jump" href="{_hu}">{c.get("跳转文字","查看完整介绍 →")}</a>'
-        stage = c.get('对应阶段', '')
-        stage_html = f'<div class="cap-stage">对应业务阶段 · <b>{stage}</b></div>' if stage else ''
 
         # 应用数量
         cnt = str(c.get('应用数量', '')).strip()
@@ -3844,8 +3928,8 @@ def build_digital_employee_page(data):
     </div>
     {count_html}
   </div>
-  {loop_html}
   <div class="cap-desc">{c.get('说明','')}</div>
+  {loop_html}
   {hint_html}
   {body}
   {jump}
@@ -3856,12 +3940,11 @@ def build_digital_employee_page(data):
     <div class="cap-hd">
       <div class="cap-num">{c.get('序号','')}</div>
       <div class="cap-name">{c.get('名称','')}</div>
-      {stage_html}
     </div>
     {count_html}
   </div>
-  {loop_html}
   <div class="cap-desc">{c.get('说明','')}</div>
+  {loop_html}
   {hint_html}
   {body}
   {jump}
@@ -3873,13 +3956,16 @@ def build_digital_employee_page(data):
     main_html = ''.join(cap_card(c) for c in main_caps)
     sub_html = ''.join(cap_card(c, compact=True) for c in sub_caps)
 
+    _ch_pill = (ch.get('眉标', '') or '').strip()
+    _ch_sub = (ch.get('副标题', '') or '').strip()
+    _ch_stat = (ch.get('统计', '') or '').strip()
     cap_html = f'''<section class="de-cap-sec" id="de-cap">
   <div class="de-wrap">
     <div class="de-sec-head">
-      <span class="de-pill">🧩 {ch.get('眉标','能力清单')}</span>
+      {f'<span class="de-pill">🧩 {_ch_pill}</span>' if _ch_pill else ''}
       <h2 class="de-h2">{ch.get('标题','超级数字员工 · 场景能力集合')}</h2>
-      <p class="de-lead">{ch.get('副标题','')}</p>
-      <p class="de-lead de-lead-sub">{ch.get('统计','')}</p>
+      {f'<p class="de-lead">{_ch_sub}</p>' if _ch_sub else ''}
+      {f'<p class="de-lead de-lead-sub">{_ch_stat}</p>' if _ch_stat else ''}
     </div>
     <div class="cap-grid">{main_html}</div>
     <div class="de-sub-head"><span>跨阶段 · 通用能力</span></div>
@@ -3925,6 +4011,16 @@ def build_digital_employee_page(data):
     _ss = f'{_sv:g}'
     h2_sub = (_ss[1:] if _ss.startswith('0.') else _ss) + 'em'
     de_css = DE_CSS.replace('__H2_SUB__', h2_sub)
+    # 能力集主卡列数 / 容器宽度 / 顶部间距（content.md 同名三个字段）
+    _cols = re.sub(r'\D', '', meta.get('能力集列数', '') or '') or '2'
+    _cw = re.sub(r'[^\d.]', '', meta.get('能力集容器宽度', '') or '')
+    _pt = re.sub(r'\D', '', meta.get('能力集上间距', '') or '') or '56'
+    # 每张主卡至少 660px（4 列表格的下限），据此推出「收成一行一张」的断点
+    _bp = str(max(1, int(_cols)) * 660 + 64)
+    de_css = (de_css.replace('__CAP_COLS__', _cols)
+                    .replace('__CAP_W__', (_cw + 'px') if _cw else '1760px')
+                    .replace('__CAP_PT__', _pt)
+                    .replace('__CAP_BP__', _bp))
     return ('<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n'
             '<meta name="viewport" content="width=device-width,initial-scale=1.0">\n'
             f'<title>{title}</title>\n{CSS}\n{de_css}\n{preload}</head>\n<body class="de-body">\n'

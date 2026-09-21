@@ -212,6 +212,16 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 .path-tag { display:inline-block; padding:8px 16px; border-radius:12px; font-size:13px; font-weight:700; background:linear-gradient(135deg,#eaf2ff,#dbe9ff); color:var(--blue); margin-top:12px; letter-spacing:.3px; border:1px solid rgba(59,130,246,.15); transition:all var(--transition); }
 .path-tag:hover { transform:translateX(2px); box-shadow:0 2px 8px rgba(13,37,80,.08); }
 .path-tag .arr { color:var(--muted); margin:0 3px; }
+/* 可跳转的路径标签：深色实心 + ↗，和不可点的浅蓝标签一眼区分 */
+a.path-tag-link { display:inline-block; text-decoration:none; cursor:pointer;
+  background:linear-gradient(135deg,#0d2550,#1a3d6e); color:#fff; border-color:transparent;
+  box-shadow:0 6px 16px rgba(13,37,80,.18); }
+a.path-tag-link .arr { color:rgba(255,255,255,.55); }
+a.path-tag-link .pt-arw { display:inline-block; font-style:normal; font-size:12px; color:#8fc0ff;
+  margin-left:6px; transition:transform .25s; }
+a.path-tag-link:hover { transform:translateX(3px); box-shadow:0 10px 24px rgba(13,37,80,.3); }
+a.path-tag-link:hover .pt-arw { transform:translate(2px,-2px); }
+a.path-tag-link:focus-visible { outline:2px solid #7fb2ff; outline-offset:2px; }
 /* ---- 视频面板 ---- */
 .app-video-panel { background:#f6f8fc; padding:24px 32px 28px; border-top:1px solid rgba(0,0,0,.05); }
 .app-video-detail { background:#fff; padding:20px 32px; border-top:1px solid rgba(0,0,0,.04); }
@@ -311,8 +321,15 @@ a.hero-incentive-badge:hover { border-color:rgba(96,165,250,.4); }
 /* ---- 应用能力集表格 ---- */
 .cap-board { margin:22px 32px 0; background:#fff; border-radius:14px; border:1px solid rgba(0,0,0,.05); overflow:hidden; box-shadow:var(--shadow); }
 .cap-title { padding:16px 22px; font-size:17px; font-weight:700; color:#fff; background:linear-gradient(135deg,#0d2550,#1a3d6e,#235491); display:flex; align-items:center; gap:10px; }
+.cap-title .ct-hint { margin-left:auto; font-size:11.5px; font-weight:600; color:rgba(196,216,250,.72); letter-spacing:.2px; }
 .cap-title .ai-dot { width:10px; height:10px; background:#60a5fa; border-radius:50%; box-shadow:0 0 10px #60a5fa,0 0 4px #60a5fa; animation:pulse-dot 2s infinite; }
-.cap-img-wrap { border-radius:0 0 12px 12px; overflow:hidden; }
+/* 能力集图片：长表格放进固定高度的滚动框里（和「客户画像」一样的下滑查看方式），避免整页被拉太长 */
+.cap-img-wrap { border-radius:0 0 12px 12px; overflow-y:auto; overflow-x:hidden; max-height:660px;
+  overscroll-behavior:contain; background:#fff; scrollbar-width:thin; }
+.cap-img-wrap::-webkit-scrollbar { width:9px; }
+.cap-img-wrap::-webkit-scrollbar-track { background:rgba(15,35,80,.045); }
+.cap-img-wrap::-webkit-scrollbar-thumb { background:rgba(20,40,90,.2); border-radius:5px; }
+.cap-img-wrap::-webkit-scrollbar-thumb:hover { background:rgba(20,40,90,.32); }
 .cap-img-wrap img { width:100%; display:block; border:none; }
 .cap-img-wrap img + img { margin-top:2px; }
 .cap-table-wrap { overflow-x:auto; border-radius:0 0 12px 12px; }
