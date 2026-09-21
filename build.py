@@ -4,7 +4,7 @@ build.py v2 — 从 content.md 生成 index.html
 用法: python build.py
 修改 content.md 后运行此脚本即可更新网站内容。
 """
-import re, os, sys
+import re, os, sys, json
 
 # 切换工作目录 + 强制UTF-8
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -29,6 +29,16 @@ def media_path(path):
     return path
 
 
+def _h2_at(text, name):
+    """定位**整行独立**的二级标题 `^## name$`。
+
+    ⚠️ 不要退化成 text.find('## xxx')：content.md 顶部「改哪里速查」表里也会
+    出现 `## 激励模块` 这类行内引用，find 会命中那里，导致后面切出来的整段是空的。
+    """
+    m = re.search(r'(?m)^## ' + re.escape(name) + r'\s*$', text)
+    return m.start() if m else -1
+
+
 def _de_table(block, keys):
     """从 markdown 块中解析 | 字段 | 值 | 表，只保留 keys 中的字段"""
     out = {}
@@ -44,7 +54,7 @@ def _de_table(block, keys):
 
 def parse_de_page(text):
     """解析 ## 数字员工页 整段配置"""
-    start = text.find('## 数字员工页')
+    start = _h2_at(text, '数字员工页')
     if start < 0:
         return None
     sec = text[start:]
@@ -61,7 +71,7 @@ def parse_de_page(text):
         '立牌正面图', '立牌正面图小图', '立牌全图', '立牌显示宽度', '人物层前缀', '立牌占位图',
         '旋转提示', '翻转按钮', '背回按钮', '放大按钮',
         '入口体验文字', '入口提示图标',
-        '返回按钮', '返回链接', '页尾标语',
+        '返回按钮', '返回链接', '来源参数', '来源返回文字', '页尾标语',
     }) if m else {}
 
     def sub(name, keys=None, upto=None):
@@ -117,7 +127,7 @@ def parse_de_page(text):
     # ---- 业务流头部 ----
     blk = sub('业务流头部')
     de['flow'] = _de_table(blk, {
-        '眉标', '标题', '副标题', '说明', '底部说明', '日常标题', '日常说明', '日常动作',
+        '眉标', '标题', '副标题', '说明', '底部说明', '日常标题', '日常说明', '日常动作', '日常跳转',
         '规划列脚注',
     })
 
@@ -229,8 +239,8 @@ def parse_content(path):
     
     # ---- 未来规划（独立模块）----
     future = {'title': '未来规划', 'subtitle': '统一入口 · 整合资源 · 建设营销AI综合能力平台', 'status': '', 'directions': '', 'plan': ''}
-    fp_start = text.find('## 未来规划')
-    fp_end = text.find('## 点赞评论模块')
+    fp_start = _h2_at(text, '未来规划')
+    fp_end = _h2_at(text, '点赞评论模块')
     if fp_start >= 0 and fp_end > fp_start:
         fp_section = text[fp_start:fp_end]
         # 提取属性表
@@ -253,8 +263,9 @@ def parse_content(path):
     
     # ---- 激励模块 ----
     inc = {'标题': '积极使用 AI，更有 丰厚激励 等你拿', '副标题': '积极使用AI工具，主动反馈优化建议，甚至自建提效Skill——优秀实践可获月度激励、专项大奖及年度荣誉！', 'cards': []}
-    inc_start = text.find('## 激励模块')
-    inc_end = text.find('## 未来规划') if text.find('## 未来规划') > inc_start else len(text)
+    inc_start = _h2_at(text, '激励模块')
+    _fut = _h2_at(text, '未来规划')
+    inc_end = _fut if _fut > inc_start else len(text)
     if inc_start >= 0 and inc_end > inc_start:
         inc_section = text[inc_start:inc_end]
         # 提取模块标题/副标题
@@ -2136,6 +2147,23 @@ a.ent-a:hover .ent-go, a.ent-a:focus-visible .ent-go { filter:brightness(1.08); 
   .cap-tbl td.dt::before, .cap-tbl td.ent::before, .cap-tbl td.ent-m::before {
     color:rgba(178,198,232,.74); background:rgba(255,255,255,.08); }
 }
+
+/* ============ 业务流「点哪跳哪」：点阶段列 / 日常带 → 滚到对应能力卡并高亮 ============ */
+.flow-col.jumpable, .de-daily.jumpable { cursor:pointer; }
+.flow-col.jumpable:focus-visible, .de-daily.jumpable:focus-visible { outline:2px solid #7fb2ff; outline-offset:3px; }
+.flow-col.jumpable:hover .flow-head { filter:brightness(1.12); }
+.flow-col.jumpable .flow-body { border-color:rgba(120,165,255,.42); }
+.de-daily.jumpable { transition:border-color .28s, background .28s; }
+.de-daily.jumpable:hover { border-color:rgba(130,170,255,.5); background:rgba(40,74,138,.5); }
+.de-daily.jumpable .ds::after { content:' ↘'; font-size:11px; opacity:.75; }
+@keyframes capFlash {
+  0%   { box-shadow:0 0 0 0 rgba(127,178,255,0), 0 18px 44px rgba(0,0,0,0); }
+  16%  { box-shadow:0 0 0 3px rgba(127,178,255,.9), 0 22px 62px rgba(64,124,255,.5); }
+  60%  { box-shadow:0 0 0 3px rgba(127,178,255,.36), 0 14px 38px rgba(64,124,255,.22); }
+  100% { box-shadow:0 0 0 0 rgba(127,178,255,0), 0 18px 44px rgba(0,0,0,0); }
+}
+.cap-card.cap-flash { animation:capFlash 1.6s cubic-bezier(.22,.9,.3,1) 1; border-color:rgba(127,178,255,.8) !important; }
+@media (prefers-reduced-motion:reduce) { .cap-card.cap-flash { animation-duration:.01s; } }
 </style>'''
 
 
@@ -2307,6 +2335,47 @@ DE_JS = '''<script>
   /* 入场时自动打一次招呼 */
   if(!reduce && charEl){
     setTimeout(function(){ play('hello'); ci = 0; }, 2400);
+  }
+})();
+</script>'''
+
+# 业务流「点哪跳哪」：独立脚本，避免被上面 IIFE 里的早退影响
+JUMP_JS = '''<script>
+(function(){
+  var HEAD_OFFSET = 78;   // 顶部导航高度留白
+
+  function flash(el){
+    el.classList.remove('cap-flash');
+    void el.offsetWidth;                    // 强制重排，保证连续点同一张也能重新播动画
+    el.classList.add('cap-flash');
+    setTimeout(function(){ el.classList.remove('cap-flash'); }, 1800);
+  }
+
+  function goto(name){
+    var target = null;
+    var cards = document.querySelectorAll('.cap-card[data-scene]');
+    for (var i = 0; i < cards.length; i++){
+      if (cards[i].getAttribute('data-scene') === name){ target = cards[i]; break; }
+    }
+    if (!target) return;
+    var y = target.getBoundingClientRect().top + window.pageYOffset - HEAD_OFFSET;
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    try {
+      window.scrollTo({ top: y, behavior: reduce ? 'auto' : 'smooth' });
+    } catch (e) {
+      window.scrollTo(0, y);            // 极老浏览器不支持 options 对象时的兜底
+    }
+    setTimeout(function(){ flash(target); }, reduce ? 0 : 420);
+  }
+
+  var triggers = document.querySelectorAll('[data-jump]');
+  for (var i = 0; i < triggers.length; i++){
+    (function(el){
+      el.addEventListener('click', function(){ goto(el.getAttribute('data-jump')); });
+      el.addEventListener('keydown', function(e){
+        if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); goto(el.getAttribute('data-jump')); }
+      });
+    })(triggers[i]);
   }
 })();
 </script>'''
@@ -3094,7 +3163,7 @@ def build_incentive_section(data=None):
     )
 
 
-def build_future_section_home(data):
+def build_future_section_home(data, tag_origin=False):
     """未来规划 首页独立模块：放在激励模块下方"""
     g = data['global']
     fp = data.get('future_plan', {})
@@ -3104,6 +3173,10 @@ def build_future_section_home(data):
     if not status:
         status = '当前各类AI应用分散在不同平台，一线员工在外部AI工具上积累了大量实战经验。未来我们将统一整合、沉淀推广，形成完整营销AI工具矩阵。'
 
+    # 页面若挂在「超级数字员工」下（tag_origin=True），链接带上 ?from=xx，未来页的「返回」就会指回它
+    _p, _u, _t = _src_back(data)
+    furl = 'future.html' + (('?from=' + _p) if (tag_origin and _p) else '')
+
     return (
         '<section class="future-home-section" id="future-home">\n'
         '  <div class="future-home-inner">\n'
@@ -3112,7 +3185,7 @@ def build_future_section_home(data):
         '      <div class="future-home-title">' + title + '</div>\n'
         '      <div class="future-home-subtitle">' + subtitle + '</div>\n'
         '    </div>\n'
-        '    <a href="future.html" class="future-home-card">\n'
+        '    <a href="' + furl + '" class="future-home-card">\n'
         '      <div class="future-home-icon">🚀</div>\n'
         '      <div class="future-home-card-body">\n'
         '        <div class="future-home-card-title">建设营销AI综合能力平台</div>\n'
@@ -3127,6 +3200,33 @@ def build_future_section_home(data):
         '    </a>\n'
         '  </div>\n'
         '</section>'
+    )
+
+
+def _src_back(data, param=None):
+    """返回联动：从「超级数字员工」页跳去详情页时带 ?from=xx，
+    目标页读到该参数就把「返回」指回本页。返回 (param, back_url, back_text)。"""
+    de = data.get('de_page') or {}
+    meta = de.get('meta', {}) or {}
+    g = data.get('global', {})
+    p = (param if param is not None else meta.get('来源参数', '')) or ''
+    url = (g.get('数字员工入口链接', '') or 'digital-employee.html').strip()
+    txt = (meta.get('来源返回文字', '') or '← 返回超级数字员工').strip()
+    return p.strip(), url, txt
+
+
+def _back_js(data, selector='.scene-detail-nav .back-btn'):
+    """生成「返回指回来处」的 JS 片段（要塞进已有 <script> 里，params 变量需已存在）。"""
+    p, url, txt = _src_back(data)
+    if not p:
+        return ''
+    return (
+        f"  if (params.get('from') === {json.dumps(p)}) {{\n"
+        f"    var _t = {json.dumps(url, ensure_ascii=False)}, _x = {json.dumps(txt, ensure_ascii=False)};\n"
+        f"    var _ls = document.querySelectorAll({json.dumps(selector)});\n"
+        f"    for (var _i = 0, _a; (_a = _ls[_i]); _i++) _a.setAttribute('href', _t);\n"
+        f"    if (_ls[0] && _x) _ls[0].textContent = _x;\n"
+        f"  }}"
     )
 
 
@@ -3252,6 +3352,7 @@ def build_scene_page(data, scene, prev_scene=None, next_scene=None):
   if (back && params.get('from') === 'ai-arch') {{
     back.href = 'index.html#ai-arch';
   }}
+{_back_js(data)}
 }})();
 </script>'''
 
@@ -3277,7 +3378,13 @@ def build_future_page(data):
   <div class="nav-title">🚀 未来规划</div>
   {_de_nav_btn(g)}
   <div class="nav-pager"></div>
-</div>'''
+</div>
+<script>
+(function() {{
+  var params = new URLSearchParams(window.location.search);
+{_back_js(data)}
+}})();
+</script>'''
 
     fp = data.get('future_plan', {})
     import html as _html_mod
@@ -3507,6 +3614,13 @@ def build_digital_employee_page(data):
 </div>'''
 
     # ---------- 2. 业务流 ----------
+    # 点哪跳哪：阶段列 / 日常带 → 下方场景能力集合里对应的那张卡（按卡片「名称」匹配）
+    _cap_names = {c.get('名称', '').strip() for c in de.get('caps', [])}
+
+    def _jump_attr(name):
+        n = (name or '').strip()
+        return f' data-jump="{n}" role="link" tabindex="0"' if n and n in _cap_names else ''
+
     daily_items = [x.strip() for x in fl.get('日常动作', '').split(',') if x.strip()]
     daily_html = ''.join(f'<span class="it">{x}</span>' for x in daily_items)
 
@@ -3520,7 +3634,9 @@ def build_digital_employee_page(data):
             items += f'<div class="flow-item"><i>{st["no"]}.{i}</i><span>{a}</span></div>'
         if plan:
             items += plan_foot_html
-        cols += f'''<div class="flow-col {plan}">
+        _jb = _jump_attr(st.get('scene'))
+        _cls = ' '.join([x for x in ['flow-col', plan, ('jumpable' if _jb else '')] if x])
+        cols += f'''<div class="{_cls}"{_jb}>
   <div class="flow-head"><span class="n">{st['no']}</span><span class="t">{st['name']}</span></div>
   <div class="flow-body">{items}</div>
 </div>'''
@@ -3551,7 +3667,7 @@ def build_digital_employee_page(data):
       <div class="de-flow-stat">{stat_html}</div>
     </div>
 
-    <div class="de-daily">
+    <div class="de-daily{' jumpable' if _jump_attr(fl.get('日常跳转')) else ''}"{_jump_attr(fl.get('日常跳转'))}>
       <span class="lb">{fl.get('日常标题','9. 日常')}</span>
       {daily_html}
       <span class="ln"></span>
@@ -3579,6 +3695,8 @@ def build_digital_employee_page(data):
 
     entry_links = de.get('entry_links', {})
     go_txt = (meta.get('入口体验文字', '') or '去体验').strip()   # 可点击入口标签右侧的引导文字
+    SRC = (meta.get('来源参数', '') or '').strip()               # 跳去详情页时带的 ?from=xx
+    BACK_TXT = (meta.get('来源返回文字', '') or '').strip()      # 目标页「返回」按钮文案
 
     def ent_tag(name):
         """入口标签：配了链接的 → 可点击「去体验 ↗」外链标签；没配的 → 普通文字标签。"""
@@ -3652,7 +3770,11 @@ def build_digital_employee_page(data):
                     '<span>该阶段能力正在规划中，上线后将持续补充到本清单</span></div>')
         jump = ''
         if c.get('跳转链接'):
-            jump = f'<a class="cap-jump" href="{c["跳转链接"]}">{c.get("跳转文字","查看完整介绍 →")}</a>'
+            # 从本页跳去详情页时带上 ?from=xx，目标页据此把「返回」指回超级数字员工页
+            jump_url = c['跳转链接']
+            if SRC and not jump_url.startswith('#') and 'from=' not in jump_url:
+                jump_url += ('&' if '?' in jump_url else '?') + 'from=' + SRC
+            jump = f'<a class="cap-jump" href="{jump_url}">{c.get("跳转文字","查看完整介绍 →")}</a>'
         stage = c.get('对应阶段', '')
         stage_html = f'<div class="cap-stage">对应业务阶段 · <b>{stage}</b></div>' if stage else ''
 
@@ -3675,7 +3797,7 @@ def build_digital_employee_page(data):
 
         if compact:
             # 跨阶段紧凑卡：闭环链放在头部下方
-            return f'''<div class="cap-card compact" style="--cc:{cc}">
+            return f'''<div class="cap-card compact" style="--cc:{cc}" data-scene="{c.get('名称','')}">
   <div class="cap-top">
     <div class="cap-ico">{c.get('图标','')}</div>
     <div class="cap-hd">
@@ -3690,7 +3812,7 @@ def build_digital_employee_page(data):
   {body}
   {jump}
 </div>'''
-        return f'''<div class="cap-card{' wide' if wide else ''}" style="--cc:{cc}">
+        return f'''<div class="cap-card{' wide' if wide else ''}" style="--cc:{cc}" data-scene="{c.get('名称','')}">
   <div class="cap-top">
     <div class="cap-ico">{c.get('图标','')}</div>
     <div class="cap-hd">
@@ -3745,7 +3867,7 @@ def build_digital_employee_page(data):
 </footer>'''
 
     incentive_section = build_incentive_section(data)
-    future_section = build_future_section_home(data)
+    future_section = build_future_section_home(data, tag_origin=True)
 
     title = meta.get('浏览器标题', '超级数字员工 — 安恒信息 AI赋能营销')
     if os.path.exists(_b1x):
@@ -3770,7 +3892,7 @@ def build_digital_employee_page(data):
             f'<title>{title}</title>\n{CSS}\n{de_css}\n{preload}</head>\n<body class="de-body">\n'
             '<div id="prog"></div>\n\n' + nav + '\n\n' + board_html + '\n\n' + flow_html + '\n\n'
             + cap_html + '\n\n' + incentive_section + '\n\n' + future_section + '\n\n'
-            + cta + '\n\n' + footer + '\n\n' + DE_JS + '\n</body>\n</html>')
+            + cta + '\n\n' + footer + '\n\n' + DE_JS + '\n' + JUMP_JS + '\n</body>\n</html>')
 
 
 def build(data):

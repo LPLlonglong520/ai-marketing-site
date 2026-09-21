@@ -854,6 +854,17 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   <a class="nav-de-btn" href="digital-employee.html" title="进入 超级数字员工 专页"><span class="nde-dot"></span><span class="nde-txt">超级数字员工</span></a>
   <div class="nav-pager"></div>
 </div>
+<script>
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('from') === "de") {
+    var _t = "digital-employee.html", _x = "← 返回超级数字员工";
+    var _ls = document.querySelectorAll(".scene-detail-nav .back-btn");
+    for (var _i = 0, _a; (_a = _ls[_i]); _i++) _a.setAttribute('href', _t);
+    if (_ls[0] && _x) _ls[0].textContent = _x;
+  }
+})();
+</script>
 
 <div class="detail-wrap">
 <section class="future-section" style="margin-top:0;">
