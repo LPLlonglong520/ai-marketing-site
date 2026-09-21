@@ -5,6 +5,7 @@ build.py v2 — 从 content.md 生成 index.html
 修改 content.md 后运行此脚本即可更新网站内容。
 """
 import re, os, sys, json
+from html import escape as _esc
 from urllib.parse import quote
 
 # 切换工作目录 + 强制UTF-8
@@ -1819,12 +1820,16 @@ DE_CSS = '''<style>
 /* 入口标签：没配链接的走「纯文字」，不做按钮外观，避免误导点击 */
 .ent-chip { display:inline-flex; align-items:center; gap:4px; border-radius:9px; }
 .ent-n { line-height:1.42; }
-/* ── 可点击入口（配了链接的）：直接是文字链接，带虚线底 + ↗ ── */
+/* ── 可点击入口（配了链接的）：文字链接，主题色渐变 + 虚线底 + ↗ ──
+   ⚠️ 渐变文字用 background-image（不能用 background 简写，否则 clip 会被重置） */
 a.ent-a { display:inline-flex; align-items:center; gap:4px; padding:0 0 1px; text-decoration:none;
-  color:var(--cc,#1e6fd9);
   border-bottom:1px dashed color-mix(in srgb, var(--cc,#1e6fd9) 48%, #fff);
   transition:border-color .2s, border-bottom-style .2s; }
-a.ent-a .ent-n { color:inherit; }
+a.ent-a .ent-n {
+  background-image:linear-gradient(94deg, var(--cc,#1e6fd9) 0%,
+    color-mix(in srgb, var(--cc,#1e6fd9) 46%, #6fb0ff) 100%);
+  -webkit-background-clip:text; background-clip:text;
+  color:transparent; -webkit-text-fill-color:transparent; }
 .ent-arw { font-style:normal; font-size:10px; line-height:1; flex:none;
   color:color-mix(in srgb, var(--cc,#1e6fd9) 78%, #6b7a9b); transition:transform .2s; }
 a.ent-a:hover, a.ent-a:focus-visible { outline:none;
@@ -1836,9 +1841,10 @@ a.ent-a:hover .ent-arw, a.ent-a:focus-visible .ent-arw { transform:translate(1.5
   background:color-mix(in srgb, var(--cc,#1e6fd9) 6%, #fff);
   border:1px dashed color-mix(in srgb, var(--cc,#1e6fd9) 30%, #fff); }
 .cap-ent-hint .ic { font-size:12px; line-height:1; }
-/* 同入口合并单元格：垂直居中 + 极淡底色，弱化“每行重复入口” */
-.cap-tbl td.ent-span { vertical-align:middle; background:color-mix(in srgb, var(--cc,#1e6fd9) 3.2%, #fff); }
+/* 合并单元格：垂直居中 + 极淡底色，弱化“每行重复同一入口/同一数据来源” */
+.cap-tbl td.ent-span, .cap-tbl td.dt-span { vertical-align:middle; background:color-mix(in srgb, var(--cc,#1e6fd9) 3.2%, #fff); }
 .cap-tbl td.ent-m { display:none; }
+.cap-tbl td.dt-m { display:none; }
 .cap-tbl tbody tr { transition:background .2s; }
 .cap-tbl tbody tr:hover { background:color-mix(in srgb, var(--cc,#1e6fd9) 4.5%, #fff); }
 .cap-empty { padding:26px 24px 28px; text-align:center; border:1px dashed rgba(15,35,80,.16);
@@ -1900,8 +1906,7 @@ a.ent-a:hover .ent-arw, a.ent-a:focus-visible .ent-arw { transform:translate(1.5
 .cap-row:hover { background:color-mix(in srgb, var(--cc,#1e6fd9) 5%, #fff); transform:translateX(3px); box-shadow:0 6px 18px rgba(15,35,80,.06); }
 .cap-row-h { display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; margin-bottom:7px; }
 .cap-row-h b { font-size:13.5px; font-weight:700; color:#1f2c48; letter-spacing:-.2px; }
-.cap-row-h .ent { margin-left:auto; font-size:10.5px; font-weight:700; color:var(--cc,#1e6fd9); padding:3px 9px; border-radius:8px;
-  background:color-mix(in srgb, var(--cc,#1e6fd9) 9%, #fff); border:1px solid color-mix(in srgb, var(--cc,#1e6fd9) 20%, #fff); }
+.cap-row-h .ent { margin-left:auto; font-size:11px; font-weight:600; color:#828da1; padding:0; background:none; border:none; }
 .cap-row-d { font-size:12.5px; color:#5a6579; line-height:1.72; }
 .cap-row-m { font-size:11px; color:#98a2b3; margin-top:8px; display:flex; align-items:flex-start; gap:7px; line-height:1.6; }
 .cap-row-m::before { content:'▸'; color:var(--cc,#1e6fd9); font-size:10px; flex:none; line-height:1.7; }
@@ -1910,10 +1915,9 @@ a.ent-a:hover .ent-arw, a.ent-a:focus-visible .ent-arw { transform:translate(1.5
   display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap; }
 .cap-row-path .crp-l { flex:none; font-size:10.5px; font-weight:800; letter-spacing:.3px; color:#98a2b3; line-height:1.9; }
 .cap-row-path .crp-c { display:flex; align-items:center; flex-wrap:wrap; gap:5px; }
-.cap-row-path .pth { font-size:11px; font-weight:600; color:var(--cc,#1e6fd9);
-  background:color-mix(in srgb, var(--cc,#1e6fd9) 8%, #fff);
-  border:1px solid color-mix(in srgb, var(--cc,#1e6fd9) 18%, #fff);
-  border-radius:7px; padding:3px 9px; line-height:1.4; text-decoration:none; }
+/* 紧凑卡「操作路径」：纯文字展示，不做链接/按钮外观 */
+.cap-row-path .pth { font-size:11px; font-weight:600; color:#828da1;
+  background:none; border:none; border-radius:0; padding:0; line-height:1.5; text-decoration:none; }
 .cap-row-path .pth-sep { font-style:normal; color:#b6c0d0; font-size:11px; }
 a.pth-a:hover { background:color-mix(in srgb, var(--cc,#1e6fd9) 16%, #fff); }
 a.pth-a .ent-arw { margin-left:3px; font-size:9px; }
@@ -2019,16 +2023,16 @@ a.pth-a .ent-arw { margin-left:3px; font-size:9px; }
   .cap-tbl td { display:block; padding:0; border:none; }
   /* 桌面端的百分比列宽在堆叠卡片里必须清掉，否则 skill 列会被挤到只剩 17% 宽，中文逐字换行 */
   .cap-tbl th:nth-child(n), .cap-tbl td, .cap-tbl td.sk, .cap-tbl td.dm,
-  .cap-tbl td.dt, .cap-tbl td.ent, .cap-tbl td.ent-m { width:auto; max-width:none; min-width:0; }
+  .cap-tbl td.dt, .cap-tbl td.dt-m, .cap-tbl td.ent, .cap-tbl td.ent-m { width:auto; max-width:none; min-width:0; }
   .cap-tbl td.sk { font-size:14px; font-weight:800; color:#1f2c48; margin-bottom:7px; letter-spacing:-.2px; }
   .cap-tbl td.dm { font-size:12.5px; color:#5a6579; line-height:1.72; }
-  .cap-tbl td.dt, .cap-tbl td.ent, .cap-tbl td.ent-m { margin-top:9px; display:flex; align-items:flex-start; gap:8px;
+  .cap-tbl td.dt, .cap-tbl td.dt-m, .cap-tbl td.ent, .cap-tbl td.ent-m { margin-top:9px; display:flex; align-items:flex-start; gap:8px;
     width:auto; max-width:none; font-size:11.5px; color:#8a94a6; line-height:1.6; }
-  .cap-tbl td.dt::before, .cap-tbl td.ent::before, .cap-tbl td.ent-m::before { content:attr(data-l); flex:none; font-size:10.5px; font-weight:700;
+  .cap-tbl td.dt::before, .cap-tbl td.dt-m::before, .cap-tbl td.ent::before, .cap-tbl td.ent-m::before { content:attr(data-l); flex:none; font-size:10.5px; font-weight:700;
     color:#aab2c0; padding:1px 7px; border-radius:6px; background:#f3f5f9; }
   .cap-tbl td.ent a.ent-a, .cap-tbl td.ent-m a.ent-a { white-space:normal; gap:5px; }
   .cap-tbl td.ent .ent-n, .cap-tbl td.ent-m .ent-n { font-size:12px; line-height:1.45; }
-  .cap-tbl td.ent-span { background:transparent; }
+  .cap-tbl td.ent-span, .cap-tbl td.dt-span { background:transparent; }
 }
 @media (max-width:480px) {
   .de-act { font-size:11px; padding:8px 3px; gap:3px; }
@@ -2151,11 +2155,15 @@ a.pth-a .ent-arw { margin-left:3px; font-size:9px; }
 .cap-tbl tbody tr:hover { background:rgba(255,255,255,.05); }
 .plan-tag { color:#ff7583; }
 .cap-tbl td.ent { color:rgba(214,230,255,.62); }
-.cap-tbl td.ent-span { background:rgba(255,255,255,.035); }
-/* 可点击入口（深色底）：纯白文字 + 亮色虚线下划，和不可点的灰字拉开对比 */
+.cap-tbl td.ent-span, .cap-tbl td.dt-span { background:rgba(255,255,255,.035); }
+/* 可点击入口（深色底）：亮白 → 浅蓝渐变文字 + 亮色虚线下划，和不可点的灰字拉开对比 */
 a.ent-a { color:#fff;
   border-bottom-color:rgba(150,185,255,.6); }
-a.ent-a .ent-n { color:#fff; }
+a.ent-a .ent-n {
+  background-image:linear-gradient(94deg, #ffffff 0%,
+    color-mix(in srgb, var(--cc,#1e6fd9) 36%, #cfe4ff) 100%);
+  -webkit-background-clip:text; background-clip:text;
+  color:transparent; -webkit-text-fill-color:transparent; }
 a.ent-a .ent-arw { color:#7fb2ff; }
 a.ent-a:hover, a.ent-a:focus-visible { border-bottom-color:#9dc4ff; }
 .cap-ent-hint { color:rgba(228,240,255,.92); background:rgba(255,255,255,.055);
@@ -2167,15 +2175,13 @@ a.ent-a:hover, a.ent-a:focus-visible { border-bottom-color:#9dc4ff; }
 .cap-row { background:rgba(255,255,255,.045); border-color:rgba(255,255,255,.08); border-left-color:var(--cc,#1e6fd9); }
 .cap-row:hover { background:color-mix(in srgb, var(--cc,#1e6fd9) 14%, rgba(255,255,255,.06)); box-shadow:none; }
 .cap-row-h b { color:#fff; }
-.cap-row-h .ent { color:rgba(228,240,255,.9);
-  background:rgba(255,255,255,.07);
-  border-color:color-mix(in srgb, var(--cc,#1e6fd9) 30%, rgba(255,255,255,.14)); }
+.cap-row-h .ent { color:rgba(170,190,222,.72); background:none; border:none; }
 .cap-row-d { color:rgba(198,214,244,.76); }
 .cap-row-m { color:rgba(158,180,218,.62); }
 .cap-row-m::before { color:color-mix(in srgb, var(--cc,#1e6fd9) 40%, #9fb6e8); }
 .cap-row-path { border-top-color:rgba(255,255,255,.12); }
 .cap-row-path .crp-l { color:rgba(158,180,218,.62); }
-.cap-row-path .pth { color:rgba(214,230,255,.9); background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.13); }
+.cap-row-path .pth { color:rgba(178,198,230,.78); background:none; border:none; }
 .cap-row-path .pth-sep { color:rgba(166,188,224,.48); }
 a.pth-a:hover { background:rgba(255,255,255,.13); }
 
@@ -2185,8 +2191,8 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
   .cap-tbl tbody tr:hover { background:linear-gradient(145deg, rgba(20,52,108,.95), rgba(31,68,134,.82)); box-shadow:0 8px 22px rgba(0,0,0,.34); }
   .cap-tbl td.sk { color:#fff; }
   .cap-tbl td.dm { color:rgba(197,213,244,.76); }
-  .cap-tbl td.dt, .cap-tbl td.ent, .cap-tbl td.ent-m { color:rgba(168,188,224,.7); }
-  .cap-tbl td.dt::before, .cap-tbl td.ent::before, .cap-tbl td.ent-m::before {
+  .cap-tbl td.dt, .cap-tbl td.dt-m, .cap-tbl td.ent, .cap-tbl td.ent-m { color:rgba(168,188,224,.7); }
+  .cap-tbl td.dt::before, .cap-tbl td.dt-m::before, .cap-tbl td.ent::before, .cap-tbl td.ent-m::before {
     color:rgba(178,198,232,.74); background:rgba(255,255,255,.08); }
 }
 
@@ -3794,11 +3800,11 @@ def build_digital_employee_page(data):
     BACK_TXT = (meta.get('来源返回文字', '') or '').strip()      # 目标页「返回」按钮文案
 
     def ent_tag(name, no_link=False):
-        """入口：配了链接的 → 文字本身就是链接（可直接点跳转）；没配的 → 普通灰字。
-        no_link=True：强制纯文字（极少用）。
-            - 跨阶段紧凑卡（渠道赋能/知识助手/Skill共享平台）与主卡一致：走「入口链接映射」。
-              想保持纯文字 → 不把该入口名登记进映射表即可（渠道赋能的两条入口就是这样）。
-            - 只有需要「无论如何都不给链接」（如同一句话在不同卡要区别对待）才传 no_link=True。"""
+        """入口：配了链接的 → 文字本身就是链接（主题色渐变 + 虚线底 + ↗）；没配的 → 普通灰字。
+        no_link=True：强制纯文字。
+            - **跨阶段紧凑卡（渠道赋能/知识助手/Skill共享平台）固定传 True**：用户要求这三张
+              概览卡只做文字展示、不要链接感（入口和操作路径都一样）。
+            - 主卡（数字员工页 8 张场景卡 + 场景详情页表格）默认 False，走「入口链接映射」。"""
         if not name:
             return '—'
         url = None if no_link else entry_links.get(name)
@@ -3808,6 +3814,16 @@ def build_digital_employee_page(data):
         return ('<a class="ent ent-chip ent-a" href="%s" target="_blank" rel="noopener noreferrer"'
                 ' title="点击跳转前往体验">'
                 '<span class="ent-n">%s</span><i class="ent-arw">↗</i></a>') % (href, name)
+
+    def demo_html(s):
+        """「介绍 / 输入示例」列：介绍在上、输入示例在下，换行展示。
+        content.md 里用 `；` 分隔两段（原 PPT 就是两行），这里转成 <br>。"""
+        if not s:
+            return ''
+        t = _esc(s)
+        for sep in ('；', ';'):
+            t = t.replace(sep, '<br>')
+        return t
 
     def path_tag(name):
         """操作路径里的一段：配了链接 → 可点标签；没配 → 纯文字标签。"""
@@ -3833,26 +3849,32 @@ def build_digital_employee_page(data):
         hint_html = (f'<div class="cap-ent-hint"><span class="ic">💡</span>{_hint}</div>'
                      ) if (_hint and has_link) else ''
         if rows and not compact:
-            # 入口列：空值向上继承上一行的入口，连续同值合并为一格（rowspan）
-            ent_vals, last = [], ''
-            for r in rows:
-                e = (r.get('entry') or '').strip()
-                if e:
-                    last = e
-                ent_vals.append(last)
-            spans = [1] * len(rows)
-            i = 0
-            while i < len(rows):
-                if not ent_vals[i]:
-                    i += 1
-                    continue
-                j = i
-                while j + 1 < len(rows) and ent_vals[j + 1] == ent_vals[i]:
-                    j += 1
-                spans[i] = j - i + 1
-                for k in range(i + 1, j + 1):
-                    spans[k] = 0          # 被上一格的 rowspan 覆盖
-                i = j + 1
+            # 入口列 / 数据来源列：空值向上继承上一行的值，连续同值合并为一格（rowspan）
+            # （还原 PPT 原表的合并单元格：如「客户管理系统」跨 3 行）
+            def _merge_col(key):
+                vals, last = [], ''
+                for r in rows:
+                    v = (r.get(key) or '').strip()
+                    if v:
+                        last = v
+                    vals.append(last)
+                sp = [1] * len(rows)
+                i = 0
+                while i < len(rows):
+                    if not vals[i]:
+                        i += 1
+                        continue
+                    j = i
+                    while j + 1 < len(rows) and vals[j + 1] == vals[i]:
+                        j += 1
+                    sp[i] = j - i + 1
+                    for k in range(i + 1, j + 1):
+                        sp[k] = 0          # 被上一格的 rowspan 覆盖
+                    i = j + 1
+                return vals, sp
+
+            ent_vals, spans = _merge_col('entry')
+            dat_vals, dspans = _merge_col('data')
 
             body = ('<div class="cap-tbl-wrap"><table class="cap-tbl">'
                     '<thead><tr><th>skill / 功能</th><th>介绍 / 输入示例</th>'
@@ -3868,14 +3890,24 @@ def build_digital_employee_page(data):
                 else:
                     # 桌面端由 rowspan 覆盖，移动端堆叠时补一份（保证每张卡都带入口）
                     ent_html = f'<td class="ent-m" data-l="入口">{inner}</td>'
-                body += (f'<tr><td class="sk">{skill_html(r["skill"])}</td><td class="dm">{r["demo"]}</td>'
-                         f'<td class="dt" data-l="数据来源">{r["data"] or "—"}</td>'
-                         f'{ent_html}</tr>')
+                _dv = dat_vals[idx]
+                _d = _esc(_dv) if _dv else '—'
+                if dspans[idx] > 1:
+                    dt_html = (f'<td class="dt dt-span" rowspan="{dspans[idx]}" data-l="数据来源">'
+                               f'{_d}</td>')
+                elif dspans[idx] == 1:
+                    dt_html = f'<td class="dt" data-l="数据来源">{_d}</td>'
+                else:
+                    # 桌面端由 rowspan 覆盖，移动端堆叠时补一份
+                    dt_html = f'<td class="dt-m" data-l="数据来源">{_d}</td>'
+                body += (f'<tr><td class="sk">{skill_html(r["skill"])}</td>'
+                         f'<td class="dm">{demo_html(r["demo"])}</td>'
+                         f'{dt_html}{ent_html}</tr>')
             body += '</tbody></table></div>'
         elif compact:
             body = '<div class="cap-rows">'
             for r in c['rows']:
-                ent = ent_tag(r['entry'])   # 跨阶段紧凑卡：入口名走「入口链接映射」；渠道赋能刻意不配链接 → 保持纯文字
+                ent = ent_tag(r['entry'], no_link=True)   # 跨阶段紧凑卡：入口只做纯文字展示，不做链接
                 dat = ('<div class="cap-row-m">数据来源 · %s</div>' % r['data']) if r['data'] else ''
                 body += ('<div class="cap-row"><div class="cap-row-h"><b>%s</b>%s</div>'
                          '<div class="cap-row-d">%s</div>%s</div>') % (skill_html(r['skill']), ent, r['demo'], dat)
