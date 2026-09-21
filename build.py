@@ -55,17 +55,21 @@ def parse_de_page(text):
     m = re.search(r'## 数字员工页\s*\n\s*((?:\|.+\|\s*\n)+)', sec)
     de['meta'] = _de_table(m.group(1), {
         '浏览器标题', '页头眉标', '页头主标题', '页头主标题链接', '页头主标题提示', '页头副标题',
-        '页头标语', '页头描述',
+        '页头副标题字号比', '页头标语', '页头描述',
         'KPI1数值', 'KPI1标签', 'KPI2数值', 'KPI2标签', 'KPI3数值', 'KPI3标签',
         'KPI4数值', 'KPI4标签',
-        '立牌正面图', '人物层前缀', '旋转提示', '翻转按钮', '背回按钮', '放大按钮',
+        '立牌正面图', '立牌正面图小图', '立牌全图', '立牌显示宽度', '人物层前缀', '立牌占位图',
+        '旋转提示', '翻转按钮', '背回按钮', '放大按钮',
+        '入口体验文字', '入口提示图标',
         '返回按钮', '返回链接', '页尾标语',
     }) if m else {}
 
     def sub(name, keys=None, upto=None):
-        a = sec.find('### ' + name)
-        if a < 0:
+        # 只认整行独立的小节标题（^### xxx$），避免命中正文里 `### xxx` 这样的行内引用
+        m = re.search(r'(?m)^### ' + re.escape(name) + r'\s*$', sec)
+        if not m:
             return ''
+        a = m.start()
         b = len(sec)
         for nxt in re.finditer(r'\n### ', sec[a + 4:]):
             b = a + 4 + nxt.start()
@@ -114,7 +118,7 @@ def parse_de_page(text):
     blk = sub('业务流头部')
     de['flow'] = _de_table(blk, {
         '眉标', '标题', '副标题', '说明', '底部说明', '日常标题', '日常说明', '日常动作',
-        '图例已建设', '图例规划中',
+        '规划列脚注',
     })
 
     # ---- 业务流阶段 ----
@@ -1422,7 +1426,7 @@ DE_CSS = '''<style>
   color:#4b36c4; background:linear-gradient(120deg,#eef1ff,#f6efff); border:1px solid rgba(91,63,212,.18); letter-spacing:.2px; }
 .de-h2 { font-size:38px; font-weight:800; letter-spacing:-1.15px; line-height:1.24; color:var(--brand-deep); margin:16px 0 12px; }
 .de-h2 em { font-style:normal; background:linear-gradient(100deg,#1f5fd0,#7c5ce7 60%,#c026d3); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
-  font-size:.72em; }   /* 副标题比主标题小两号 */
+  font-size:__H2_SUB__; }   /* 副标题字号比，content.md「页头副标题字号比」可配（如 .72 = 比主标题小两号） */
 /* 页头主标题可点击：标题 + 「进入体验 ↗」提示胶囊 */
 .de-h2-a { display:inline-flex; align-items:center; gap:14px; text-decoration:none; color:inherit; }
 .de-h2-t { position:relative; }
@@ -1704,7 +1708,8 @@ DE_CSS = '''<style>
 .flow-col.plan .flow-item { background:transparent; border:1px dashed rgba(120,145,200,.28); color:#8f9cba; }
 .flow-col.plan .flow-item i { color:#77839e; }
 .flow-col.plan .flow-item:hover { background:rgba(120,145,200,.1); border-color:rgba(150,170,220,.45); }
-.flow-col.plan .flow-body::after { content:'本期未建设'; margin-top:auto; text-align:center; font-size:10px; font-weight:700; letter-spacing:1px; color:#6f7b96; padding:9px 0 3px; }
+.flow-col.plan .plan-foot { margin-top:auto; align-self:center; padding:5px 12px; border-radius:20px; white-space:nowrap;
+  font-size:10.5px; font-weight:700; letter-spacing:.6px; color:#8fa0c2; background:rgba(120,145,200,.12); border:1px solid rgba(130,155,210,.3); }
 
 /* 底部说明带（L1 × L2） */
 .flow-foot { margin-top:19px; display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:10px 18px;
@@ -3125,29 +3130,43 @@ def build_future_section_home(data):
     )
 
 
+def _de_nav_btn(g):
+    """超级数字员工 导航入口按钮。文案/链接来自 content.md「全局信息」的
+    「数字员工入口文字」/「数字员工入口链接」，改 md 即可全站生效。"""
+    txt = (g.get('数字员工入口文字', '') or '超级数字员工').strip()
+    lnk = (g.get('数字员工入口链接', '') or 'digital-employee.html').strip()
+    return (f'<a class="nav-de-btn" href="{lnk}" title="进入 {txt} 专页">'
+            f'<span class="nde-dot"></span><span class="nde-txt">{txt}</span></a>')
+
+
 def build_home(data):
     """生成首页 index.html — Hero + 卡片网格"""
     g = data['global']
     logo = media_path(g.get('Logo图片', 'media/image2.png'))
+    # 超级数字员工入口（导航按钮 + hero 圆形入口）—— 全部来自 content.md「全局信息」
+    orb_text = (g.get('数字员工入口文字', '') or '超级数字员工').strip()
+    orb_link = (g.get('数字员工入口链接', '') or 'digital-employee.html').strip()
+    orb_face = media_path(g.get('数字员工入口头像', 'media/de_orb_face.png'))
+    orb_title = (g.get('数字员工入口标题', '') or f'点击查看 {orb_text}').strip()
 
     nav = f'''<nav>
   <a class="nav-brand" href="index.html"><img src="{logo}" alt="安恒信息"><span>AI赋能营销</span></a>
   <div class="nav-actions">
-    <a class="nav-de-btn" href="digital-employee.html" title="进入 超级数字员工 专页"><span class="nde-dot"></span><span class="nde-txt">超级数字员工</span></a>
+    <a class="nav-de-btn" href="{orb_link}" title="进入 {orb_text} 专页"><span class="nde-dot"></span><span class="nde-txt">{orb_text}</span></a>
     <div class="nav-right"><img src="{logo}" alt=""><span class="nav-right-dept">{g.get('页脚部门','安恒信息 · 营销中心 · 综合管理部')}</span></div>
   </div>
 </nav>'''
 
     hero = f'''<section class="hero" id="hero" style="min-height:auto;padding:80px 40px 24px;">
   <div class="hero-bg-circles"><span></span><span></span><span></span></div>
-  <a class="hero-de-orb" href="digital-employee.html" title="点击查看 超级数字员工" aria-label="点击查看超级数字员工">
+  <a class="hero-de-orb" href="{orb_link}" title="{orb_title}" aria-label="{orb_title}">
     <span class="orb-stage">
       <span class="orb-halo"></span><span class="orb-halo d2"></span>
       <span class="orb-ring"></span>
-      <span class="orb-core"><img src="{media_path('media/de_orb_face.png')}" alt="超级数字员工"></span>
+      <span class="orb-core"><img src="{orb_face}" alt="{orb_text}"></span>
       <span class="orb-hand"><b>👆</b></span>
     </span>
-    <span class="orb-label">超级数字员工</span>
+    <span class="orb-label">{orb_text}</span>
   </a>
   <div class="hero-inner">
     <h1>{g.get('Hero大标题','AI赋能营销')}<br><em>{g.get('Hero副标题','让每一线都更强')}</em></h1>
@@ -3223,7 +3242,7 @@ def build_scene_page(data, scene, prev_scene=None, next_scene=None):
   <a href="index.html" class="back-btn">← 返回首页</a>
   <a href="index.html#landing-scenes" class="back-btn back-to-module">返回</a>
   <div class="nav-title">{scene.get("icon","")} {scene.get("title","")}</div>
-  <a class="nav-de-btn" href="digital-employee.html" title="进入 超级数字员工 专页"><span class="nde-dot"></span><span class="nde-txt">超级数字员工</span></a>
+  {_de_nav_btn(g)}
   <div class="nav-pager">{prev_link}{next_link}</div>
 </div>
 <script>
@@ -3256,7 +3275,7 @@ def build_future_page(data):
   <a href="index.html" class="back-btn">← 返回首页</a>
   <a href="index.html#future-home" class="back-btn">返回</a>
   <div class="nav-title">🚀 未来规划</div>
-  <a class="nav-de-btn" href="digital-employee.html" title="进入 超级数字员工 专页"><span class="nde-dot"></span><span class="nde-txt">超级数字员工</span></a>
+  {_de_nav_btn(g)}
   <div class="nav-pager"></div>
 </div>'''
 
@@ -3346,14 +3365,29 @@ def build_digital_employee_page(data):
     # ---------- 1. 立牌 ----------
     board_img = media_path(meta.get('立牌正面图', 'media/de_board_front.webp'))
     prefix = meta.get('人物层前缀', 'media/de_char_')
-    poster_full = media_path('media/de_poster_full.png')
-    # 1 倍屏轻量版（560px 宽，约 36KB）：普通屏不再下载 2 倍屏大图
-    _b1x = media_path('media/de_board_front_1x.webp')
+    poster_full = media_path(meta.get('立牌全图', 'media/de_poster_full.webp'))
+    # 「立牌显示宽度」= 立牌在页面上的实际显示宽度（px）。据此推导 srcset/sizes：
+    #   大图 = 2× 显示宽度（高清屏用），小图 = 1× 显示宽度（普通屏用，体积约 1/3）
+    _bw_raw = re.sub(r'[^\d.]', '', meta.get('立牌显示宽度', '') or '')
+    try:
+        BW = int(float(_bw_raw)) or 560
+    except Exception:
+        BW = 560
+    BW_SM = int(round(BW * 4 / 7))         # 窄屏（≤768px）显示宽度，约等于大屏的 4/7
+    _b1x = media_path(meta.get('立牌正面图小图', 'media/de_board_front_1x.webp'))
     if os.path.exists(_b1x):
-        board_src = (f'src="{board_img}" srcset="{_b1x} 560w, {board_img} 1100w" '
-                     f'sizes="(max-width:768px) 320px, 560px"')
+        board_src = (f'src="{board_img}" srcset="{_b1x} {BW}w, {board_img} {BW * 2}w" '
+                     f'sizes="(max-width:768px) {BW_SM}px, {BW}px"')
     else:
         board_src = f'src="{board_img}"'
+    # 模糊占位图（LQIP）：主图到达前先显示轮廓，避免白板期。
+    # content.md 写「无」可关闭；写 data:image/... 或图片路径可替换；留空用内置默认。
+    _lq = (meta.get('立牌占位图', '') or '').strip()
+    if _lq in ('无', '关闭', 'none', 'None', 'off', 'OFF'):
+        lqip_html = ''
+    else:
+        lqip_src = _lq if _lq.startswith('data:') else (media_path(_lq) if _lq else DE_BOARD_LQIP)
+        lqip_html = f'<img class="de-lqip" src="{lqip_src}" alt="" aria-hidden="true">'
     layers = ''
     for nm in ('body', 'tab', 'arm', 'head'):
         layers += f'<img class="de-l de-l-{nm}" src="{media_path(prefix + nm + ".png")}" alt="" decoding="async">'
@@ -3443,7 +3477,7 @@ def build_digital_employee_page(data):
               <div class="tagline">{back.get('支架文字','')}</div>
             </div>
             <div class="de-face de-front">
-              <img class="de-lqip" src="{DE_BOARD_LQIP}" alt="" aria-hidden="true">
+              {lqip_html}
               <img class="de-img" {board_src} alt="营销AI小秘 场景能力立牌" fetchpriority="high" decoding="async">
               <div class="de-char" id="deChar" title="点我切换动作">{layers}</div>
               <div class="de-sheen"></div>
@@ -3477,11 +3511,15 @@ def build_digital_employee_page(data):
     daily_html = ''.join(f'<span class="it">{x}</span>' for x in daily_items)
 
     cols = ''
+    plan_foot = (fl.get('规划列脚注', '') or '').strip()
+    plan_foot_html = f'<span class="plan-foot">{plan_foot}</span>' if plan_foot else ''
     for st in de.get('stages', []):
         plan = 'plan' if st.get('status') != '已建设' else ''
         items = ''
         for i, a in enumerate(st['actions'], 1):
             items += f'<div class="flow-item"><i>{st["no"]}.{i}</i><span>{a}</span></div>'
+        if plan:
+            items += plan_foot_html
         cols += f'''<div class="flow-col {plan}">
   <div class="flow-head"><span class="n">{st['no']}</span><span class="t">{st['name']}</span></div>
   <div class="flow-body">{items}</div>
@@ -3540,6 +3578,7 @@ def build_digital_employee_page(data):
         return f'{main}<i class="plan-tag">{m.group(1)}</i>'
 
     entry_links = de.get('entry_links', {})
+    go_txt = (meta.get('入口体验文字', '') or '去体验').strip()   # 可点击入口标签右侧的引导文字
 
     def ent_tag(name):
         """入口标签：配了链接的 → 可点击「去体验 ↗」外链标签；没配的 → 普通文字标签。"""
@@ -3548,10 +3587,11 @@ def build_digital_employee_page(data):
         url = entry_links.get(name)
         if not url:
             return f'<span class="ent ent-chip"><span class="ent-n">{name}</span></span>'
+        href = url.replace('&', '&amp;')      # 链接里带 & 时按 HTML 规范转义
         return ('<a class="ent ent-chip ent-a" href="%s" target="_blank" rel="noopener noreferrer"'
                 ' title="点击跳转前往体验">'
                 '<span class="ent-n">%s</span>'
-                '<span class="ent-go">去体验<i class="ent-arw">↗</i></span></a>') % (url, name)
+                '<span class="ent-go">%s<i class="ent-arw">↗</i></span></a>') % (href, name, go_txt)
 
     def cap_card(c, wide=False, compact=False):
         cc = c.get('主题色', '#1e6fd9')
@@ -3710,15 +3750,24 @@ def build_digital_employee_page(data):
     title = meta.get('浏览器标题', '超级数字员工 — 安恒信息 AI赋能营销')
     if os.path.exists(_b1x):
         preload = (f'<link rel="preload" as="image" href="{board_img}" '
-                   f'imagesrcset="{_b1x} 560w, {board_img} 1100w" '
-                   f'imagesizes="(max-width:768px) 320px, 560px" fetchpriority="high">\n'
+                   f'imagesrcset="{_b1x} {BW}w, {board_img} {BW * 2}w" '
+                   f'imagesizes="(max-width:768px) {BW_SM}px, {BW}px" fetchpriority="high">\n'
                    f'<link rel="preload" as="image" href="{media_path(prefix + "body.png")}">\n')
     else:
         preload = (f'<link rel="preload" as="image" href="{board_img}" fetchpriority="high">\n'
                    f'<link rel="preload" as="image" href="{media_path(prefix + "body.png")}">\n')
+    # 副标题字号比（content.md「页头副标题字号比」，如 .72）：注入 DE_CSS 占位符
+    _sub_raw = re.sub(r'[^\d.]', '', meta.get('页头副标题字号比', '') or '')
+    try:
+        _sv = float(_sub_raw) if _sub_raw else 0.72
+    except Exception:
+        _sv = 0.72
+    _ss = f'{_sv:g}'
+    h2_sub = (_ss[1:] if _ss.startswith('0.') else _ss) + 'em'
+    de_css = DE_CSS.replace('__H2_SUB__', h2_sub)
     return ('<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n'
             '<meta name="viewport" content="width=device-width,initial-scale=1.0">\n'
-            f'<title>{title}</title>\n{CSS}\n{DE_CSS}\n{preload}</head>\n<body class="de-body">\n'
+            f'<title>{title}</title>\n{CSS}\n{de_css}\n{preload}</head>\n<body class="de-body">\n'
             '<div id="prog"></div>\n\n' + nav + '\n\n' + board_html + '\n\n' + flow_html + '\n\n'
             + cap_html + '\n\n' + incentive_section + '\n\n' + future_section + '\n\n'
             + cta + '\n\n' + footer + '\n\n' + DE_JS + '\n</body>\n</html>')
