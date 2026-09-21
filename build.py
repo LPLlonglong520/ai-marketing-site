@@ -3199,6 +3199,7 @@ def build_future_section_home(data, tag_origin=False):
     # 未来页的「返回」就会指回超级数字员工页的这块未来规划模块（id=future-home）
     _p, _u, _t = _src_back(data)
     furl = 'future.html' + (('?from=' + _p + '&to=future-home') if (tag_origin and _p) else '')
+    furl = furl.replace('&', '&amp;')   # 放进 HTML href 前先按规范转义
 
     return (
         '<section class="future-home-section" id="future-home">\n'
