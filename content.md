@@ -734,6 +734,8 @@
 | 浏览器标题 | 营销AI小秘 · 超级数字员工 — 安恒信息 AI赋能营销 |
 | 页头眉标 | 安恒信息 · 营销中心 · AI赋能营销 |
 | 页头主标题 | 营销AI小秘 |
+| 页头主标题链接 | https://applink.dingtalk.com/action/jumprobot?dingtalkid=%24%3aLWCP_v1%3a%24jNpCmgi%2fFOAC4IeQJVQM%2bm3Lp3xG0gCb |
+| 页头主标题提示 | 进入体验 |
 | 页头副标题 | 营销的超级数字员工 |
 | 页头标语 | 让每一次营销动作，都有 AI 陪跑 |
 | 页头描述 | 从市场洞察到成单交付，一个会查、会写、会算、会讲的超级数字员工 |
@@ -821,6 +823,7 @@
 | 标题 | 超级数字员工 · 场景能力集合 |
 | 副标题 | 11 项场景能力，每个场景一条闭环链路 —— 从你说什么，到它查哪里、从哪进入 |
 | 统计 | 8 项业务场景能力 + 3 项跨阶段通用能力（渠道赋能 / 知识助手 / Skill 共享平台） |
+| 入口提示 | 点击带 ↗ 的「入口」标签，可直接跳转前往体验 |
 
 ### 场景能力1 · 机会点场景
 
@@ -1053,3 +1056,17 @@
 | 主按钮链接 | index.html |
 | 次按钮文字 | 回到顶部 ↑ |
 | 署名 | 安恒信息 · 营销中心 · 综合管理部 | 2026 |
+
+### 入口链接映射
+
+> 能力表「入口 / 链接」列里出现的入口名称 → 跳转地址。
+> 这里配了的入口会变成可点击的「去体验 ↗」标签；没配的保持普通文字标签。
+
+| 入口名称 | 链接 |
+|------|------|
+| 营销AI小秘 | https://applink.dingtalk.com/action/jumprobot?dingtalkid=%24%3aLWCP_v1%3a%24jNpCmgi%2fFOAC4IeQJVQM%2bm3Lp3xG0gCb |
+| 营销AI小秘-挖商机（PC） | https://report.dbappsecurity.com.cn/webroot/decision?#/?activeTab=8d400ca1-a45e-41b5-9001-28daa30a53be |
+| 营销AI小秘-练话术 | https://short-phx-ali.yunxuetang.cn/wi4m25oca |
+| 营销AI小秘-写标书 | http://bid.xxzx.dbappsecurity.com.cn/project |
+| LTC-机会点 | https://ltc.dbappsecurity.com.cn/#/paas/list?subBusinessType=404&appId=27&menuId=153&saasMark=2&distributorMark=0&timestamp=1789890595373 |
+

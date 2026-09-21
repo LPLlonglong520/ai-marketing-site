@@ -54,7 +54,8 @@ def parse_de_page(text):
     # ---- 主属性表 ----
     m = re.search(r'## 数字员工页\s*\n\s*((?:\|.+\|\s*\n)+)', sec)
     de['meta'] = _de_table(m.group(1), {
-        '浏览器标题', '页头眉标', '页头主标题', '页头副标题', '页头标语', '页头描述',
+        '浏览器标题', '页头眉标', '页头主标题', '页头主标题链接', '页头主标题提示', '页头副标题',
+        '页头标语', '页头描述',
         'KPI1数值', 'KPI1标签', 'KPI2数值', 'KPI2标签', 'KPI3数值', 'KPI3标签',
         'KPI4数值', 'KPI4标签',
         '立牌正面图', '人物层前缀', '旋转提示', '翻转按钮', '背回按钮', '放大按钮',
@@ -133,7 +134,23 @@ def parse_de_page(text):
 
     # ---- 场景能力集头部 ----
     blk = sub('场景能力集头部')
-    de['cap_head'] = _de_table(blk, {'眉标', '标题', '副标题', '统计'})
+    de['cap_head'] = _de_table(blk, {'眉标', '标题', '副标题', '统计', '入口提示'})
+
+    # ---- 入口链接映射（能力表「入口 / 链接」列 → 跳转地址）----
+    de['entry_links'] = {}
+    m2 = re.search(r'### 入口链接映射\s*\n(.*?)(?=\n### |\n## |\Z)', sec, re.DOTALL)
+    if m2:
+        for line in m2.group(1).split('\n'):
+            if not line.strip().startswith('|'):
+                continue
+            cells = [c.strip() for c in line.strip().strip('|').split('|')]
+            if len(cells) < 2:
+                continue
+            if cells[0] in ('入口名称', '字段') or set(cells[0]) <= set('-: '):
+                continue
+            url = cells[1].strip()
+            if url and url not in ('链接', '—', '-'):
+                de['entry_links'][cells[0]] = url
 
     # ---- 场景能力 1..N ----
     de['caps'] = []
@@ -642,11 +659,37 @@ nav.scrolled { box-shadow:0 1px 12px rgba(0,0,0,.06); }
 @media (max-width:1280px) { .hero-de-orb { top:106px; } }
 @media (max-width:1180px) { .hero-de-orb { transform:scale(.86); transform-origin:top right; } }
 @media (max-width:1080px) { .hero-de-orb { right:max(26px, 2.4vw); } .orb-hand { right:-17px; font-size:23px; } }
-@media (max-width:1024px) { .hero-de-orb { display:none; } }
-@media (prefers-reduced-motion: reduce) {
-  .orb-stage, .orb-ring, .orb-halo, .orb-hand b { animation:none !important; }
-  .orb-halo { opacity:.35; }
+/* ≤1024px：改为主内容下方的横向居中胶囊入口（不再隐藏） */
+@media (max-width:1024px) {
+  .hero { flex-direction:column; }
+  .hero-inner { order:1; }
+  .hero-de-orb { position:relative; right:auto; top:auto; order:2; flex:none;
+    width:auto; height:auto; display:inline-flex; align-items:center; gap:14px;
+    margin:26px auto 6px; padding:8px 24px 8px 8px; border-radius:999px;
+    background:linear-gradient(118deg, rgba(31,95,208,.30), rgba(91,63,212,.26));
+    border:1px solid rgba(125,178,255,.34); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    box-shadow:0 12px 34px rgba(4,14,38,.46); transform:none; transform-origin:center;
+    transition:transform .3s, box-shadow .3s; }
+  .hero-de-orb:active { transform:scale(.97); }
+  .orb-stage { width:66px; height:66px; flex:none; animation:none; }
+  .orb-ring { inset:-5px; border-width:1px; }
+  .orb-halo { animation-duration:2.4s; }
+  .orb-label { position:relative; left:auto; top:auto; transform:none; padding:0; white-space:nowrap;
+    font-size:15px; background:none; box-shadow:none; }
+  .hero-de-orb:hover .orb-label { transform:none; box-shadow:none; }
+  .orb-hand { display:none; }
+  .hero-de-orb::after { content:'👆'; order:3; margin-left:-4px; font-size:20px; line-height:1;
+    filter:drop-shadow(0 4px 10px rgba(0,0,0,.5)); animation:orbTap 2.3s cubic-bezier(.4,0,.3,1) infinite; }
 }
+@media (max-width:640px) {
+  .hero-de-orb { gap:11px; padding:7px 18px 7px 7px; margin-top:22px; }
+  .orb-stage { width:58px; height:58px; }
+  .orb-label { font-size:14px; }
+  .hero-de-orb::after { font-size:18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .orb-stage, .orb-ring, .orb-halo, .orb-hand b, .hero-de-orb::after { animation:none !important; }
+  .orb-halo { opacity:.35; }}
 .text-highlight { background:linear-gradient(135deg,#5eead4,#818cf8,#60a5fa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-style:normal; font-weight:700; }
 .text-highlight-gold { background:linear-gradient(135deg,#fbbf24,#f59e0b,#fb923c); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-style:normal; font-weight:700; }
 .hero-incentive-divider { width:80px; height:1px; background:rgba(255,255,255,.12); border-radius:1px; margin:44px auto 28px; }
@@ -1364,6 +1407,13 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 # 超级数字员工页 专用样式
 # ============================================================
 
+# 立牌缩略占位图（22×28 超轻量 WebP，内联进 HTML，0 请求）
+# 作用：立牌主图到达前，页面立刻呈现一张模糊海报轮廓，避免长时间白板
+DE_BOARD_LQIP = ('data:image/webp;base64,UklGRswAAABXRUJQVlA4IMAAAABwBQCdASoWABwAPwlus1KrpaSisBgIAXAhCWMArj'
+                 'z2PLW3+Aex57HhSKwLXYv7X8sdjRU8AM4NINYvP+Vdv91FpKDbI1VrNLY5qvpwqhialuCVhhgmyscLoHHArq'
+                 'vvxT9Xbv/9buEjGMc0AQ51h+PTSSgaK9dVABnaLoDDCipviTHJasysd20JO3hjAQKYPZFNFOcIFRBGJV8U7'
+                 'Q5g2/NMEO8GjTTtzSMk+TB/KAnfeAJWCi6Gc16IN908UAOgAAA=')
+
 DE_CSS = '''<style>
 /* ============ 页面基础 ============ */
 .de-body { background:var(--bg); }
@@ -1371,7 +1421,27 @@ DE_CSS = '''<style>
 .de-pill { display:inline-flex; align-items:center; gap:7px; padding:5px 15px; border-radius:20px; font-size:12.5px; font-weight:700;
   color:#4b36c4; background:linear-gradient(120deg,#eef1ff,#f6efff); border:1px solid rgba(91,63,212,.18); letter-spacing:.2px; }
 .de-h2 { font-size:38px; font-weight:800; letter-spacing:-1.15px; line-height:1.24; color:var(--brand-deep); margin:16px 0 12px; }
-.de-h2 em { font-style:normal; background:linear-gradient(100deg,#1f5fd0,#7c5ce7 60%,#c026d3); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+.de-h2 em { font-style:normal; background:linear-gradient(100deg,#1f5fd0,#7c5ce7 60%,#c026d3); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  font-size:.72em; }   /* 副标题比主标题小两号 */
+/* 页头主标题可点击：标题 + 「进入体验 ↗」提示胶囊 */
+.de-h2-a { display:inline-flex; align-items:center; gap:14px; text-decoration:none; color:inherit; }
+.de-h2-t { position:relative; }
+.de-h2-t::after { content:''; position:absolute; left:0; right:0; bottom:3px; height:2.5px; border-radius:2px;
+  background:linear-gradient(90deg,#1f5fd0,#7c5ce7); transform:scaleX(0); transform-origin:left; transition:transform .32s cubic-bezier(.4,0,.2,1); }
+.de-h2-a:hover .de-h2-t::after, .de-h2-a:focus-visible .de-h2-t::after { transform:scaleX(1); }
+.de-h2-go { display:inline-flex; align-items:center; gap:6px; padding:8px 15px; border-radius:999px;
+  font-size:13px; font-weight:800; letter-spacing:.2px; line-height:1; white-space:nowrap; color:#fff;
+  background:linear-gradient(135deg,#2f7bff,#7c5ce7);
+  box-shadow:0 8px 22px rgba(60,110,255,.38), inset 0 1px 0 rgba(255,255,255,.3);
+  animation:deGoGlow 2.8s ease-in-out infinite;
+  transition:transform .26s, filter .26s; }
+.de-h2-go i { font-style:normal; font-size:14px; line-height:1; transition:transform .26s; }
+.de-h2-a:hover .de-h2-go { transform:translateY(-2px); filter:brightness(1.08); }
+.de-h2-a:hover .de-h2-go i { transform:translate(2px,-2px); }
+@keyframes deGoGlow {
+  0%, 100% { box-shadow:0 8px 22px rgba(60,110,255,.34), inset 0 1px 0 rgba(255,255,255,.3); }
+  50%      { box-shadow:0 8px 34px rgba(96,144,255,.66), inset 0 1px 0 rgba(255,255,255,.38); }
+}
 .de-slogan { display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:#2b3a58; }
 .de-slogan::before { content:''; width:3px; height:14px; border-radius:2px; flex:none;
   background:linear-gradient(180deg,#1f5fd0,#c026d3); }
@@ -1420,6 +1490,9 @@ DE_CSS = '''<style>
 .de-front { transform:translateZ(9px); background:#fff; box-shadow:0 2px 0 rgba(255,255,255,.9) inset, 0 0 0 1px rgba(15,35,80,.07); }
 .de-back { transform:translateZ(-9px) rotateY(180deg); background:#fff; box-shadow:0 0 0 1px rgba(15,35,80,.07); }
 .de-img { position:absolute; inset:0; width:100%; height:100%; object-fit:fill; display:block; user-select:none; -webkit-user-drag:none; }
+/* 内联占位图：主图未到时先铺一层模糊海报轮廓（主图为不透明整图，加载完成后自然完全遮盖） */
+.de-lqip { position:absolute; inset:0; width:100%; height:100%; object-fit:fill; display:block;
+  filter:blur(6px) saturate(1.04); transform:scale(1.035); pointer-events:none; user-select:none; }
 
 /* 底板边缘：模拟板材厚度 */
 .de-edge { position:absolute; top:0; bottom:0; width:18px; pointer-events:none;
@@ -1429,7 +1502,10 @@ DE_CSS = '''<style>
 
 /* 人物分层 */
 .de-char { position:absolute; left:33.0952%; top:17.3507%; width:33.5714%; height:60.8209%; transform-origin:50% 100%;
-  animation:deIdle 5.2s ease-in-out infinite; }
+  animation:deIdle 5.2s ease-in-out infinite;
+  opacity:0; transition:opacity .42s ease; }
+/* 5 个分层全部 load 完成后由 JS 加 .ready 整体淡入，避免"身体→头→手"逐块弹出的拼装感 */
+.de-char.ready { opacity:1; }
 .de-l { position:absolute; inset:0; width:100%; height:100%; display:block; pointer-events:none; }
 .de-l-head { transform-origin:57.16% 23.62%; }
 .de-l-arm  { transform-origin:29.08% 31.44%; }
@@ -1686,12 +1762,37 @@ DE_CSS = '''<style>
 .cap-tbl td.sk { font-weight:700; color:#1f2c48; min-width:104px; }
 .cap-tbl td.sk .plan-tag, .plan-tag { display:block; font-style:normal; font-weight:700; font-size:10px; line-height:1.4;
   color:#e02b3c; margin-top:3px; letter-spacing:.1px; }
-.cap-tbl td.ent { white-space:nowrap; font-size:11px; font-weight:700; color:var(--cc,#1e6fd9); }
-.cap-tbl td.ent span { display:inline-block; padding:3px 9px; border-radius:8px; background:color-mix(in srgb, var(--cc,#1e6fd9) 9%, #fff);
-  border:1px solid color-mix(in srgb, var(--cc,#1e6fd9) 20%, #fff); }
+.cap-tbl td.ent { white-space:nowrap; font-size:11.5px; font-weight:700; color:var(--cc,#1e6fd9); }
+/* 入口标签：没配链接的走「纯文字」，不做按钮外观，避免误导点击 */
+.ent-chip { display:inline-flex; align-items:center; gap:0; border-radius:9px; }
+.ent-n { line-height:1.42; }
+/* ── 可点击入口标签（配了链接的）：整体做成一颗按钮 ── */
+a.ent-a { display:inline-flex; align-items:center; gap:9px; padding:3px 3px 3px 11px; text-decoration:none;
+  border-radius:9px; border:1px solid color-mix(in srgb, var(--cc,#1e6fd9) 22%, #fff);
+  background:color-mix(in srgb, var(--cc,#1e6fd9) 8%, #fff);
+  transition:background .2s, border-color .2s, box-shadow .2s, transform .2s; }
+a.ent-a .ent-n { color:#13224a; }
+.ent-go { display:inline-flex; align-items:center; gap:3px; flex:none;
+  font-size:10.5px; font-weight:800; letter-spacing:.35px; line-height:1; white-space:nowrap;
+  padding:4.5px 8px; border-radius:7px; color:#fff;
+  background:linear-gradient(135deg, color-mix(in srgb, var(--cc,#1e6fd9) 92%, #16224a), color-mix(in srgb, var(--cc,#1e6fd9) 64%, #16224a));
+  box-shadow:0 2px 6px color-mix(in srgb, var(--cc,#1e6fd9) 26%, transparent);
+  transition:box-shadow .2s, filter .2s; }
+.ent-arw { font-style:normal; font-size:10.5px; line-height:1; transition:transform .2s; }
+a.ent-a:hover, a.ent-a:focus-visible { transform:translateY(-1.5px); outline:none;
+  background:color-mix(in srgb, var(--cc,#1e6fd9) 15%, #fff);
+  border-color:color-mix(in srgb, var(--cc,#1e6fd9) 46%, #fff);
+  box-shadow:0 7px 18px color-mix(in srgb, var(--cc,#1e6fd9) 24%, transparent); }
+a.ent-a:hover .ent-arw, a.ent-a:focus-visible .ent-arw { transform:translate(1.5px,-1.5px); }
+/* 入口列提示条 */
+.cap-ent-hint { display:flex; align-items:center; gap:7px; margin:0 24px 12px; padding:8px 12px; border-radius:9px;
+  font-size:11.5px; font-weight:700; line-height:1.5; color:color-mix(in srgb, var(--cc,#1e6fd9) 62%, #4b5670);
+  background:color-mix(in srgb, var(--cc,#1e6fd9) 6%, #fff);
+  border:1px dashed color-mix(in srgb, var(--cc,#1e6fd9) 30%, #fff); }
+.cap-ent-hint .ic { font-size:12px; line-height:1; }
 /* 同入口合并单元格：垂直居中 + 极淡底色，弱化“每行重复入口” */
 .cap-tbl td.ent-span { vertical-align:middle; background:color-mix(in srgb, var(--cc,#1e6fd9) 3.2%, #fff); }
-.cap-tbl td.ent-span span { background:color-mix(in srgb, var(--cc,#1e6fd9) 11%, #fff); }
+.cap-tbl td.ent-span a.ent-a { background:color-mix(in srgb, var(--cc,#1e6fd9) 11%, #fff); }
 .cap-tbl td.ent-m { display:none; }
 .cap-tbl tbody tr { transition:background .2s; }
 .cap-tbl tbody tr:hover { background:color-mix(in srgb, var(--cc,#1e6fd9) 4.5%, #fff); }
@@ -1774,6 +1875,7 @@ DE_CSS = '''<style>
 }
 @media (max-width:980px) {
   .de-h2, .de-flow-head h2 { font-size:31px; }
+  .de-h2-go { padding:7px 13px; font-size:12px; gap:5px; }
   .de-sec { padding:66px 0; }
   .de-wrap { padding:0 22px; }
   .cap-grid { grid-template-columns:1fr; }
@@ -1785,6 +1887,9 @@ DE_CSS = '''<style>
   .nav-back-btn { padding:6px 12px; font-size:12.5px; }
   .de-board-sec { padding:40px 0 54px; }
   .de-h2, .de-flow-head h2 { font-size:26px; }
+  .de-h2-a { gap:10px; }
+  .de-h2-go { padding:6px 11px; font-size:11px; gap:4px; }
+  .de-h2-go i { font-size:12px; }
   .de-lead { font-size:14.5px; }
   .de-stage { min-height:470px; }
   .de-board { width:min(320px,84%); }
@@ -1861,7 +1966,9 @@ DE_CSS = '''<style>
     font-size:11.5px; color:#8a94a6; line-height:1.6; }
   .cap-tbl td.dt::before, .cap-tbl td.ent::before, .cap-tbl td.ent-m::before { content:attr(data-l); flex:none; font-size:10.5px; font-weight:700;
     color:#aab2c0; padding:1px 7px; border-radius:6px; background:#f3f5f9; }
-  .cap-tbl td.ent span, .cap-tbl td.ent-m span { white-space:normal; padding:1px 8px; border-radius:7px; font-size:11px; }
+  .cap-tbl td.ent a.ent-a, .cap-tbl td.ent-m a.ent-a { white-space:normal; padding:3px 3px 3px 10px; gap:7px; }
+  .cap-tbl td.ent .ent-n, .cap-tbl td.ent-m .ent-n { font-size:11px; line-height:1.45; }
+  .cap-tbl td.ent .ent-go, .cap-tbl td.ent-m .ent-go { font-size:10px; padding:4px 7px; }
   .cap-tbl td.ent-span { background:transparent; }
 }
 @media (max-width:480px) {
@@ -1876,6 +1983,7 @@ DE_CSS = '''<style>
 @media (prefers-reduced-motion: reduce) {
   .de-char, .de-char .de-l, .nav-de-btn::after, .de-bhint .k { animation:none !important; }
   .de-bubble .bb-tx.pop { animation:none !important; }
+  .de-h2-go { animation:none !important; }
 }
 
 /* ============================================================
@@ -1983,11 +2091,22 @@ DE_CSS = '''<style>
 .cap-tbl td.sk { color:#fff; }
 .cap-tbl tbody tr:hover { background:rgba(255,255,255,.05); }
 .plan-tag { color:#ff7583; }
-.cap-tbl td.ent { color:color-mix(in srgb, var(--cc,#1e6fd9) 38%, #e2ecff); }
-.cap-tbl td.ent span { background:color-mix(in srgb, var(--cc,#1e6fd9) 20%, rgba(255,255,255,.05));
-  border-color:color-mix(in srgb, var(--cc,#1e6fd9) 36%, transparent); }
+.cap-tbl td.ent { color:rgba(214,230,255,.62); }
 .cap-tbl td.ent-span { background:rgba(255,255,255,.035); }
-.cap-tbl td.ent-span span { background:color-mix(in srgb, var(--cc,#1e6fd9) 26%, transparent); }
+/* 可点击入口标签：深色底下的高亮按钮（保证文字对比度） */
+a.ent-a { background:rgba(255,255,255,.075);
+  border-color:color-mix(in srgb, var(--cc,#1e6fd9) 42%, rgba(255,255,255,.14)); }
+a.ent-a .ent-n { color:#fff; }
+.cap-tbl td.ent-span a.ent-a { background:rgba(255,255,255,.09); }
+.ent-go { color:#0d1a37;
+  background:linear-gradient(135deg, color-mix(in srgb, var(--cc,#1e6fd9) 50%, #fff), color-mix(in srgb, var(--cc,#1e6fd9) 24%, #fff));
+  box-shadow:0 2px 8px rgba(0,0,0,.32); }
+a.ent-a:hover, a.ent-a:focus-visible { background:rgba(255,255,255,.13);
+  border-color:color-mix(in srgb, var(--cc,#1e6fd9) 72%, #fff);
+  box-shadow:0 8px 22px color-mix(in srgb, var(--cc,#1e6fd9) 48%, transparent); }
+a.ent-a:hover .ent-go, a.ent-a:focus-visible .ent-go { filter:brightness(1.08); }
+.cap-ent-hint { color:rgba(228,240,255,.92); background:rgba(255,255,255,.055);
+  border-color:color-mix(in srgb, var(--cc,#1e6fd9) 44%, transparent); }
 
 /* 跨阶段紧凑卡（能力行） */
 .de-sub-head span { color:#fff; }
@@ -1995,9 +2114,9 @@ DE_CSS = '''<style>
 .cap-row { background:rgba(255,255,255,.045); border-color:rgba(255,255,255,.08); border-left-color:var(--cc,#1e6fd9); }
 .cap-row:hover { background:color-mix(in srgb, var(--cc,#1e6fd9) 14%, rgba(255,255,255,.06)); box-shadow:none; }
 .cap-row-h b { color:#fff; }
-.cap-row-h .ent { color:color-mix(in srgb, var(--cc,#1e6fd9) 38%, #e2ecff);
-  background:color-mix(in srgb, var(--cc,#1e6fd9) 20%, transparent);
-  border-color:color-mix(in srgb, var(--cc,#1e6fd9) 38%, transparent); }
+.cap-row-h .ent { color:rgba(228,240,255,.9);
+  background:rgba(255,255,255,.07);
+  border-color:color-mix(in srgb, var(--cc,#1e6fd9) 30%, rgba(255,255,255,.14)); }
 .cap-row-d { color:rgba(198,214,244,.76); }
 .cap-row-m { color:rgba(158,180,218,.62); }
 .cap-row-m::before { color:color-mix(in srgb, var(--cc,#1e6fd9) 40%, #9fb6e8); }
@@ -2096,11 +2215,16 @@ DE_JS = '''<script>
     });
   }
 
-  /* ---------- 放大查看 ---------- */
+  /* ---------- 放大查看（大图首次点击时才加载，避免首屏白下载 200KB+） ---------- */
   var lb = document.getElementById('deLb');
   var lbBtn = document.querySelector('[data-de-lightbox]');
   if(lb && lbBtn){
-    lbBtn.addEventListener('click', function(e){ e.stopPropagation(); lb.classList.add('open'); });
+    var lbImg = lb.querySelector('img');
+    lbBtn.addEventListener('click', function(e){
+      e.stopPropagation();
+      if(lbImg && !lbImg.getAttribute('src')){ lbImg.setAttribute('src', lbImg.getAttribute('data-src') || ''); }
+      lb.classList.add('open');
+    });
     lb.addEventListener('click', function(){ lb.classList.remove('open'); });
     document.addEventListener('keydown', function(e){ if(e.key === 'Escape') lb.classList.remove('open'); });
   }
@@ -2121,8 +2245,21 @@ DE_JS = '''<script>
 
   /* ---------- 人物动作：打招呼 / 转身 / 转到背面 / 复位 ---------- */
   var charEl = document.getElementById('deChar');
-  var sayEl = document.getElementById('deSay');
-  var btns = Array.prototype.slice.call(document.querySelectorAll('.de-act'));
+  /* 5 个分层图全部就绪后整体淡入，避免逐块弹出；2.5s 兜底强制显示，防止图片异常时人物消失 */
+  (function(){
+    if(!charEl) return;
+    var imgs = Array.prototype.slice.call(charEl.querySelectorAll('img'));
+    var left = imgs.length, shown = false;
+    function ready(){ if(shown) return; shown = true; charEl.classList.add('ready'); }
+    imgs.forEach(function(im){
+      function one(){ if(--left <= 0) ready(); }
+      if(im.complete && im.naturalWidth){ one(); }
+      else { im.addEventListener('load', one); im.addEventListener('error', one); }
+    });
+    if(left <= 0) ready();
+    setTimeout(ready, 2500);
+  })();
+  var sayEl = document.getElementById('deSay');  var btns = Array.prototype.slice.call(document.querySelectorAll('.de-act'));
   var CLS = ['act-hello', 'act-turn'];
   var CYCLE = ['hello', 'turn', 'back', 'reset'];
   var ci = -1;
@@ -3210,11 +3347,18 @@ def build_digital_employee_page(data):
     board_img = media_path(meta.get('立牌正面图', 'media/de_board_front.webp'))
     prefix = meta.get('人物层前缀', 'media/de_char_')
     poster_full = media_path('media/de_poster_full.png')
+    # 1 倍屏轻量版（560px 宽，约 36KB）：普通屏不再下载 2 倍屏大图
+    _b1x = media_path('media/de_board_front_1x.webp')
+    if os.path.exists(_b1x):
+        board_src = (f'src="{board_img}" srcset="{_b1x} 560w, {board_img} 1100w" '
+                     f'sizes="(max-width:768px) 320px, 560px"')
+    else:
+        board_src = f'src="{board_img}"'
     layers = ''
     for nm in ('body', 'tab', 'arm', 'head'):
-        layers += f'<img class="de-l de-l-{nm}" src="{media_path(prefix + nm + ".png")}" alt="">'
+        layers += f'<img class="de-l de-l-{nm}" src="{media_path(prefix + nm + ".png")}" alt="" decoding="async">'
     # 挥手版手臂（打招呼时切换显示，去掉手中的笔）
-    layers += f'<img class="de-l de-l-arm de-arm-wave" src="{media_path(prefix + "wave_arm.png")}" alt="">'
+    layers += f'<img class="de-l de-l-arm de-arm-wave" src="{media_path(prefix + "wave_arm.png")}" alt="" decoding="async">'
 
     kpi_meta = de.get('kpi_meta', {})
     kpi = ''
@@ -3247,6 +3391,18 @@ def build_digital_employee_page(data):
 
     bubble_say = acts[0]['say'] if acts else ''
     lb_label = meta.get('放大按钮', '放大查看')
+
+    # 页头主标题：配了链接 → 可点击 + 「进入体验 ↗」提示胶囊
+    h2_t = meta.get('页头主标题', '').strip()
+    h2_url = meta.get('页头主标题链接', '').strip()
+    h2_tip = meta.get('页头主标题提示', '进入体验').strip()
+    if h2_url:
+        h2_main = (f'<a class="de-h2-a" href="{h2_url}" target="_blank" rel="noopener noreferrer"'
+                   f' title="点击进入「{h2_t}」体验">'
+                   f'<span class="de-h2-t">{h2_t}</span>'
+                   f'<span class="de-h2-go">{h2_tip}<i>↗</i></span></a>')
+    else:
+        h2_main = h2_t
 
     back_panel = f'''<div class="de-bi">
   <div class="de-bi-top"><i></i>{back.get('背面眉标','')}<span class="de-bi-back-btn" data-de-front>{back.get('背面入口文字','查看正面能力全景 →')}</span></div>
@@ -3287,7 +3443,8 @@ def build_digital_employee_page(data):
               <div class="tagline">{back.get('支架文字','')}</div>
             </div>
             <div class="de-face de-front">
-              <img class="de-img" src="{board_img}" alt="营销AI小秘 场景能力立牌">
+              <img class="de-lqip" src="{DE_BOARD_LQIP}" alt="" aria-hidden="true">
+              <img class="de-img" {board_src} alt="营销AI小秘 场景能力立牌" fetchpriority="high" decoding="async">
               <div class="de-char" id="deChar" title="点我切换动作">{layers}</div>
               <div class="de-sheen"></div>
             </div>
@@ -3300,7 +3457,7 @@ def build_digital_employee_page(data):
       </div>
 
       <div class="de-panel">
-        <h2 class="de-h2">{meta.get('页头主标题','')}<br><em>{meta.get('页头副标题','')}</em></h2>
+        <h2 class="de-h2">{h2_main}<br><em>{meta.get('页头副标题','')}</em></h2>
         <div class="de-tagline">
           <span class="de-slogan">{meta.get('页头标语','')}</span>
           <span class="de-tagsep"></span>
@@ -3312,7 +3469,7 @@ def build_digital_employee_page(data):
       </div>
     </div>
   </div>
-  <div class="de-lb" id="deLb"><span class="cl">✕</span><img src="{poster_full}" alt="营销AI小秘 场景能力立牌 全图"></div>
+  <div class="de-lb" id="deLb"><span class="cl">✕</span><img data-src="{poster_full}" alt="营销AI小秘 场景能力立牌 全图" decoding="async"></div>
 </div>'''
 
     # ---------- 2. 业务流 ----------
@@ -3382,9 +3539,26 @@ def build_digital_employee_page(data):
         main = (name[:m.start()] + name[m.end():]).strip()
         return f'{main}<i class="plan-tag">{m.group(1)}</i>'
 
+    entry_links = de.get('entry_links', {})
+
+    def ent_tag(name):
+        """入口标签：配了链接的 → 可点击「去体验 ↗」外链标签；没配的 → 普通文字标签。"""
+        if not name:
+            return '—'
+        url = entry_links.get(name)
+        if not url:
+            return f'<span class="ent ent-chip"><span class="ent-n">{name}</span></span>'
+        return ('<a class="ent ent-chip ent-a" href="%s" target="_blank" rel="noopener noreferrer"'
+                ' title="点击跳转前往体验">'
+                '<span class="ent-n">%s</span>'
+                '<span class="ent-go">去体验<i class="ent-arw">↗</i></span></a>') % (url, name)
+
     def cap_card(c, wide=False, compact=False):
         cc = c.get('主题色', '#1e6fd9')
         rows = c.get('rows', [])
+        has_link = any((r.get('entry') or '').strip() in entry_links for r in rows)
+        hint_html = (f'<div class="cap-ent-hint"><span class="ic">💡</span>'
+                     f'{ch.get("入口提示","点击带 ↗ 的「入口」标签，可直接跳转前往体验")}</div>') if has_link else ''
         if rows and not compact:
             # 入口列：空值向上继承上一行的入口，连续同值合并为一格（rowspan）
             ent_vals, last = [], ''
@@ -3412,15 +3586,14 @@ def build_digital_employee_page(data):
                     '<th>数据平台</th><th>入口 / 链接</th></tr></thead><tbody>')
             for idx, r in enumerate(rows):
                 ent = ent_vals[idx]
+                inner = ent_tag(ent)
                 if spans[idx] > 1:
                     ent_html = (f'<td class="ent ent-span" rowspan="{spans[idx]}" data-l="入口">'
-                                f'<span>{ent}</span></td>')
+                                f'{inner}</td>')
                 elif spans[idx] == 1:
-                    inner = f'<span>{ent}</span>' if ent else '—'
                     ent_html = f'<td class="ent" data-l="入口">{inner}</td>'
                 else:
                     # 桌面端由 rowspan 覆盖，移动端堆叠时补一份（保证每张卡都带入口）
-                    inner = f'<span>{ent}</span>' if ent else '—'
                     ent_html = f'<td class="ent-m" data-l="入口">{inner}</td>'
                 body += (f'<tr><td class="sk">{skill_html(r["skill"])}</td><td class="dm">{r["demo"]}</td>'
                          f'<td class="dt" data-l="数据平台">{r["data"] or "—"}</td>'
@@ -3429,7 +3602,7 @@ def build_digital_employee_page(data):
         elif compact:
             body = '<div class="cap-rows">'
             for r in c['rows']:
-                ent = ('<span class="ent">%s</span>' % r['entry']) if r['entry'] else ''
+                ent = ent_tag(r['entry'])
                 dat = ('<div class="cap-row-m">数据平台 · %s</div>' % r['data']) if r['data'] else ''
                 body += ('<div class="cap-row"><div class="cap-row-h"><b>%s</b>%s</div>'
                          '<div class="cap-row-d">%s</div>%s</div>') % (skill_html(r['skill']), ent, r['demo'], dat)
@@ -3473,6 +3646,7 @@ def build_digital_employee_page(data):
   </div>
   {loop_html}
   <div class="cap-desc">{c.get('说明','')}</div>
+  {hint_html}
   {body}
   {jump}
 </div>'''
@@ -3488,6 +3662,7 @@ def build_digital_employee_page(data):
   </div>
   {loop_html}
   <div class="cap-desc">{c.get('说明','')}</div>
+  {hint_html}
   {body}
   {jump}
 </div>'''
@@ -3533,9 +3708,17 @@ def build_digital_employee_page(data):
     future_section = build_future_section_home(data)
 
     title = meta.get('浏览器标题', '超级数字员工 — 安恒信息 AI赋能营销')
+    if os.path.exists(_b1x):
+        preload = (f'<link rel="preload" as="image" href="{board_img}" '
+                   f'imagesrcset="{_b1x} 560w, {board_img} 1100w" '
+                   f'imagesizes="(max-width:768px) 320px, 560px" fetchpriority="high">\n'
+                   f'<link rel="preload" as="image" href="{media_path(prefix + "body.png")}">\n')
+    else:
+        preload = (f'<link rel="preload" as="image" href="{board_img}" fetchpriority="high">\n'
+                   f'<link rel="preload" as="image" href="{media_path(prefix + "body.png")}">\n')
     return ('<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n'
             '<meta name="viewport" content="width=device-width,initial-scale=1.0">\n'
-            f'<title>{title}</title>\n{CSS}\n{DE_CSS}\n</head>\n<body class="de-body">\n'
+            f'<title>{title}</title>\n{CSS}\n{DE_CSS}\n{preload}</head>\n<body class="de-body">\n'
             '<div id="prog"></div>\n\n' + nav + '\n\n' + board_html + '\n\n' + flow_html + '\n\n'
             + cap_html + '\n\n' + incentive_section + '\n\n' + future_section + '\n\n'
             + cta + '\n\n' + footer + '\n\n' + DE_JS + '\n</body>\n</html>')

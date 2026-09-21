@@ -101,11 +101,37 @@ nav.scrolled { box-shadow:0 1px 12px rgba(0,0,0,.06); }
 @media (max-width:1280px) { .hero-de-orb { top:106px; } }
 @media (max-width:1180px) { .hero-de-orb { transform:scale(.86); transform-origin:top right; } }
 @media (max-width:1080px) { .hero-de-orb { right:max(26px, 2.4vw); } .orb-hand { right:-17px; font-size:23px; } }
-@media (max-width:1024px) { .hero-de-orb { display:none; } }
-@media (prefers-reduced-motion: reduce) {
-  .orb-stage, .orb-ring, .orb-halo, .orb-hand b { animation:none !important; }
-  .orb-halo { opacity:.35; }
+/* ≤1024px：改为主内容下方的横向居中胶囊入口（不再隐藏） */
+@media (max-width:1024px) {
+  .hero { flex-direction:column; }
+  .hero-inner { order:1; }
+  .hero-de-orb { position:relative; right:auto; top:auto; order:2; flex:none;
+    width:auto; height:auto; display:inline-flex; align-items:center; gap:14px;
+    margin:26px auto 6px; padding:8px 24px 8px 8px; border-radius:999px;
+    background:linear-gradient(118deg, rgba(31,95,208,.30), rgba(91,63,212,.26));
+    border:1px solid rgba(125,178,255,.34); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    box-shadow:0 12px 34px rgba(4,14,38,.46); transform:none; transform-origin:center;
+    transition:transform .3s, box-shadow .3s; }
+  .hero-de-orb:active { transform:scale(.97); }
+  .orb-stage { width:66px; height:66px; flex:none; animation:none; }
+  .orb-ring { inset:-5px; border-width:1px; }
+  .orb-halo { animation-duration:2.4s; }
+  .orb-label { position:relative; left:auto; top:auto; transform:none; padding:0; white-space:nowrap;
+    font-size:15px; background:none; box-shadow:none; }
+  .hero-de-orb:hover .orb-label { transform:none; box-shadow:none; }
+  .orb-hand { display:none; }
+  .hero-de-orb::after { content:'👆'; order:3; margin-left:-4px; font-size:20px; line-height:1;
+    filter:drop-shadow(0 4px 10px rgba(0,0,0,.5)); animation:orbTap 2.3s cubic-bezier(.4,0,.3,1) infinite; }
 }
+@media (max-width:640px) {
+  .hero-de-orb { gap:11px; padding:7px 18px 7px 7px; margin-top:22px; }
+  .orb-stage { width:58px; height:58px; }
+  .orb-label { font-size:14px; }
+  .hero-de-orb::after { font-size:18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .orb-stage, .orb-ring, .orb-halo, .orb-hand b, .hero-de-orb::after { animation:none !important; }
+  .orb-halo { opacity:.35; }}
 .text-highlight { background:linear-gradient(135deg,#5eead4,#818cf8,#60a5fa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-style:normal; font-weight:700; }
 .text-highlight-gold { background:linear-gradient(135deg,#fbbf24,#f59e0b,#fb923c); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-style:normal; font-weight:700; }
 .hero-incentive-divider { width:80px; height:1px; background:rgba(255,255,255,.12); border-radius:1px; margin:44px auto 28px; }
