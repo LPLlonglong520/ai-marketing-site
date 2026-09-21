@@ -5,6 +5,7 @@ build.py v2 — 从 content.md 生成 index.html
 修改 content.md 后运行此脚本即可更新网站内容。
 """
 import re, os, sys, json
+from urllib.parse import quote
 
 # 切换工作目录 + 强制UTF-8
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -596,6 +597,8 @@ CSS = '''<style>
   --transition: .28s cubic-bezier(.4,0,.2,1);
 }
 html { scroll-behavior: smooth; }
+/* 固定顶部导航会遮住锚点落点，按各页导航高度留白 */
+#future-home, #landing-scenes, #ai-arch, .cap-card[data-scene] { scroll-margin-top: 78px; }
 body { font-family: 'PingFang SC','Microsoft YaHei','Inter',-apple-system,sans-serif; background: var(--bg); color: var(--text); line-height: 1.68; overflow-x: hidden; -webkit-font-smoothing:antialiased; }
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-thumb { background: #c8cdd5; border-radius: 3px; }
@@ -2163,6 +2166,9 @@ a.ent-a:hover .ent-go, a.ent-a:focus-visible .ent-go { filter:brightness(1.08); 
   100% { box-shadow:0 0 0 0 rgba(127,178,255,0), 0 18px 44px rgba(0,0,0,0); }
 }
 .cap-card.cap-flash { animation:capFlash 1.6s cubic-bezier(.22,.9,.3,1) 1; border-color:rgba(127,178,255,.8) !important; }
+/* 未来规划模块不是 .cap-card，单独给它也来一下高亮，从详情页返回时才看得见落点 */
+#future-home.cap-flash,
+#future-home.cap-flash .future-home-card { animation:capFlash 1.6s cubic-bezier(.22,.9,.3,1) 1; }
 @media (prefers-reduced-motion:reduce) { .cap-card.cap-flash { animation-duration:.01s; } }
 </style>'''
 
@@ -2351,12 +2357,19 @@ JUMP_JS = '''<script>
     setTimeout(function(){ el.classList.remove('cap-flash'); }, 1800);
   }
 
-  function goto(name){
-    var target = null;
+  // 定位目标：优先按能力卡的 data-scene 名（如「渠道赋能」），
+  // 其次按元素 id（如未来规划模块 future-home）
+  function findTarget(name){
     var cards = document.querySelectorAll('.cap-card[data-scene]');
     for (var i = 0; i < cards.length; i++){
-      if (cards[i].getAttribute('data-scene') === name){ target = cards[i]; break; }
+      if (cards[i].getAttribute('data-scene') === name) return cards[i];
     }
+    if (/^[A-Za-z][\\w-]*$/.test(name)) return document.getElementById(name);
+    return null;
+  }
+
+  function goto(name){
+    var target = findTarget(name);
     if (!target) return;
     var y = target.getBoundingClientRect().top + window.pageYOffset - HEAD_OFFSET;
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2367,6 +2380,15 @@ JUMP_JS = '''<script>
     }
     setTimeout(function(){ flash(target); }, reduce ? 0 : 420);
   }
+
+  // 从详情页点「返回」回到本页时会带 ?to=<卡名>，自动滚到那张卡并高亮一下
+  try {
+    var _to = new URLSearchParams(window.location.search).get('to');
+    if (_to){
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';  // 别让浏览器恢复旧滚动位置盖掉定位
+      setTimeout(function(){ goto(_to); }, 460);
+    }
+  } catch (e) {}
 
   var triggers = document.querySelectorAll('[data-jump]');
   for (var i = 0; i < triggers.length; i++){
@@ -3173,9 +3195,10 @@ def build_future_section_home(data, tag_origin=False):
     if not status:
         status = '当前各类AI应用分散在不同平台，一线员工在外部AI工具上积累了大量实战经验。未来我们将统一整合、沉淀推广，形成完整营销AI工具矩阵。'
 
-    # 页面若挂在「超级数字员工」下（tag_origin=True），链接带上 ?from=xx，未来页的「返回」就会指回它
+    # 页面若挂在「超级数字员工」下（tag_origin=True），链接带上 ?from=xx&to=future-home，
+    # 未来页的「返回」就会指回超级数字员工页的这块未来规划模块（id=future-home）
     _p, _u, _t = _src_back(data)
-    furl = 'future.html' + (('?from=' + _p) if (tag_origin and _p) else '')
+    furl = 'future.html' + (('?from=' + _p + '&to=future-home') if (tag_origin and _p) else '')
 
     return (
         '<section class="future-home-section" id="future-home">\n'
@@ -3211,18 +3234,26 @@ def _src_back(data, param=None):
     g = data.get('global', {})
     p = (param if param is not None else meta.get('来源参数', '')) or ''
     url = (g.get('数字员工入口链接', '') or 'digital-employee.html').strip()
-    txt = (meta.get('来源返回文字', '') or '← 返回超级数字员工').strip()
+    txt = (meta.get('来源返回文字', '') or '').strip()
     return p.strip(), url, txt
 
 
-def _back_js(data, selector='.scene-detail-nav .back-btn'):
-    """生成「返回指回来处」的 JS 片段（要塞进已有 <script> 里，params 变量需已存在）。"""
+def _back_js(data, selector='.back-to-module'):
+    """生成「返回指回来处」的 JS 片段（要塞进已有 <script> 里，params 变量需已存在）。
+
+    - 只改「返回」那一枚按钮（`.back-to-module`），不动「← 返回首页」
+    - 把跳进来时带的 `?to=<卡名>` 透传回去，让超级数字员工页定位到对应的场景卡
+    - 按钮文字默认保持原样（「返回」）；`来源返回文字` 填了才替换
+    """
     p, url, txt = _src_back(data)
     if not p:
         return ''
+    joiner = '&' if '?' in url else '?'
     return (
         f"  if (params.get('from') === {json.dumps(p)}) {{\n"
-        f"    var _t = {json.dumps(url, ensure_ascii=False)}, _x = {json.dumps(txt, ensure_ascii=False)};\n"
+        f"    var _to = params.get('to') || '';\n"
+        f"    var _x = {json.dumps(txt, ensure_ascii=False)};\n"
+        f"    var _t = {json.dumps(url, ensure_ascii=False)} + (_to ? ({json.dumps(joiner)} + 'to=' + encodeURIComponent(_to)) : '');\n"
         f"    var _ls = document.querySelectorAll({json.dumps(selector)});\n"
         f"    for (var _i = 0, _a; (_a = _ls[_i]); _i++) _a.setAttribute('href', _t);\n"
         f"    if (_ls[0] && _x) _ls[0].textContent = _x;\n"
@@ -3374,7 +3405,7 @@ def build_future_page(data):
 
     detail_nav = f'''<div class="scene-detail-nav">
   <a href="index.html" class="back-btn">← 返回首页</a>
-  <a href="index.html#future-home" class="back-btn">返回</a>
+  <a href="index.html#future-home" class="back-btn back-to-module">返回</a>
   <div class="nav-title">🚀 未来规划</div>
   {_de_nav_btn(g)}
   <div class="nav-pager"></div>
@@ -3770,11 +3801,17 @@ def build_digital_employee_page(data):
                     '<span>该阶段能力正在规划中，上线后将持续补充到本清单</span></div>')
         jump = ''
         if c.get('跳转链接'):
-            # 从本页跳去详情页时带上 ?from=xx，目标页据此把「返回」指回超级数字员工页
+            # 从本页跳去详情页时带上 ?from=xx&to=<卡名>：
+            # 目标页的「返回」据此指回超级数字员工页，并定位到本卡位置
             jump_url = c['跳转链接']
-            if SRC and not jump_url.startswith('#') and 'from=' not in jump_url:
-                jump_url += ('&' if '?' in jump_url else '?') + 'from=' + SRC
-            jump = f'<a class="cap-jump" href="{jump_url}">{c.get("跳转文字","查看完整介绍 →")}</a>'
+            if SRC and not jump_url.startswith('#'):
+                _nm = (c.get('名称', '') or '').strip()
+                if 'from=' not in jump_url:
+                    jump_url += ('&' if '?' in jump_url else '?') + 'from=' + SRC
+                if _nm and 'to=' not in jump_url:
+                    jump_url += ('&' if '?' in jump_url else '?') + 'to=' + quote(_nm)
+            _hu = jump_url.replace('&', '&amp;')   # 链接里带 & 时按 HTML 规范转义
+            jump = f'<a class="cap-jump" href="{_hu}">{c.get("跳转文字","查看完整介绍 →")}</a>'
         stage = c.get('对应阶段', '')
         stage_html = f'<div class="cap-stage">对应业务阶段 · <b>{stage}</b></div>' if stage else ''
 

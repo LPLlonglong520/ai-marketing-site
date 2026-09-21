@@ -23,6 +23,8 @@
   --transition: .28s cubic-bezier(.4,0,.2,1);
 }
 html { scroll-behavior: smooth; }
+/* 固定顶部导航会遮住锚点落点，按各页导航高度留白 */
+#future-home, #landing-scenes, #ai-arch, .cap-card[data-scene] { scroll-margin-top: 78px; }
 body { font-family: 'PingFang SC','Microsoft YaHei','Inter',-apple-system,sans-serif; background: var(--bg); color: var(--text); line-height: 1.68; overflow-x: hidden; -webkit-font-smoothing:antialiased; }
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-thumb { background: #c8cdd5; border-radius: 3px; }
@@ -1577,6 +1579,9 @@ a.ent-a:hover .ent-go, a.ent-a:focus-visible .ent-go { filter:brightness(1.08); 
   100% { box-shadow:0 0 0 0 rgba(127,178,255,0), 0 18px 44px rgba(0,0,0,0); }
 }
 .cap-card.cap-flash { animation:capFlash 1.6s cubic-bezier(.22,.9,.3,1) 1; border-color:rgba(127,178,255,.8) !important; }
+/* 未来规划模块不是 .cap-card，单独给它也来一下高亮，从详情页返回时才看得见落点 */
+#future-home.cap-flash,
+#future-home.cap-flash .future-home-card { animation:capFlash 1.6s cubic-bezier(.22,.9,.3,1) 1; }
 @media (prefers-reduced-motion:reduce) { .cap-card.cap-flash { animation-duration:.01s; } }
 </style>
 <link rel="preload" as="image" href="media/de_board_front.webp" imagesrcset="media/de_board_front_1x.webp 560w, media/de_board_front.webp 1120w" imagesizes="(max-width:768px) 320px, 560px" fetchpriority="high">
@@ -1694,7 +1699,7 @@ a.ent-a:hover .ent-go, a.ent-a:focus-visible .ent-go { filter:brightness(1.08); 
 </div><div class="flow-col jumpable" data-jump="收入/经营场景" role="link" tabindex="0">
   <div class="flow-head"><span class="n">7</span><span class="t">收入</span></div>
   <div class="flow-body"><div class="flow-item"><i>7.1</i><span>应收/确认</span></div><div class="flow-item"><i>7.2</i><span>回款/逾期</span></div><div class="flow-item"><i>7.3</i><span>开票</span></div><div class="flow-item"><i>7.4</i><span>业绩预测</span></div></div>
-</div><div class="flow-col plan">
+</div><div class="flow-col plan jumpable" data-jump="合同场景" role="link" tabindex="0">
   <div class="flow-head"><span class="n">8</span><span class="t">售后</span></div>
   <div class="flow-body"><div class="flow-item"><i>8.1</i><span>售后维保</span></div><div class="flow-item"><i>8.2</i><span>退换货</span></div><div class="flow-item"><i>8.3</i><span>客诉</span></div><div class="flow-item"><i>8.4</i><span>400</span></div><span class="plan-foot">建设中</span></div>
 </div></div>
@@ -1850,7 +1855,7 @@ a.ent-a:hover .ent-go, a.ent-a:focus-visible .ent-go { filter:brightness(1.08); 
   <div class="cap-desc">渠道 AI 数字员工 + 渠道市场分析空间，7×24 小时值守，减少重复答疑，赋能渠道伙伴提质增效</div>
   
   <div class="cap-rows"><div class="cap-row"><div class="cap-row-h"><b>安小渠</b><span class="ent ent-chip"><span class="ent-n">钉钉 → 安小渠（安恒信息组织）</span></span></div><div class="cap-row-d">专为渠道打造，解答产品知识、行业打法、挖掘商机、渠道政策以及下载资料，7×24小时值守</div><div class="cap-row-m">数据平台 · 渠道专属知识库</div></div><div class="cap-row"><div class="cap-row-h"><b>渠道市场分析空间</b><span class="ent ent-chip"><span class="ent-n">DASLink → 帆软 → 渠道市场空间分析</span></span></div><div class="cap-row-d">渠道地图、渠道运营、渠道市场研判、行业市场研判</div><div class="cap-row-m">数据平台 · 渠道市场数据</div></div></div>
-  <a class="cap-jump" href="scene-5.html?from=de">查看渠道赋能完整介绍 →</a>
+  <a class="cap-jump" href="scene-5.html?from=de&amp;to=%E6%B8%A0%E9%81%93%E8%B5%8B%E8%83%BD">查看渠道赋能完整介绍 →</a>
 </div><div class="cap-card compact" style="--cc:#7c3aed" data-scene="知识助手">
   <div class="cap-top">
     <div class="cap-ico">🧠</div>
@@ -1864,7 +1869,7 @@ a.ent-a:hover .ent-go, a.ent-a:focus-visible .ent-go { filter:brightness(1.08); 
   <div class="cap-desc">把零散文档、制度、案例沉淀成可检索的知识底座，问一句就能定位到出处</div>
   <div class="cap-ent-hint"><span class="ic">💡</span>点击带 ↗ 的「入口」标签，可直接跳转前往体验</div>
   <div class="cap-rows"><div class="cap-row"><div class="cap-row-h"><b>知识AI问答</b><a class="ent ent-chip ent-a" href="https://applink.dingtalk.com/action/jumprobot?dingtalkid=%24%3aLWCP_v1%3a%24jNpCmgi%2fFOAC4IeQJVQM%2bm3Lp3xG0gCb" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">营销AI小秘</span><span class="ent-go">去体验<i class="ent-arw">↗</i></span></a></div><div class="cap-row-d">基于营销知识库的问答检索，支持文档溯源</div><div class="cap-row-m">数据平台 · 营销知识库</div></div></div>
-  <a class="cap-jump" href="scene-7.html?from=de">查看知识助手完整介绍 →</a>
+  <a class="cap-jump" href="scene-7.html?from=de&amp;to=%E7%9F%A5%E8%AF%86%E5%8A%A9%E6%89%8B">查看知识助手完整介绍 →</a>
 </div><div class="cap-card compact" style="--cc:#db2777" data-scene="Skill共享平台">
   <div class="cap-top">
     <div class="cap-ico">🛠️</div>
@@ -1878,7 +1883,7 @@ a.ent-a:hover .ent-go, a.ent-a:focus-visible .ent-go { filter:brightness(1.08); 
   <div class="cap-desc">基础 Skill + 业务专属 Skill，一线实战经验沉淀到公司平台，30+ 比武案例、40+ 提效案例持续共享</div>
   <div class="cap-ent-hint"><span class="ic">💡</span>点击带 ↗ 的「入口」标签，可直接跳转前往体验</div>
   <div class="cap-rows"><div class="cap-row"><div class="cap-row-h"><b>Skill上传与共享</b><a class="ent ent-chip ent-a" href="https://applink.dingtalk.com/action/jumprobot?dingtalkid=%24%3aLWCP_v1%3a%24jNpCmgi%2fFOAC4IeQJVQM%2bm3Lp3xG0gCb" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">营销AI小秘</span><span class="ent-go">去体验<i class="ent-arw">↗</i></span></a></div><div class="cap-row-d">一线员工上传实战经验与优秀 Skill，获奖项激励</div><div class="cap-row-m">数据平台 · 公司统一 Skill 平台</div></div></div>
-  <a class="cap-jump" href="scene-6.html?from=de">查看 Skill共享平台完整介绍 →</a>
+  <a class="cap-jump" href="scene-6.html?from=de&amp;to=Skill%E5%85%B1%E4%BA%AB%E5%B9%B3%E5%8F%B0">查看 Skill共享平台完整介绍 →</a>
 </div></div>
   </div>
 </section>
@@ -1929,7 +1934,7 @@ a.ent-a:hover .ent-go, a.ent-a:focus-visible .ent-go { filter:brightness(1.08); 
       <div class="future-home-title">未来规划</div>
       <div class="future-home-subtitle">统一入口 · 整合资源 · 建设营销AI综合能力平台</div>
     </div>
-    <a href="future.html?from=de" class="future-home-card">
+    <a href="future.html?from=de&to=future-home" class="future-home-card">
       <div class="future-home-icon">🚀</div>
       <div class="future-home-card-body">
         <div class="future-home-card-title">建设营销AI综合能力平台</div>
@@ -2143,12 +2148,19 @@ a.ent-a:hover .ent-go, a.ent-a:focus-visible .ent-go { filter:brightness(1.08); 
     setTimeout(function(){ el.classList.remove('cap-flash'); }, 1800);
   }
 
-  function goto(name){
-    var target = null;
+  // 定位目标：优先按能力卡的 data-scene 名（如「渠道赋能」），
+  // 其次按元素 id（如未来规划模块 future-home）
+  function findTarget(name){
     var cards = document.querySelectorAll('.cap-card[data-scene]');
     for (var i = 0; i < cards.length; i++){
-      if (cards[i].getAttribute('data-scene') === name){ target = cards[i]; break; }
+      if (cards[i].getAttribute('data-scene') === name) return cards[i];
     }
+    if (/^[A-Za-z][\w-]*$/.test(name)) return document.getElementById(name);
+    return null;
+  }
+
+  function goto(name){
+    var target = findTarget(name);
     if (!target) return;
     var y = target.getBoundingClientRect().top + window.pageYOffset - HEAD_OFFSET;
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2159,6 +2171,15 @@ a.ent-a:hover .ent-go, a.ent-a:focus-visible .ent-go { filter:brightness(1.08); 
     }
     setTimeout(function(){ flash(target); }, reduce ? 0 : 420);
   }
+
+  // 从详情页点「返回」回到本页时会带 ?to=<卡名>，自动滚到那张卡并高亮一下
+  try {
+    var _to = new URLSearchParams(window.location.search).get('to');
+    if (_to){
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';  // 别让浏览器恢复旧滚动位置盖掉定位
+      setTimeout(function(){ goto(_to); }, 460);
+    }
+  } catch (e) {}
 
   var triggers = document.querySelectorAll('[data-jump]');
   for (var i = 0; i < triggers.length; i++){

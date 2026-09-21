@@ -23,6 +23,8 @@
   --transition: .28s cubic-bezier(.4,0,.2,1);
 }
 html { scroll-behavior: smooth; }
+/* 固定顶部导航会遮住锚点落点，按各页导航高度留白 */
+#future-home, #landing-scenes, #ai-arch, .cap-card[data-scene] { scroll-margin-top: 78px; }
 body { font-family: 'PingFang SC','Microsoft YaHei','Inter',-apple-system,sans-serif; background: var(--bg); color: var(--text); line-height: 1.68; overflow-x: hidden; -webkit-font-smoothing:antialiased; }
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-thumb { background: #c8cdd5; border-radius: 3px; }
