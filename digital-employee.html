@@ -1306,17 +1306,25 @@ a.ent-a:hover .ent-arw, a.ent-a:focus-visible .ent-arw { transform:translate(1.5
 /* 窄卡：能力行卡片式 */
 .cap-rows { padding:0 18px 18px; display:flex; flex-direction:column; gap:11px; }
 .cap-row { border:1px solid rgba(15,35,80,.07); border-left:3px solid var(--cc,#1e6fd9); border-radius:12px;
-  padding:13px 15px; background:#fbfcfe; transition:all .26s; }
+  padding:13px 15px; background:#fbfcfe; transition:all .26s;
+  display:flex; align-items:flex-start; gap:14px; }
 .cap-row:hover { background:color-mix(in srgb, var(--cc,#1e6fd9) 5%, #fff); transform:translateX(3px); box-shadow:0 6px 18px rgba(15,35,80,.06); }
+.cap-row-bd { flex:1 1 auto; min-width:0; }
+/* 右侧列：入口 chip 在上，「操作路径」紧接其下（用户要求路径文案放在上面/贴着入口） */
+.cap-row-side { flex:none; display:flex; flex-direction:column; align-items:flex-end; gap:7px; max-width:60%; margin-left:auto; }
 .cap-row-h { display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; margin-bottom:7px; }
 .cap-row-h b { font-size:13.5px; font-weight:700; color:#1f2c48; letter-spacing:-.2px; }
 .cap-row-h .ent { margin-left:auto; font-size:11px; font-weight:600; color:#828da1; padding:0; background:none; border:none; }
+.cap-row-side .ent { font-size:11px; font-weight:600; color:#828da1; padding:0; background:none; border:none; white-space:nowrap; }
 .cap-row-d { font-size:12.5px; color:#5a6579; line-height:1.72; }
 .cap-row-m { font-size:11px; color:#98a2b3; margin-top:8px; display:flex; align-items:flex-start; gap:7px; line-height:1.6; }
 .cap-row-m::before { content:'▸'; color:var(--cc,#1e6fd9); font-size:10px; flex:none; line-height:1.7; }
-/* 紧凑卡底部「操作路径」：和「数据来源」同一位置风格，路径每段是独立小标签 */
+/* 「操作路径」：和「数据来源」同一位置风格，路径每段是独立小标签 */
 .cap-row-path { margin-top:9px; padding-top:9px; border-top:1px dashed rgba(15,35,80,.1);
   display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap; }
+/* 在右侧列里：不画分隔线，整块右对齐贴着入口 chip */
+.cap-row-side .cap-row-path { margin-top:0; padding-top:0; border-top:none; justify-content:flex-end; text-align:right; }
+.cap-row-side .cap-row-path .crp-c { justify-content:flex-end; }
 .cap-row-path .crp-l { flex:none; font-size:10.5px; font-weight:800; letter-spacing:.3px; color:#98a2b3; line-height:1.9; }
 .cap-row-path .crp-c { display:flex; align-items:center; flex-wrap:wrap; gap:5px; }
 /* 紧凑卡「操作路径」：纯文字展示，不做链接/按钮外观 */
@@ -1330,6 +1338,13 @@ a.pth-a .ent-arw { margin-left:3px; font-size:9px; }
 .cap-card > .cap-tbl-wrap { min-height:0; }
 .cap-card > .cap-jump { margin-top:auto; }
 @media (max-width:980px) { .cap-sub-grid { grid-template-columns:1fr; } }
+/* 窄屏：紧凑卡右列（入口 + 操作路径）改成堆叠到下方并左对齐 */
+@media (max-width:640px) {
+  .cap-row { flex-direction:column; gap:9px; }
+  .cap-row-side { align-items:flex-start; max-width:100%; margin-left:0; }
+  .cap-row-side .cap-row-path { justify-content:flex-start; text-align:left; }
+  .cap-row-side .cap-row-path .crp-c { justify-content:flex-start; }
+}
 
 /* ============ 响应式 ============ */
 @media (max-width:1180px) {
@@ -1580,6 +1595,7 @@ a.ent-a:hover, a.ent-a:focus-visible { border-bottom-color:#9dc4ff; }
 .cap-row:hover { background:color-mix(in srgb, var(--cc,#1e6fd9) 14%, rgba(255,255,255,.06)); box-shadow:none; }
 .cap-row-h b { color:#fff; }
 .cap-row-h .ent { color:rgba(170,190,222,.72); background:none; border:none; }
+.cap-row-side .ent { color:rgba(170,190,222,.72); background:none; border:none; }
 .cap-row-d { color:rgba(198,214,244,.76); }
 .cap-row-m { color:rgba(158,180,218,.62); }
 .cap-row-m::before { color:color-mix(in srgb, var(--cc,#1e6fd9) 40%, #9fb6e8); }
@@ -1793,7 +1809,7 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
   <div class="cap-desc">机会点转商机、报价单生成、跟进记录、项目创建与进展更新，全部从「手录」变成「说一句」</div>
   <div class="cap-loop"><span class="cap-loop-t">商机场景闭环</span><div class="cap-loop-chain"><span class="cp">线索转商机</span><i>→</i><span class="cp">报价生成</span><i>→</i><span class="cp">跟进记录</span><i>→</i><span class="cp">项目创建</span><i>→</i><span class="cp">进展更新</span></div></div>
   
-  <div class="cap-tbl-wrap"><table class="cap-tbl"><thead><tr><th>skill / 功能</th><th>介绍 / 输入示例</th><th>数据来源</th><th>入口 / 链接</th></tr></thead><tbody><tr><td class="sk">机会点分析</td><td class="dm">公开招标标讯给到销售进行线索分析/转商机<br>每日最新标讯自动流转到销售</td><td class="dt" data-l="数据来源">市场情报分析平台</td><td class="ent" data-l="入口"><a class="ent ent-chip ent-a" href="https://ltc.dbappsecurity.com.cn/#/paas/list?subBusinessType=404&amp;appId=27&amp;menuId=153&amp;saasMark=2&amp;distributorMark=0&amp;timestamp=1789890595373" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">LTC-机会点</span><i class="ent-arw">↗</i></a></td></tr><tr><td class="sk">报价单<i class="plan-tag">试用中</i></td><td class="dm">依据招标参数要求生成报价单初版<br>示例：我要依据XXX招标文件参数要求进行选型报价</td><td class="dt" data-l="数据来源">报价器</td><td class="ent ent-span" rowspan="5" data-l="入口"><a class="ent ent-chip ent-a" href="https://applink.dingtalk.com/action/jumprobot?dingtalkid=%24%3aLWCP_v1%3a%24jNpCmgi%2fFOAC4IeQJVQM%2bm3Lp3xG0gCb" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">营销AI小秘</span><i class="ent-arw">↗</i></a></td></tr><tr><td class="sk">新建商机<i class="plan-tag">2026Q4上线</i></td><td class="dm">文字/语音快速输入创建商机<br>示例：创建XX名称商机，XX客户...商机</td><td class="dt dt-span" rowspan="2" data-l="数据来源">商机管理系统</td><td class="ent-m" data-l="入口"><a class="ent ent-chip ent-a" href="https://applink.dingtalk.com/action/jumprobot?dingtalkid=%24%3aLWCP_v1%3a%24jNpCmgi%2fFOAC4IeQJVQM%2bm3Lp3xG0gCb" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">营销AI小秘</span><i class="ent-arw">↗</i></a></td></tr><tr><td class="sk">商机跟进记录<i class="plan-tag">2026Q4上线</i><i class="plan-tag">仅限销售使用</i></td><td class="dm">文字/语音完成商机跟进记录创建<br>示例：今日拜访了XX商机，和负责人XX沟通具体的方案</td><td class="dt-m" data-l="数据来源">商机管理系统</td><td class="ent-m" data-l="入口"><a class="ent ent-chip ent-a" href="https://applink.dingtalk.com/action/jumprobot?dingtalkid=%24%3aLWCP_v1%3a%24jNpCmgi%2fFOAC4IeQJVQM%2bm3Lp3xG0gCb" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">营销AI小秘</span><i class="ent-arw">↗</i></a></td></tr><tr><td class="sk">创建项目<i class="plan-tag">仅限行销使用</i></td><td class="dm">售前直接快速创建项目<br>示例：客户XXX，XX背景...帮我在IPM创建对应的项目</td><td class="dt dt-span" rowspan="2" data-l="数据来源">LTC-IPM</td><td class="ent-m" data-l="入口"><a class="ent ent-chip ent-a" href="https://applink.dingtalk.com/action/jumprobot?dingtalkid=%24%3aLWCP_v1%3a%24jNpCmgi%2fFOAC4IeQJVQM%2bm3Lp3xG0gCb" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">营销AI小秘</span><i class="ent-arw">↗</i></a></td></tr><tr><td class="sk">项目进展更新<i class="plan-tag">仅限行销使用</i></td><td class="dm">直接输入更新项目的进展信息<br>示例：XXX重点项目，主要进展XXXX，帮我更新项目进展</td><td class="dt-m" data-l="数据来源">LTC-IPM</td><td class="ent-m" data-l="入口"><a class="ent ent-chip ent-a" href="https://applink.dingtalk.com/action/jumprobot?dingtalkid=%24%3aLWCP_v1%3a%24jNpCmgi%2fFOAC4IeQJVQM%2bm3Lp3xG0gCb" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">营销AI小秘</span><i class="ent-arw">↗</i></a></td></tr></tbody></table></div>
+  <div class="cap-tbl-wrap"><table class="cap-tbl"><thead><tr><th>skill / 功能</th><th>介绍 / 输入示例</th><th>数据来源</th><th>入口 / 链接</th></tr></thead><tbody><tr><td class="sk">机会点分析</td><td class="dm">公开招标标讯给到销售进行线索分析/转商机<br>每日最新标讯自动流转到销售</td><td class="dt" data-l="数据来源">市场情报分析平台</td><td class="ent" data-l="入口"><a class="ent ent-chip ent-a" href="https://ltc.dbappsecurity.com.cn/#/paas/list?subBusinessType=404&amp;appId=27&amp;menuId=153&amp;saasMark=2&amp;distributorMark=0&amp;timestamp=1789890595373" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">LTC-机会点</span><i class="ent-arw">↗</i></a></td></tr><tr><td class="sk">报价单<i class="plan-tag">试用中</i></td><td class="dm">依据招标参数要求生成报价单初版<br>示例：我要依据XXX招标文件参数要求进行选型报价</td><td class="dt" data-l="数据来源">报价器</td><td class="ent ent-span" rowspan="5" data-l="入口"><a class="ent ent-chip ent-a" href="https://applink.dingtalk.com/action/jumprobot?dingtalkid=%24%3aLWCP_v1%3a%24jNpCmgi%2fFOAC4IeQJVQM%2bm3Lp3xG0gCb" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">营销AI小秘</span><i class="ent-arw">↗</i></a></td></tr><tr><td class="sk">新建商机<i class="plan-tag">2026Q4上线</i></td><td class="dm">文字/语音快速输入创建商机<br>示例：创建XX名称商机，XX客户...商机</td><td class="dt dt-span" rowspan="2" data-l="数据来源">商机管理系统</td><td class="ent-m" data-l="入口"><a class="ent ent-chip ent-a" href="https://applink.dingtalk.com/action/jumprobot?dingtalkid=%24%3aLWCP_v1%3a%24jNpCmgi%2fFOAC4IeQJVQM%2bm3Lp3xG0gCb" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">营销AI小秘</span><i class="ent-arw">↗</i></a></td></tr><tr><td class="sk">商机跟进记录<i class="plan-tag">仅限销售使用</i></td><td class="dm">文字/语音完成商机跟进记录创建<br>示例：今日拜访了XX商机，和负责人XX沟通具体的方案</td><td class="dt-m" data-l="数据来源">商机管理系统</td><td class="ent-m" data-l="入口"><a class="ent ent-chip ent-a" href="https://applink.dingtalk.com/action/jumprobot?dingtalkid=%24%3aLWCP_v1%3a%24jNpCmgi%2fFOAC4IeQJVQM%2bm3Lp3xG0gCb" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">营销AI小秘</span><i class="ent-arw">↗</i></a></td></tr><tr><td class="sk">创建项目<i class="plan-tag">仅限行销使用</i></td><td class="dm">售前直接快速创建项目<br>示例：客户XXX，XX背景...帮我在IPM创建对应的项目</td><td class="dt dt-span" rowspan="2" data-l="数据来源">LTC-IPM</td><td class="ent-m" data-l="入口"><a class="ent ent-chip ent-a" href="https://applink.dingtalk.com/action/jumprobot?dingtalkid=%24%3aLWCP_v1%3a%24jNpCmgi%2fFOAC4IeQJVQM%2bm3Lp3xG0gCb" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">营销AI小秘</span><i class="ent-arw">↗</i></a></td></tr><tr><td class="sk">项目进展更新<i class="plan-tag">仅限行销使用</i></td><td class="dm">直接输入更新项目的进展信息<br>示例：XXX重点项目，主要进展XXXX，帮我更新项目进展</td><td class="dt-m" data-l="数据来源">LTC-IPM</td><td class="ent-m" data-l="入口"><a class="ent ent-chip ent-a" href="https://applink.dingtalk.com/action/jumprobot?dingtalkid=%24%3aLWCP_v1%3a%24jNpCmgi%2fFOAC4IeQJVQM%2bm3Lp3xG0gCb" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">营销AI小秘</span><i class="ent-arw">↗</i></a></td></tr></tbody></table></div>
   
 </div><div class="cap-card" style="--cc:#dc2626" data-scene="招投标场景">
   <div class="cap-top">
@@ -1879,7 +1895,7 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
   <div class="cap-desc">渠道 AI 数字员工 + 渠道市场分析空间，7×24 小时值守，减少重复答疑，赋能渠道伙伴提质增效</div>
   <div class="cap-loop"><span class="cap-loop-t">渠道赋能闭环</span><div class="cap-loop-chain"><span class="cp">渠道答疑</span><i>→</i><span class="cp">商机挖掘</span><i>→</i><span class="cp">市场研判</span></div></div>
   
-  <div class="cap-rows"><div class="cap-row"><div class="cap-row-h"><b>安小渠</b><span class="ent ent-chip"><span class="ent-n">钉钉 → 安小渠（安恒信息组织）</span></span></div><div class="cap-row-d">专为渠道打造，解答产品知识、行业打法、挖掘商机、渠道政策以及下载资料，7×24小时值守</div><div class="cap-row-m">数据来源 · 渠道专属知识库</div></div><div class="cap-row"><div class="cap-row-h"><b>渠道市场分析空间</b><span class="ent ent-chip"><span class="ent-n">DASLink → 帆软 → 渠道市场空间分析</span></span></div><div class="cap-row-d">渠道地图、渠道运营、渠道市场研判、行业市场研判</div><div class="cap-row-m">数据来源 · 渠道市场数据</div></div></div>
+  <div class="cap-rows"><div class="cap-row"><div class="cap-row-bd"><div class="cap-row-h"><b>安小渠</b></div><div class="cap-row-d">专为渠道打造，解答产品知识、行业打法、挖掘商机、渠道政策以及下载资料，7×24小时值守</div><div class="cap-row-m">数据来源 · 渠道专属知识库</div></div><div class="cap-row-side"><span class="ent ent-chip"><span class="ent-n">钉钉 → 安小渠（安恒信息组织）</span></span></div></div><div class="cap-row"><div class="cap-row-bd"><div class="cap-row-h"><b>渠道市场分析空间</b></div><div class="cap-row-d">渠道地图、渠道运营、渠道市场研判、行业市场研判</div><div class="cap-row-m">数据来源 · 渠道市场数据</div></div><div class="cap-row-side"><span class="ent ent-chip"><span class="ent-n">DASLink → 帆软 → 渠道市场空间分析</span></span></div></div></div>
   <a class="cap-jump" href="scene-5.html?from=de&amp;to=%E6%B8%A0%E9%81%93%E8%B5%8B%E8%83%BD">查看渠道赋能完整介绍 →</a>
 </div><div class="cap-card compact" style="--cc:#7c3aed" data-scene="知识助手">
   <div class="cap-top">
@@ -1893,7 +1909,7 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
   <div class="cap-desc">把零散文档、制度、案例沉淀成可检索的知识底座，问一句就能定位到出处</div>
   <div class="cap-loop"><span class="cap-loop-t">知识助手闭环</span><div class="cap-loop-chain"><span class="cp">知识问答</span><i>→</i><span class="cp">文档溯源</span><i>→</i><span class="cp">出处定位</span></div></div>
   
-  <div class="cap-rows"><div class="cap-row"><div class="cap-row-h"><b>知识AI问答</b><span class="ent ent-chip"><span class="ent-n">营销AI小秘</span></span></div><div class="cap-row-d">基于营销知识库的问答检索，支持文档溯源</div><div class="cap-row-m">数据来源 · 营销知识库</div></div><div class="cap-row-path"><span class="crp-l">操作路径</span><span class="crp-c"><span class="pth">知识中心</span><i class="pth-sep">→</i><span class="pth">知识助手</span><i class="pth-sep">→</i><span class="pth">输入问题</span></span></div></div>
+  <div class="cap-rows"><div class="cap-row"><div class="cap-row-bd"><div class="cap-row-h"><b>知识AI问答</b></div><div class="cap-row-d">基于营销知识库的问答检索，支持文档溯源</div><div class="cap-row-m">数据来源 · 营销知识库</div></div><div class="cap-row-side"><span class="ent ent-chip"><span class="ent-n">营销AI小秘</span></span><div class="cap-row-path"><span class="crp-l">操作路径</span><span class="crp-c"><span class="pth">知识中心</span><i class="pth-sep">→</i><span class="pth">知识助手</span><i class="pth-sep">→</i><span class="pth">输入问题</span></span></div></div></div></div>
   <a class="cap-jump" href="scene-7.html?from=de&amp;to=%E7%9F%A5%E8%AF%86%E5%8A%A9%E6%89%8B">查看知识助手完整介绍 →</a>
 </div><div class="cap-card compact" style="--cc:#db2777" data-scene="Skill共享平台">
   <div class="cap-top">
@@ -1907,7 +1923,7 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
   <div class="cap-desc">基础 Skill + 业务专属 Skill，一线实战经验沉淀到公司平台，30+ 比武案例、40+ 提效案例持续共享</div>
   <div class="cap-loop"><span class="cap-loop-t">Skill共享平台闭环</span><div class="cap-loop-chain"><span class="cp">经验沉淀</span><i>→</i><span class="cp">Skill共享</span><i>→</i><span class="cp">激励闭环</span></div></div>
   
-  <div class="cap-rows"><div class="cap-row"><div class="cap-row-h"><b>Skill上传与共享</b><span class="ent ent-chip"><span class="ent-n">营销AI小秘</span></span></div><div class="cap-row-d">一线员工上传实战经验与优秀 Skill，获奖项激励</div><div class="cap-row-m">数据来源 · 公司统一 Skill 平台</div></div><div class="cap-row-path"><span class="crp-l">操作路径</span><span class="crp-c"><span class="pth">DASLink</span><i class="pth-sep">→</i><span class="pth">行销门户2.0</span><i class="pth-sep">→</i><span class="pth">Skill共享平台</span></span></div></div>
+  <div class="cap-rows"><div class="cap-row"><div class="cap-row-bd"><div class="cap-row-h"><b>Skill上传与共享</b></div><div class="cap-row-d">一线员工上传实战经验与优秀 Skill，获奖项激励</div><div class="cap-row-m">数据来源 · 公司统一 Skill 平台</div></div><div class="cap-row-side"><span class="ent ent-chip"><span class="ent-n">营销AI小秘</span></span><div class="cap-row-path"><span class="crp-l">操作路径</span><span class="crp-c"><span class="pth">DASLink</span><i class="pth-sep">→</i><span class="pth">行销门户2.0</span><i class="pth-sep">→</i><span class="pth">Skill共享平台</span></span></div></div></div></div>
   <a class="cap-jump" href="scene-6.html?from=de&amp;to=Skill%E5%85%B1%E4%BA%AB%E5%B9%B3%E5%8F%B0">查看 Skill共享平台完整介绍 →</a>
 </div></div>
   </div>

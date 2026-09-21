@@ -1902,17 +1902,25 @@ a.ent-a:hover .ent-arw, a.ent-a:focus-visible .ent-arw { transform:translate(1.5
 /* 窄卡：能力行卡片式 */
 .cap-rows { padding:0 18px 18px; display:flex; flex-direction:column; gap:11px; }
 .cap-row { border:1px solid rgba(15,35,80,.07); border-left:3px solid var(--cc,#1e6fd9); border-radius:12px;
-  padding:13px 15px; background:#fbfcfe; transition:all .26s; }
+  padding:13px 15px; background:#fbfcfe; transition:all .26s;
+  display:flex; align-items:flex-start; gap:14px; }
 .cap-row:hover { background:color-mix(in srgb, var(--cc,#1e6fd9) 5%, #fff); transform:translateX(3px); box-shadow:0 6px 18px rgba(15,35,80,.06); }
+.cap-row-bd { flex:1 1 auto; min-width:0; }
+/* 右侧列：入口 chip 在上，「操作路径」紧接其下（用户要求路径文案放在上面/贴着入口） */
+.cap-row-side { flex:none; display:flex; flex-direction:column; align-items:flex-end; gap:7px; max-width:60%; margin-left:auto; }
 .cap-row-h { display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; margin-bottom:7px; }
 .cap-row-h b { font-size:13.5px; font-weight:700; color:#1f2c48; letter-spacing:-.2px; }
 .cap-row-h .ent { margin-left:auto; font-size:11px; font-weight:600; color:#828da1; padding:0; background:none; border:none; }
+.cap-row-side .ent { font-size:11px; font-weight:600; color:#828da1; padding:0; background:none; border:none; white-space:nowrap; }
 .cap-row-d { font-size:12.5px; color:#5a6579; line-height:1.72; }
 .cap-row-m { font-size:11px; color:#98a2b3; margin-top:8px; display:flex; align-items:flex-start; gap:7px; line-height:1.6; }
 .cap-row-m::before { content:'▸'; color:var(--cc,#1e6fd9); font-size:10px; flex:none; line-height:1.7; }
-/* 紧凑卡底部「操作路径」：和「数据来源」同一位置风格，路径每段是独立小标签 */
+/* 「操作路径」：和「数据来源」同一位置风格，路径每段是独立小标签 */
 .cap-row-path { margin-top:9px; padding-top:9px; border-top:1px dashed rgba(15,35,80,.1);
   display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap; }
+/* 在右侧列里：不画分隔线，整块右对齐贴着入口 chip */
+.cap-row-side .cap-row-path { margin-top:0; padding-top:0; border-top:none; justify-content:flex-end; text-align:right; }
+.cap-row-side .cap-row-path .crp-c { justify-content:flex-end; }
 .cap-row-path .crp-l { flex:none; font-size:10.5px; font-weight:800; letter-spacing:.3px; color:#98a2b3; line-height:1.9; }
 .cap-row-path .crp-c { display:flex; align-items:center; flex-wrap:wrap; gap:5px; }
 /* 紧凑卡「操作路径」：纯文字展示，不做链接/按钮外观 */
@@ -1926,6 +1934,13 @@ a.pth-a .ent-arw { margin-left:3px; font-size:9px; }
 .cap-card > .cap-tbl-wrap { min-height:0; }
 .cap-card > .cap-jump { margin-top:auto; }
 @media (max-width:980px) { .cap-sub-grid { grid-template-columns:1fr; } }
+/* 窄屏：紧凑卡右列（入口 + 操作路径）改成堆叠到下方并左对齐 */
+@media (max-width:640px) {
+  .cap-row { flex-direction:column; gap:9px; }
+  .cap-row-side { align-items:flex-start; max-width:100%; margin-left:0; }
+  .cap-row-side .cap-row-path { justify-content:flex-start; text-align:left; }
+  .cap-row-side .cap-row-path .crp-c { justify-content:flex-start; }
+}
 
 /* ============ 响应式 ============ */
 @media (max-width:1180px) {
@@ -2176,6 +2191,7 @@ a.ent-a:hover, a.ent-a:focus-visible { border-bottom-color:#9dc4ff; }
 .cap-row:hover { background:color-mix(in srgb, var(--cc,#1e6fd9) 14%, rgba(255,255,255,.06)); box-shadow:none; }
 .cap-row-h b { color:#fff; }
 .cap-row-h .ent { color:rgba(170,190,222,.72); background:none; border:none; }
+.cap-row-side .ent { color:rgba(170,190,222,.72); background:none; border:none; }
 .cap-row-d { color:rgba(198,214,244,.76); }
 .cap-row-m { color:rgba(158,180,218,.62); }
 .cap-row-m::before { color:color-mix(in srgb, var(--cc,#1e6fd9) 40%, #9fb6e8); }
@@ -3905,16 +3921,32 @@ def build_digital_employee_page(data):
                          f'{dt_html}{ent_html}</tr>')
             body += '</tbody></table></div>'
         elif compact:
-            body = '<div class="cap-rows">'
-            for r in c['rows']:
-                ent = ent_tag(r['entry'], no_link=True)   # 跨阶段紧凑卡：入口只做纯文字展示，不做链接
-                dat = ('<div class="cap-row-m">数据来源 · %s</div>' % r['data']) if r['data'] else ''
-                body += ('<div class="cap-row"><div class="cap-row-h"><b>%s</b>%s</div>'
-                         '<div class="cap-row-d">%s</div>%s</div>') % (skill_html(r['skill']), ent, r['demo'], dat)
+            # 跨阶段紧凑卡：入口做纯文字展示；「操作路径」跟着入口走 ——
+            # 挂在「有入口」那一行的右侧列（chip 在上、路径紧接其下），不再单独放卡片底部
             _pth = (c.get('操作路径', '') or '').strip()
+            _pth_row = -1
             if _pth:
-                body += ('<div class="cap-row-path"><span class="crp-l">操作路径</span>'
-                         '<span class="crp-c">%s</span></div>') % path_chain(_pth)
+                for _i, _r in enumerate(c['rows']):
+                    if (_r.get('entry') or '').strip():
+                        _pth_row = _i          # 多行都有入口时挂最后一行
+            def _path_block():
+                return ('<div class="cap-row-path"><span class="crp-l">操作路径</span>'
+                        '<span class="crp-c">%s</span></div>') % path_chain(_pth)
+            body = '<div class="cap-rows">'
+            for _i, r in enumerate(c['rows']):
+                _e = (r.get('entry') or '').strip()
+                ent = ent_tag(_e, no_link=True) if _e else ''
+                dat = ('<div class="cap-row-m">数据来源 · %s</div>' % r['data']) if r['data'] else ''
+                side = ''
+                if ent or (_pth and _i == _pth_row):
+                    side = ('<div class="cap-row-side">%s%s</div>'
+                            % (ent, _path_block() if (_pth and _i == _pth_row) else ''))
+                body += ('<div class="cap-row"><div class="cap-row-bd">'
+                         '<div class="cap-row-h"><b>%s</b></div>'
+                         '<div class="cap-row-d">%s</div>%s</div>%s</div>'
+                         ) % (skill_html(r['skill']), r['demo'], dat, side)
+            if _pth and _pth_row < 0:           # 兜底：整卡没有入口时，路径仍放底部
+                body += _path_block()
             body += '</div>'
         else:
             body = ('<div class="cap-empty"><b>本期暂未建设</b>'
