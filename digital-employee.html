@@ -1310,8 +1310,8 @@ a.ent-a:hover .ent-arw, a.ent-a:focus-visible .ent-arw { transform:translate(1.5
   display:flex; align-items:flex-start; gap:14px; }
 .cap-row:hover { background:color-mix(in srgb, var(--cc,#1e6fd9) 5%, #fff); transform:translateX(3px); box-shadow:0 6px 18px rgba(15,35,80,.06); }
 .cap-row-bd { flex:1 1 auto; min-width:0; }
-/* 右侧列：入口 chip 在上，「操作路径」紧接其下（用户要求路径文案放在上面/贴着入口） */
-.cap-row-side { flex:none; display:flex; flex-direction:column; align-items:flex-end; gap:7px; max-width:60%; margin-left:auto; }
+/* 右侧列：右列只有一行「用在哪」的纯文字（操作路径 / 入口名），贴着卡片右边缘、和行首对齐 */
+.cap-row-side { flex:none; display:flex; flex-direction:column; align-items:flex-end; gap:7px; max-width:66%; margin-left:auto; }
 .cap-row-h { display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; margin-bottom:7px; }
 .cap-row-h b { font-size:13.5px; font-weight:700; color:#1f2c48; letter-spacing:-.2px; }
 .cap-row-h .ent { margin-left:auto; font-size:11px; font-weight:600; color:#828da1; padding:0; background:none; border:none; }
@@ -1322,10 +1322,9 @@ a.ent-a:hover .ent-arw, a.ent-a:focus-visible .ent-arw { transform:translate(1.5
 /* 「操作路径」：和「数据来源」同一位置风格，路径每段是独立小标签 */
 .cap-row-path { margin-top:9px; padding-top:9px; border-top:1px dashed rgba(15,35,80,.1);
   display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap; }
-/* 在右侧列里：不画分隔线，整块右对齐贴着入口 chip */
+/* 在右侧列里：不画分隔线、不写「操作路径」标签，整块右对齐贴着卡片右边 */
 .cap-row-side .cap-row-path { margin-top:0; padding-top:0; border-top:none; justify-content:flex-end; text-align:right; }
 .cap-row-side .cap-row-path .crp-c { justify-content:flex-end; }
-.cap-row-path .crp-l { flex:none; font-size:10.5px; font-weight:800; letter-spacing:.3px; color:#98a2b3; line-height:1.9; }
 .cap-row-path .crp-c { display:flex; align-items:center; flex-wrap:wrap; gap:5px; }
 /* 紧凑卡「操作路径」：纯文字展示，不做链接/按钮外观 */
 .cap-row-path .pth { font-size:11px; font-weight:600; color:#828da1;
@@ -1600,7 +1599,6 @@ a.ent-a:hover, a.ent-a:focus-visible { border-bottom-color:#9dc4ff; }
 .cap-row-m { color:rgba(158,180,218,.62); }
 .cap-row-m::before { color:color-mix(in srgb, var(--cc,#1e6fd9) 40%, #9fb6e8); }
 .cap-row-path { border-top-color:rgba(255,255,255,.12); }
-.cap-row-path .crp-l { color:rgba(158,180,218,.62); }
 .cap-row-path .pth { color:rgba(178,198,230,.78); background:none; border:none; }
 .cap-row-path .pth-sep { color:rgba(166,188,224,.48); }
 a.pth-a:hover { background:rgba(255,255,255,.13); }
@@ -1909,7 +1907,7 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
   <div class="cap-desc">把零散文档、制度、案例沉淀成可检索的知识底座，问一句就能定位到出处</div>
   <div class="cap-loop"><span class="cap-loop-t">知识助手闭环</span><div class="cap-loop-chain"><span class="cp">知识问答</span><i>→</i><span class="cp">文档溯源</span><i>→</i><span class="cp">出处定位</span></div></div>
   
-  <div class="cap-rows"><div class="cap-row"><div class="cap-row-bd"><div class="cap-row-h"><b>知识AI问答</b></div><div class="cap-row-d">基于营销知识库的问答检索，支持文档溯源</div><div class="cap-row-m">数据来源 · 营销知识库</div></div><div class="cap-row-side"><span class="ent ent-chip"><span class="ent-n">营销AI小秘</span></span><div class="cap-row-path"><span class="crp-l">操作路径</span><span class="crp-c"><span class="pth">知识中心</span><i class="pth-sep">→</i><span class="pth">知识助手</span><i class="pth-sep">→</i><span class="pth">输入问题</span></span></div></div></div></div>
+  <div class="cap-rows"><div class="cap-row"><div class="cap-row-bd"><div class="cap-row-h"><b>知识AI问答</b></div><div class="cap-row-d">基于营销知识库的问答检索，支持文档溯源</div><div class="cap-row-m">数据来源 · 营销知识库</div></div><div class="cap-row-side"><div class="cap-row-path"><span class="crp-c"><span class="pth">知识中心</span><i class="pth-sep">→</i><span class="pth">知识助手</span><i class="pth-sep">→</i><span class="pth">输入问题</span></span></div></div></div></div>
   <a class="cap-jump" href="scene-7.html?from=de&amp;to=%E7%9F%A5%E8%AF%86%E5%8A%A9%E6%89%8B">查看知识助手完整介绍 →</a>
 </div><div class="cap-card compact" style="--cc:#db2777" data-scene="Skill共享平台">
   <div class="cap-top">
@@ -1923,7 +1921,7 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
   <div class="cap-desc">基础 Skill + 业务专属 Skill，一线实战经验沉淀到公司平台，30+ 比武案例、40+ 提效案例持续共享</div>
   <div class="cap-loop"><span class="cap-loop-t">Skill共享平台闭环</span><div class="cap-loop-chain"><span class="cp">经验沉淀</span><i>→</i><span class="cp">Skill共享</span><i>→</i><span class="cp">激励闭环</span></div></div>
   
-  <div class="cap-rows"><div class="cap-row"><div class="cap-row-bd"><div class="cap-row-h"><b>Skill上传与共享</b></div><div class="cap-row-d">一线员工上传实战经验与优秀 Skill，获奖项激励</div><div class="cap-row-m">数据来源 · 公司统一 Skill 平台</div></div><div class="cap-row-side"><span class="ent ent-chip"><span class="ent-n">营销AI小秘</span></span><div class="cap-row-path"><span class="crp-l">操作路径</span><span class="crp-c"><span class="pth">DASLink</span><i class="pth-sep">→</i><span class="pth">行销门户2.0</span><i class="pth-sep">→</i><span class="pth">Skill共享平台</span></span></div></div></div></div>
+  <div class="cap-rows"><div class="cap-row"><div class="cap-row-bd"><div class="cap-row-h"><b>Skill上传与共享</b></div><div class="cap-row-d">一线员工上传实战经验与优秀 Skill，获奖项激励</div><div class="cap-row-m">数据来源 · 公司统一 Skill 平台</div></div><div class="cap-row-side"><div class="cap-row-path"><span class="crp-c"><span class="pth">DASLink</span><i class="pth-sep">→</i><span class="pth">行销门户2.0</span><i class="pth-sep">→</i><span class="pth">Skill共享平台</span></span></div></div></div></div>
   <a class="cap-jump" href="scene-6.html?from=de&amp;to=Skill%E5%85%B1%E4%BA%AB%E5%B9%B3%E5%8F%B0">查看 Skill共享平台完整介绍 →</a>
 </div></div>
   </div>

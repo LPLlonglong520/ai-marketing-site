@@ -1906,8 +1906,8 @@ a.ent-a:hover .ent-arw, a.ent-a:focus-visible .ent-arw { transform:translate(1.5
   display:flex; align-items:flex-start; gap:14px; }
 .cap-row:hover { background:color-mix(in srgb, var(--cc,#1e6fd9) 5%, #fff); transform:translateX(3px); box-shadow:0 6px 18px rgba(15,35,80,.06); }
 .cap-row-bd { flex:1 1 auto; min-width:0; }
-/* 右侧列：入口 chip 在上，「操作路径」紧接其下（用户要求路径文案放在上面/贴着入口） */
-.cap-row-side { flex:none; display:flex; flex-direction:column; align-items:flex-end; gap:7px; max-width:60%; margin-left:auto; }
+/* 右侧列：右列只有一行「用在哪」的纯文字（操作路径 / 入口名），贴着卡片右边缘、和行首对齐 */
+.cap-row-side { flex:none; display:flex; flex-direction:column; align-items:flex-end; gap:7px; max-width:66%; margin-left:auto; }
 .cap-row-h { display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; margin-bottom:7px; }
 .cap-row-h b { font-size:13.5px; font-weight:700; color:#1f2c48; letter-spacing:-.2px; }
 .cap-row-h .ent { margin-left:auto; font-size:11px; font-weight:600; color:#828da1; padding:0; background:none; border:none; }
@@ -1918,10 +1918,9 @@ a.ent-a:hover .ent-arw, a.ent-a:focus-visible .ent-arw { transform:translate(1.5
 /* 「操作路径」：和「数据来源」同一位置风格，路径每段是独立小标签 */
 .cap-row-path { margin-top:9px; padding-top:9px; border-top:1px dashed rgba(15,35,80,.1);
   display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap; }
-/* 在右侧列里：不画分隔线，整块右对齐贴着入口 chip */
+/* 在右侧列里：不画分隔线、不写「操作路径」标签，整块右对齐贴着卡片右边 */
 .cap-row-side .cap-row-path { margin-top:0; padding-top:0; border-top:none; justify-content:flex-end; text-align:right; }
 .cap-row-side .cap-row-path .crp-c { justify-content:flex-end; }
-.cap-row-path .crp-l { flex:none; font-size:10.5px; font-weight:800; letter-spacing:.3px; color:#98a2b3; line-height:1.9; }
 .cap-row-path .crp-c { display:flex; align-items:center; flex-wrap:wrap; gap:5px; }
 /* 紧凑卡「操作路径」：纯文字展示，不做链接/按钮外观 */
 .cap-row-path .pth { font-size:11px; font-weight:600; color:#828da1;
@@ -2196,7 +2195,6 @@ a.ent-a:hover, a.ent-a:focus-visible { border-bottom-color:#9dc4ff; }
 .cap-row-m { color:rgba(158,180,218,.62); }
 .cap-row-m::before { color:color-mix(in srgb, var(--cc,#1e6fd9) 40%, #9fb6e8); }
 .cap-row-path { border-top-color:rgba(255,255,255,.12); }
-.cap-row-path .crp-l { color:rgba(158,180,218,.62); }
 .cap-row-path .pth { color:rgba(178,198,230,.78); background:none; border:none; }
 .cap-row-path .pth-sep { color:rgba(166,188,224,.48); }
 a.pth-a:hover { background:rgba(255,255,255,.13); }
@@ -3921,8 +3919,9 @@ def build_digital_employee_page(data):
                          f'{dt_html}{ent_html}</tr>')
             body += '</tbody></table></div>'
         elif compact:
-            # 跨阶段紧凑卡：入口做纯文字展示；「操作路径」跟着入口走 ——
-            # 挂在「有入口」那一行的右侧列（chip 在上、路径紧接其下），不再单独放卡片底部
+            # 跨阶段紧凑卡：右列只放一行「用在哪」的纯文字说明，位置和渠道赋能卡的入口文案对齐 ——
+            # 卡上写了「操作路径」就显示路径（贴在原入口 chip 的位置），没写的显示该行入口名；
+            # 显示路径的那一行不再重复渲染入口 chip（用户要求：去掉入口 chip 与「操作路径」标签文字）
             _pth = (c.get('操作路径', '') or '').strip()
             _pth_row = -1
             if _pth:
@@ -3930,17 +3929,18 @@ def build_digital_employee_page(data):
                     if (_r.get('entry') or '').strip():
                         _pth_row = _i          # 多行都有入口时挂最后一行
             def _path_block():
-                return ('<div class="cap-row-path"><span class="crp-l">操作路径</span>'
-                        '<span class="crp-c">%s</span></div>') % path_chain(_pth)
+                return ('<div class="cap-row-path"><span class="crp-c">%s</span></div>'
+                        ) % path_chain(_pth)
             body = '<div class="cap-rows">'
             for _i, r in enumerate(c['rows']):
                 _e = (r.get('entry') or '').strip()
-                ent = ent_tag(_e, no_link=True) if _e else ''
+                _has_pth = bool(_pth) and _i == _pth_row
+                ent = ent_tag(_e, no_link=True) if (_e and not _has_pth) else ''
                 dat = ('<div class="cap-row-m">数据来源 · %s</div>' % r['data']) if r['data'] else ''
                 side = ''
-                if ent or (_pth and _i == _pth_row):
+                if ent or _has_pth:
                     side = ('<div class="cap-row-side">%s%s</div>'
-                            % (ent, _path_block() if (_pth and _i == _pth_row) else ''))
+                            % (ent, _path_block() if _has_pth else ''))
                 body += ('<div class="cap-row"><div class="cap-row-bd">'
                          '<div class="cap-row-h"><b>%s</b></div>'
                          '<div class="cap-row-d">%s</div>%s</div>%s</div>'
