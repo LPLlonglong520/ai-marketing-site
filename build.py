@@ -41,6 +41,34 @@ def _h2_at(text, name):
     return m.start() if m else -1
 
 
+def _img_size(path):
+    """读 PNG / WebP 的像素尺寸 (w, h)，纯标准库实现；读不到返回 None。
+
+    用来给立牌这类「换张图就可能换比例」的元素算真实宽高比，
+    避免把比例写死在 CSS 里（换图就变形）。
+    """
+    try:
+        with open(path, 'rb') as f:
+            head = f.read(32)
+        if head[:8] == b'\x89PNG\r\n\x1a\n':
+            return (int.from_bytes(head[16:20], 'big'),
+                    int.from_bytes(head[20:24], 'big'))
+        if head[:4] == b'RIFF' and head[8:12] == b'WEBP':
+            fmt = head[12:16]
+            if fmt == b'VP8X':                      # 扩展格式（带 alpha / 动画）
+                return (int.from_bytes(head[24:27], 'little') + 1,
+                        int.from_bytes(head[27:30], 'little') + 1)
+            if fmt == b'VP8 ':                      # 有损
+                return (int.from_bytes(head[26:28], 'little') & 0x3fff,
+                        int.from_bytes(head[28:30], 'little') & 0x3fff)
+            if fmt == b'VP8L':                      # 无损
+                b = int.from_bytes(head[21:25], 'little')
+                return ((b & 0x3fff) + 1, ((b >> 14) & 0x3fff) + 1)
+    except Exception:
+        pass
+    return None
+
+
 def _de_table(block, keys):
     """从 markdown 块中解析 | 字段 | 值 | 表，只保留 keys 中的字段"""
     out = {}
@@ -151,6 +179,16 @@ def parse_de_page(text):
     # ---- 场景能力集头部 ----
     blk = sub('场景能力集头部')
     de['cap_head'] = _de_table(blk, {'眉标', '标题', '副标题', '统计', '入口提示'})
+
+    # ---- 生态板块（夹在「跨阶段 · 通用能力」与「激励模块」之间）----
+    # 左栏 = 可 180° 拖动的立牌，右栏 = 「卡片名称」指定的那张跨阶段能力卡
+    blk = sub('生态板块')
+    de['eco'] = _de_table(blk, {
+        '标题', '说明', '卡片名称',
+        '立牌正面图', '立牌正面图小图', '立牌显示宽度', '旋转提示',
+        '背面眉标', '背面主标题', '背面副标题', '背面标语', '背面说明',
+        '背面入口文字', '支架文字',
+    })
 
     # ---- 入口链接映射（能力表「入口 / 链接」列 → 跳转地址）----
     de['entry_links'] = {}
@@ -1860,16 +1898,20 @@ a.ent-a:hover .ent-arw, a.ent-a:focus-visible .ent-arw { transform:translate(1.5
 .de-body > section { position:relative; }
 .de-body > .de-flow-sec,
 .de-body > .de-cap-sec,
+.de-body > .de-eco-sec,
 .de-body > .inc-section { border-radius:46px 46px 0 0; margin-top:-46px; }
 .de-body > .de-flow-sec  { z-index:2; }
 .de-body > .de-cap-sec   { z-index:3; }
-.de-body > .inc-section  { z-index:4; }
+.de-body > .de-eco-sec   { z-index:4; }
+.de-body > .inc-section  { z-index:5; }
 /* 深色板块顶部补一层柔光，弱化圆角切边 */
 .de-body > .de-flow-sec,
+.de-body > .de-eco-sec,
 .de-body > .inc-section { box-shadow:inset 0 1px 0 rgba(150,190,255,.10); }
 @media (max-width:768px){
   .de-body > .de-flow-sec,
   .de-body > .de-cap-sec,
+  .de-body > .de-eco-sec,
   .de-body > .inc-section { border-radius:26px 26px 0 0; margin-top:-26px; }
 }
 
@@ -1895,7 +1937,7 @@ a.ent-a:hover .ent-arw, a.ent-a:focus-visible .ent-arw { transform:translate(1.5
   display:inline-flex; align-items:center; gap:9px; }
 .de-sub-head span::before { content:''; width:26px; height:3px; border-radius:2px; background:linear-gradient(90deg,#1f5fd0,#c026d3); }
 .de-sub-head::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,rgba(15,35,80,.14),transparent); }
-.cap-sub-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; align-items:stretch; }
+.cap-sub-grid { display:grid; grid-template-columns:repeat(var(--sub-cols,3),minmax(0,1fr)); gap:20px; align-items:stretch; }
 .cap-sub-grid > .cap-card { height:100%; }
 .cap-sub-grid .cap-jump { margin-top:auto; }
 .cap-sub-grid .cap-rows, .cap-sub-grid .cap-empty { flex:1; }
@@ -2229,6 +2271,48 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
 #future-home.cap-flash,
 #future-home.cap-flash .future-home-card { animation:capFlash 1.6s cubic-bezier(.22,.9,.3,1) 1; }
 @media (prefers-reduced-motion:reduce) { .cap-card.cap-flash { animation-duration:.01s; } }
+
+/* ============ 生态板块（夹在「跨阶段 · 通用能力」与「激励模块」之间） ============ */
+/* 左栏：可 180° 拖动的立牌；右栏：从跨阶段卡里摘出来的那张能力卡 */
+.de-eco-sec { padding:74px 0 80px;
+  background:
+    radial-gradient(ellipse 52% 40% at 20% 26%, rgba(16,185,129,.16) 0%, transparent 64%),
+    radial-gradient(ellipse 46% 36% at 84% 74%, rgba(70,120,255,.13) 0%, transparent 66%),
+    linear-gradient(180deg,#0a1735 0%,#0b1e46 46%,#0a1c3f 78%,#081430 100%); }
+.de-eco-sec .de-wrap { max-width:1400px; }
+.de-eco-sec .de-sub-head { margin:0 0 18px; }
+.de-eco-lead { font-size:13.5px; color:rgba(180,200,238,.66); line-height:1.85; margin:0 0 34px; max-width:820px; }
+.de-eco-grid { display:grid; grid-template-columns:minmax(0,0.84fr) minmax(0,1.16fr); gap:52px; align-items:center; }
+
+/* 左栏：立牌（与页头立牌同机制，独立变量 --eco-rot / --eco-tilt） */
+.de-eco-stage { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  min-height:600px; padding-bottom:36px; }
+.de-eco-persp { position:relative; z-index:2; width:100%; display:flex; justify-content:center;
+  perspective:1900px; perspective-origin:50% 45%; }
+.de-eco-board { position:relative; width:min(520px,92%); aspect-ratio:4200/5360; transform-style:preserve-3d;
+  transform:rotateX(var(--eco-tilt,0deg)) rotateY(var(--eco-rot,-15deg)); transition:transform .1s linear;
+  cursor:grab; touch-action:pan-y; will-change:transform; }
+.de-eco-board.dragging { cursor:grabbing; transition:none; }
+.de-eco-board.settling { transition:transform .68s cubic-bezier(.22,1.05,.36,1); }
+.de-eco-board .de-face { border-radius:10px; }
+.de-eco-front { transform:translateZ(9px); background:#fff; box-shadow:0 2px 0 rgba(255,255,255,.9) inset, 0 0 0 1px rgba(255,255,255,.16); }
+.de-eco-back  { transform:translateZ(-9px) rotateY(180deg); background:#fff; box-shadow:0 0 0 1px rgba(255,255,255,.16); }
+.de-eco-stage .de-floor { bottom:8px; width:min(520px,92%); height:46px;
+  background:radial-gradient(ellipse at center, rgba(0,0,0,.52) 0%, rgba(0,0,0,.22) 44%, transparent 72%); }
+.de-eco-stage .de-bhint { bottom:0; color:#cfdcff; background:rgba(255,255,255,.07);
+  border-color:rgba(255,255,255,.14); box-shadow:none; }
+.de-eco-stage.dragging .de-bhint { opacity:0; }
+
+/* 右栏：能力卡（与左栏立牌等高，按钮贴底） */
+.de-eco-side { min-width:0; }
+.de-eco-side .cap-card { height:100%; }
+.de-eco-side .cap-jump { margin-top:auto; }
+
+@media (max-width:980px) {
+  .de-eco-grid { grid-template-columns:1fr; gap:36px; }
+  .de-eco-stage { min-height:0; padding-bottom:32px; }
+  .de-eco-sec { padding:62px 0 70px; }
+}
 </style>'''
 
 
@@ -2241,6 +2325,49 @@ DE_JS = '''<script>
     var h = document.documentElement.scrollHeight - window.innerHeight;
     prog.style.width = (h > 0 ? window.scrollY / h * 100 : 0) + '%';
   }, {passive:true});
+
+  /* ---------- 生态板块立牌（第二块立牌，独立变量，与页头立牌互不影响） ---------- */
+  (function(){
+    var eco = document.getElementById('ecoBoard');
+    if(!eco) return;
+    var F = -15, B = 195;
+    var rot = F, dragging = false, sx = 0, srot = 0;
+    var stage = eco.closest('.de-eco-stage');
+    function apply(){ eco.style.setProperty('--eco-rot', rot + 'deg'); }
+    function settle(){ eco.classList.add('settling');
+      setTimeout(function(){ eco.classList.remove('settling'); }, 720); }
+    apply();
+    eco.addEventListener('pointerdown', function(e){
+      dragging = true; sx = e.clientX; srot = rot;
+      eco.classList.add('dragging'); eco.classList.remove('settling');
+      if(stage) stage.classList.add('dragging');
+      try { eco.setPointerCapture(e.pointerId); } catch(err){}
+    });
+    eco.addEventListener('pointermove', function(e){
+      if(!dragging) return;
+      rot = Math.max(-30, Math.min(210, srot + (e.clientX - sx) * 0.45));
+      apply();
+    });
+    function end(){
+      if(!dragging) return;
+      dragging = false;
+      eco.classList.remove('dragging');
+      if(stage) stage.classList.remove('dragging');
+      rot = (rot < 90) ? F : B;
+      apply(); settle();
+    }
+    eco.addEventListener('pointerup', end);
+    eco.addEventListener('pointercancel', end);
+    eco.addEventListener('pointerleave', end);
+    /* 背面上的「转回正面」 */
+    var fb = eco.querySelector('[data-eco-front]');
+    if(fb){
+      fb.addEventListener('click', function(e){
+        e.stopPropagation();
+        rot = F; apply(); settle();
+      });
+    }
+  })();
 
   /* ---------- 3D 立牌 ---------- */
   var board = document.getElementById('deBoard');
@@ -3556,6 +3683,80 @@ _PLAN_TAG = re.compile(
     r'[（(]\s*([^（()）]{0,20}?(?:上线|试用中|试用|仅限[^（()）]{0,10}?使用))\s*[)）]')
 
 
+def build_eco_section(ec, cards_html):
+    """生态板块：左栏 = 可 180° 拖动的立牌，右栏 = 从跨阶段卡里摘出来的那张能力卡。
+
+    立牌沿用页头立牌同一套 3D 机制（rotateX 俯仰 + rotateY 翻转 + 正/背两面），
+    但用独立的 `--eco-rot` 变量和 `#ecoBoard` 节点，与页头立牌互不影响。
+    全部字段取自 content.md 的「### 生态板块」。
+    """
+    title = (ec.get('标题') or '').strip()
+    lead = (ec.get('说明') or '').strip()
+    hint = (ec.get('旋转提示') or '').strip()
+
+    bimg = media_path(ec.get('立牌正面图', 'media/eco_board.png'))
+    b1x = media_path(ec.get('立牌正面图小图', 'media/eco_board_1x.png'))
+    _bw = re.sub(r'[^\d.]', '', ec.get('立牌显示宽度', '') or '')
+    try:
+        BW = int(float(_bw)) or 520
+    except Exception:
+        BW = 520
+    if os.path.exists(b1x):
+        bsrc = (f'src="{bimg}" srcset="{b1x} {BW}w, {bimg} {BW * 2}w" '
+                f'sizes="(max-width:900px) 82vw, {BW}px"')
+    else:
+        bsrc = f'src="{bimg}"'
+    # 立牌宽高比取图片真实尺寸（换任意比例的立牌图都不会变形）
+    _sz = _img_size(bimg) or _img_size(b1x)
+    _ar = f'{_sz[0]}/{_sz[1]}' if _sz else '4200/5360'
+    _dim = f' width="{_sz[0]}" height="{_sz[1]}"' if _sz else ''
+
+    # 背板结构与页头立牌背面同款（复用 .de-bi 的样式），只换文案
+    back_panel = f'''<div class="de-bi">
+  <div class="de-bi-top"><i></i>{ec.get('背面眉标','')}<span class="de-bi-back-btn" data-eco-front>{ec.get('背面入口文字','查看正面能力全景 →')}</span></div>
+  <div class="de-bi-mid">
+    <div class="n">{ec.get('背面主标题','')}</div>
+    <div class="s">{ec.get('背面副标题','')}</div>
+    <div class="de-bi-sep"></div>
+    <div class="t">{ec.get('背面标语','')}</div>
+    <div class="d">{ec.get('背面说明','')}</div>
+    <div class="de-bi-spec">
+      <span><b>面板</b> 5mm 复合板</span><span><b>支架</b> 铝合金背撑</span>
+      <span><b>工艺</b> 高清微喷</span><span><b>尺寸</b> 420 × 536 mm</span>
+    </div>
+  </div>
+  <div class="de-bi-foot">
+    <span class="code">DAS-SECURITY · CHANNEL AI · 2026</span>
+    <span class="mat">{ec.get('支架文字','')}</span>
+  </div>
+</div>'''
+
+    return f'''<section class="de-eco-sec" id="de-eco">
+  <div class="de-wrap">
+    <div class="de-sub-head"><span>{title}</span></div>
+    {f'<p class="de-eco-lead">{lead}</p>' if lead else ''}
+    <div class="de-eco-grid">
+      <div class="de-eco-stage">
+        <div class="de-floor"></div>
+        <div class="de-eco-persp">
+          <div class="de-eco-board" id="ecoBoard" style="aspect-ratio:{_ar}" role="img" aria-label="渠道数字员工能力立牌，可按住左右拖动翻转">
+            <div class="de-edge l"></div>
+            <div class="de-edge r"></div>
+            <div class="de-face de-eco-back">{back_panel}</div>
+            <div class="de-face de-eco-front">
+              <img class="de-img" {bsrc}{_dim} alt="渠道数字员工 能力立牌" loading="lazy" decoding="async">
+            </div>
+            <div class="de-sheen"></div>
+          </div>
+        </div>
+        {f'<div class="de-bhint"><span class="k">↔</span> {hint}</div>' if hint else ''}
+      </div>
+      <div class="de-eco-side">{cards_html}</div>
+    </div>
+  </div>
+</section>'''
+
+
 def build_digital_employee_page(data):
     """生成超级数字员工独立页 digital-employee.html"""
     g = data['global']
@@ -4017,12 +4218,28 @@ def build_digital_employee_page(data):
     caps = de.get('caps', [])
     main_caps = caps[:8]
     sub_caps = caps[8:]
+    # 生态板块：把 content.md「### 生态板块 → 卡片名称」指定的那张跨阶段卡从
+    # 「跨阶段 · 通用能力」里摘出来，单独放到下面的生态板块（左立牌 + 右这张卡）
+    ec = de.get('eco') or {}
+    _eco_name = (ec.get('卡片名称') or '').strip()
+    eco_cards = []
+    if _eco_name:
+        eco_cards = [c for c in sub_caps if (c.get('名称') or '').strip() == _eco_name]
+        sub_caps = [c for c in sub_caps if (c.get('名称') or '').strip() != _eco_name]
     main_html = ''.join(cap_card(c) for c in main_caps)
     sub_html = ''.join(cap_card(c, compact=True) for c in sub_caps)
+    eco_html = (build_eco_section(ec, ''.join(cap_card(c, compact=True) for c in eco_cards))
+                if eco_cards else '')
 
     _ch_pill = (ch.get('眉标', '') or '').strip()
     _ch_sub = (ch.get('副标题', '') or '').strip()
     _ch_stat = (ch.get('统计', '') or '').strip()
+    # 「跨阶段 · 通用能力」列数随剩余卡数自适应（最多 3 列），避免少一张卡时右边空一格
+    _sub_block = ''
+    if sub_html:
+        _n_sub = min(len(sub_caps), 3)
+        _sub_block = (f'<div class="de-sub-head"><span>跨阶段 · 通用能力</span></div>'
+                      f'<div class="cap-sub-grid" style="--sub-cols:{_n_sub}">{sub_html}</div>')
     cap_html = f'''<section class="de-cap-sec" id="de-cap">
   <div class="de-wrap">
     <div class="de-sec-head">
@@ -4032,8 +4249,7 @@ def build_digital_employee_page(data):
       {f'<p class="de-lead de-lead-sub">{_ch_stat}</p>' if _ch_stat else ''}
     </div>
     <div class="cap-grid">{main_html}</div>
-    <div class="de-sub-head"><span>跨阶段 · 通用能力</span></div>
-    <div class="cap-sub-grid">{sub_html}</div>
+    {_sub_block}
   </div>
 </section>'''
 
@@ -4089,7 +4305,7 @@ def build_digital_employee_page(data):
             '<meta name="viewport" content="width=device-width,initial-scale=1.0">\n'
             f'<title>{title}</title>\n{CSS}\n{de_css}\n{preload}</head>\n<body class="de-body">\n'
             '<div id="prog"></div>\n\n' + nav + '\n\n' + board_html + '\n\n' + flow_html + '\n\n'
-            + cap_html + '\n\n' + incentive_section + '\n\n' + future_section + '\n\n'
+            + cap_html + '\n\n' + eco_html + '\n\n' + incentive_section + '\n\n' + future_section + '\n\n'
             + cta + '\n\n' + footer + '\n\n' + DE_JS + '\n' + JUMP_JS + '\n</body>\n</html>')
 
 
