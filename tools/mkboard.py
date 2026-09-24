@@ -14,6 +14,7 @@
     普通屏 1x   _1x           显示宽度         桌面普通屏（DPR=1）
     高清屏 2x   无后缀         显示宽度 × 2     桌面高清屏（DPR=2）
     放大图      _zoom         2000            点「放大查看」时弹的大图
+    （页头另有 _lb_1x / _lb_zoom：弹层用、含人物）
 
     WebP：所有浏览器都能用（兜底）
     AVIF：同画质体积约为 WebP 的 45%~55%（Chrome/Edge/Firefox/Safari 现代版全支持）
@@ -23,8 +24,12 @@
     {name}_lqip.txt       22px 模糊占位图的 data URI，主图到达前先铺一层轮廓
 
 源图路径、显示宽度都来自 `content.md`：
-    `### 立牌素材源` 里的「页头立牌源图 / 生态立牌源图」
+    `### 立牌素材源` 里的「页头立牌底图 / 页头立牌源图 / 生态立牌源图」
     `立牌显示宽度`（页头那节 / 生态板块那节各一个）
+
+页头额外出一套「弹层（含人物）」图 `{name}_lb_1x` / `{name}_lb_zoom`：
+页面上显示的那张是**无人版底图**（人物由 de_char_*.webp 分层叠上去，防动作重影），
+而「放大查看」弹层是静态看图，用含人物的高清图才不会让人觉得"人没了"。
 """
 import base64
 import io
@@ -55,7 +60,8 @@ BOARDS = {
         'label': '页头 · 营销AI小秘立牌',
         'm': 640,           # 移动端 2x（手机显示宽度约 320px × 2）
         'zoom': 2000,
-        'src_key': '页头立牌源图',
+        'src_key': '页头立牌底图',        # 页面显示的那张 = 无人版底图（防动作重影）
+        'lb_src_key': '页头立牌源图',     # 「放大查看」弹层用含人物的高清图（静态看图，不影响防重影）
         'width_anchor': None,          # 取第一处「立牌显示宽度」
         'default_src': (r'C:\Users\龙仔\WorkBuddy\2026-09-20-14-29-28\立牌\小秘现有版男'
                         r'\营销AI小秘-场景能力立牌.png'),
@@ -80,6 +86,12 @@ PLAN = (
     ('_zoom', 90, 28),
 )
 
+# 灯箱（含人物版）只出两档：底座小图（点开瞬间铺满）+ 放大图
+LB_PLAN = (
+    ('_1x', 88, 30),
+    ('_zoom', 90, 28),
+)
+
 
 def read_content():
     with io.open(CONTENT, encoding='utf-8') as f:
@@ -91,14 +103,14 @@ def _table_value(text, key):
     return m.group(1).strip() if m else ''
 
 
-def resolve_source(text, cfg):
+def resolve_source(text, cfg, key=None):
     """源图路径：content.md「### 立牌素材源」优先，其次内置默认。"""
     sec = text.split('### 立牌素材源', 1)
     if len(sec) == 2:
-        v = _table_value(sec[1], cfg['src_key'])
+        v = _table_value(sec[1], key or cfg['src_key'])
         if v and v not in ('无', '-'):
             return os.path.expanduser(v)
-    return cfg['default_src']
+    return '' if key else cfg['default_src']
 
 
 def section_of(text, heading):
@@ -130,24 +142,10 @@ def enc_avif(png_path, out_path, crf, preset=7):
     subprocess.run(cmd, check=True)
 
 
-def build(key):
-    cfg = BOARDS[key]
-    text = read_content()
-    src = resolve_source(text, cfg)
-    if not os.path.exists(src):
-        print('  源图不存在，跳过：%s' % src)
-        return None
-    disp = resolve_width(text, cfg)
-    name = cfg['name']
-    if not os.path.isdir(TMP):
-        os.makedirs(TMP)
-
-    im = Image.open(src).convert('RGB')
-    print('  %s\n    源图 %s  %s' % (cfg['label'], im.size, src))
-
-    variants = {}
-    report = []
-    for tag, wq, crf in PLAN:
+def encode_set(im, name, disp, plan, cfg):
+    """按 plan 出图（WebP + AVIF），返回 (variants, report)。"""
+    variants, report = {}, []
+    for tag, wq, crf in plan:
         w = disp if tag == '_1x' else (disp * 2 if tag == '' else (cfg['m'] if tag == '_m' else cfg['zoom']))
         h = int(round(w * im.size[1] / im.size[0]))
         small = im.resize((w, h), Image.LANCZOS)
@@ -170,6 +168,25 @@ def build(key):
         variants[tag] = {'w': w, 'h': h}
         report.append((tag or '2x', w, h, os.path.getsize(wp),
                        os.path.getsize(ap) if ap else 0))
+    return variants, report
+
+
+def build(key):
+    cfg = BOARDS[key]
+    text = read_content()
+    src = resolve_source(text, cfg)
+    if not os.path.exists(src):
+        print('  源图不存在，跳过：%s' % src)
+        return None
+    disp = resolve_width(text, cfg)
+    name = cfg['name']
+    if not os.path.isdir(TMP):
+        os.makedirs(TMP)
+
+    im = Image.open(src).convert('RGB')
+    print('  %s\n    底图 %s  %s' % (cfg['label'], im.size, src))
+
+    variants, report = encode_set(im, name, disp, PLAN, cfg)
 
     # LQIP：22px 宽的小图内联成 data URI（不占请求）
     lw = 22
@@ -192,6 +209,20 @@ def build(key):
             tot_w += sw
             tot_a += sa
     print('    首屏合计（不含放大图） WebP %.1fKB → AVIF %.1fKB' % (tot_w / 1024, tot_a / 1024))
+
+    # 「放大查看」弹层：用含人物的高清图（静态看图，底图有没有人物都无所谓）
+    lb_key = cfg.get('lb_src_key')
+    if lb_key:
+        lb_src = resolve_source(text, cfg, lb_key)
+        if lb_src and os.path.exists(lb_src) and os.path.abspath(lb_src) != os.path.abspath(src):
+            lb_im = Image.open(lb_src).convert('RGB')
+            lb_name = name + '_lb'
+            _, lb_report = encode_set(lb_im, lb_name, disp, LB_PLAN, cfg)
+            print('    弹层（含人物）%s' % os.path.basename(lb_src))
+            for tag, w, h, sw, sa in lb_report:
+                print('    %-8s %-18s %8.1fKB %8.1fKB' % (tag, '%d × %d' % (w, h), sw / 1024, sa / 1024))
+        else:
+            print('    ! 没配「%s」，弹层将复用页面上那张底图' % lb_key)
     return variants
 
 

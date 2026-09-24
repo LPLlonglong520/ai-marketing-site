@@ -1697,27 +1697,39 @@ DE_CSS = '''<style>
 .de-edge.l { left:0; transform:translateX(-9px) rotateY(-90deg); transform-origin:right center; }
 .de-edge.r { right:0; transform:translateX(9px) rotateY(90deg); transform-origin:left center; }
 
-/* 人物分层 */
+/* 人物分层
+   ⚠️ 底图是「无人版」（tools/mkplate.py 出的），人物全靠这 5 层拼出来 —— 底图里要是
+      也烘焙了人物，做动作时底图那个人不跟着动，就会和分层叠成重影。
+   落地阴影原本烘焙在底图里，改无人版后用 filter 补回来（尺寸按海报 28px/52px × 显示缩放）。 */
 .de-char { position:absolute; left:33.0952%; top:17.3507%; width:33.5714%; height:60.8209%; transform-origin:50% 100%;
   animation:deIdle 5.2s ease-in-out infinite;
+  filter:drop-shadow(0 7px 13px rgba(12,40,84,.28));
   opacity:0; transition:opacity .42s ease; }
 /* 5 个分层全部 load 完成后由 JS 加 .ready 整体淡入，避免"身体→头→手"逐块弹出的拼装感 */
 .de-char.ready { opacity:1; }
 .de-l { position:absolute; inset:0; width:100%; height:100%; display:block; pointer-events:none; }
 /* ⚠️ 人物分层的转动轴心必须与 media/de_char_*.webp 对应：
    换立牌人物（男/女）后跑 tools/mkchar.py，把它打印的两个百分比抄到这里 */
-.de-l-head { transform-origin:50.08% 22.30%; }
+.de-l-head { transform-origin:49.36% 22.30%; }
 .de-l-arm  { transform-origin:38.16% 38.61%; }
 .de-l-tab  { transform-origin:84.75% 41.87%; }
 @keyframes deIdle { 0%,100%{ transform:translateY(0) rotate(0deg);} 50%{ transform:translateY(-5px) rotate(.3deg);} }
-/* 动作：打招呼（挥手·不拿笔）/ 转身（人物侧身）/ 转到背面 / 复位 */
-.de-arm-wave { opacity:0; transition:opacity .14s; }
-.de-char.act-hello .de-l-arm:not(.de-arm-wave) { opacity:0; }
-.de-char.act-hello .de-arm-wave { opacity:1; animation:deWave 1.8s cubic-bezier(.36,.07,.19,.97) both; }
-.de-char.act-hello .de-l-head { animation:deNodG 1.8s ease-in-out both; }
+/* 动作：打招呼（整身轻快点头）/ 转身（原地侧身）/ 转到背面 / 复位
+   ⚠️ 两个动作都是「整身」的（动 .de-char 本身），不是只转手臂：
+      手臂下半截压在躯干上，从平面图里切不干净，一单独旋转就会在身体上留断口/残影。 */
+.de-char.act-hello { animation:deHi 1.9s cubic-bezier(.36,.07,.19,.97) both; }
+.de-char.act-hello .de-l-head { animation:deNodG 1.9s ease-in-out both; }
 .de-char.act-turn { transform-origin:50% 60%; animation:deTurnY 1.9s cubic-bezier(.36,.07,.19,.97) both; }
 .de-char.act-turn .de-l-head { animation:deNodG 1.9s ease-in-out both; }
-@keyframes deWave { 0%{transform:rotate(0)} 14%{transform:rotate(-16deg)} 34%{transform:rotate(9deg)} 54%{transform:rotate(-13deg)} 74%{transform:rotate(6deg)} 88%{transform:rotate(-3deg)} 100%{transform:rotate(0)} }
+/* 打招呼：像立牌被轻轻点了一下 —— 两次上浮 + 轻微侧倾，配合点头很自然 */
+@keyframes deHi {
+  0%   { transform:translateY(0) rotate(0deg); }
+  16%  { transform:translateY(-10px) rotate(-1deg); }
+  36%  { transform:translateY(-3px) rotate(.7deg); }
+  56%  { transform:translateY(-8px) rotate(-.6deg); }
+  76%  { transform:translateY(-2px) rotate(.4deg); }
+  100% { transform:translateY(0) rotate(0deg); }
+}
 @keyframes deNodG  { 0%{transform:rotate(0)} 30%{transform:rotate(-2.4deg)} 66%{transform:rotate(1.4deg)} 100%{transform:rotate(0)} }
 @keyframes deTurnY { 0%{transform:perspective(1200px) rotateY(0deg) translateX(0)} 26%{transform:perspective(1200px) rotateY(-34deg) translateX(-5px)} 62%{transform:perspective(1200px) rotateY(24deg) translateX(4px)} 100%{transform:perspective(1200px) rotateY(0deg) translateX(0)} }
 
@@ -4000,6 +4012,9 @@ def build_digital_employee_page(data):
         BW = 560
     BW_SM = int(round(BW * 4 / 7))         # 窄屏（≤768px）显示宽度，约等于大屏的 4/7
     _bname = os.path.splitext(os.path.basename(board_img))[0]
+    # 「放大查看」弹层用含人物的图（_lb_*）：页面上那张是无人版底图（防动作重影），
+    # 弹层是静态看图，缺了人物会让人觉得"人没了"。mkboard.py 没出 _lb_ 就退回底图。
+    _lbname = _bname + '_lb' if os.path.exists(media_path(_bname + '_lb_zoom.webp')) else _bname
     board_src, board_preload, _bw_real, _bh_real = board_picture(
         _bname, '营销AI小秘 场景能力立牌',
         f'(max-width:768px) {BW_SM}px, {BW}px', priority=True)
@@ -4016,8 +4031,6 @@ def build_digital_employee_page(data):
     layers = ''
     for nm in ('body', 'tab', 'arm', 'head'):
         layers += f'<img class="de-l de-l-{nm}" src="{media_path(prefix + nm + ".png", ver=True)}" alt="" decoding="async">'
-    # 挥手版手臂（打招呼时切换显示，去掉手中的笔）
-    layers += f'<img class="de-l de-l-arm de-arm-wave" src="{media_path(prefix + "wave_arm.png", ver=True)}" alt="" decoding="async">'
 
     kpi_meta = de.get('kpi_meta', {})
     kpi = ''
@@ -4128,7 +4141,7 @@ def build_digital_employee_page(data):
       </div>
     </div>
   </div>
-  {board_lightbox('deLb', _bname, '营销AI小秘 场景能力立牌 放大图', lb_label, lqip_html)}
+  {board_lightbox('deLb', _lbname, '营销AI小秘 场景能力立牌 放大图', lb_label, lqip_html)}
 </div>'''
 
     # ---------- 2. 业务流 ----------

@@ -950,27 +950,39 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .de-edge.l { left:0; transform:translateX(-9px) rotateY(-90deg); transform-origin:right center; }
 .de-edge.r { right:0; transform:translateX(9px) rotateY(90deg); transform-origin:left center; }
 
-/* 人物分层 */
+/* 人物分层
+   ⚠️ 底图是「无人版」（tools/mkplate.py 出的），人物全靠这 5 层拼出来 —— 底图里要是
+      也烘焙了人物，做动作时底图那个人不跟着动，就会和分层叠成重影。
+   落地阴影原本烘焙在底图里，改无人版后用 filter 补回来（尺寸按海报 28px/52px × 显示缩放）。 */
 .de-char { position:absolute; left:33.0952%; top:17.3507%; width:33.5714%; height:60.8209%; transform-origin:50% 100%;
   animation:deIdle 5.2s ease-in-out infinite;
+  filter:drop-shadow(0 7px 13px rgba(12,40,84,.28));
   opacity:0; transition:opacity .42s ease; }
 /* 5 个分层全部 load 完成后由 JS 加 .ready 整体淡入，避免"身体→头→手"逐块弹出的拼装感 */
 .de-char.ready { opacity:1; }
 .de-l { position:absolute; inset:0; width:100%; height:100%; display:block; pointer-events:none; }
 /* ⚠️ 人物分层的转动轴心必须与 media/de_char_*.webp 对应：
    换立牌人物（男/女）后跑 tools/mkchar.py，把它打印的两个百分比抄到这里 */
-.de-l-head { transform-origin:50.08% 22.30%; }
+.de-l-head { transform-origin:49.36% 22.30%; }
 .de-l-arm  { transform-origin:38.16% 38.61%; }
 .de-l-tab  { transform-origin:84.75% 41.87%; }
 @keyframes deIdle { 0%,100%{ transform:translateY(0) rotate(0deg);} 50%{ transform:translateY(-5px) rotate(.3deg);} }
-/* 动作：打招呼（挥手·不拿笔）/ 转身（人物侧身）/ 转到背面 / 复位 */
-.de-arm-wave { opacity:0; transition:opacity .14s; }
-.de-char.act-hello .de-l-arm:not(.de-arm-wave) { opacity:0; }
-.de-char.act-hello .de-arm-wave { opacity:1; animation:deWave 1.8s cubic-bezier(.36,.07,.19,.97) both; }
-.de-char.act-hello .de-l-head { animation:deNodG 1.8s ease-in-out both; }
+/* 动作：打招呼（整身轻快点头）/ 转身（原地侧身）/ 转到背面 / 复位
+   ⚠️ 两个动作都是「整身」的（动 .de-char 本身），不是只转手臂：
+      手臂下半截压在躯干上，从平面图里切不干净，一单独旋转就会在身体上留断口/残影。 */
+.de-char.act-hello { animation:deHi 1.9s cubic-bezier(.36,.07,.19,.97) both; }
+.de-char.act-hello .de-l-head { animation:deNodG 1.9s ease-in-out both; }
 .de-char.act-turn { transform-origin:50% 60%; animation:deTurnY 1.9s cubic-bezier(.36,.07,.19,.97) both; }
 .de-char.act-turn .de-l-head { animation:deNodG 1.9s ease-in-out both; }
-@keyframes deWave { 0%{transform:rotate(0)} 14%{transform:rotate(-16deg)} 34%{transform:rotate(9deg)} 54%{transform:rotate(-13deg)} 74%{transform:rotate(6deg)} 88%{transform:rotate(-3deg)} 100%{transform:rotate(0)} }
+/* 打招呼：像立牌被轻轻点了一下 —— 两次上浮 + 轻微侧倾，配合点头很自然 */
+@keyframes deHi {
+  0%   { transform:translateY(0) rotate(0deg); }
+  16%  { transform:translateY(-10px) rotate(-1deg); }
+  36%  { transform:translateY(-3px) rotate(.7deg); }
+  56%  { transform:translateY(-8px) rotate(-.6deg); }
+  76%  { transform:translateY(-2px) rotate(.4deg); }
+  100% { transform:translateY(0) rotate(0deg); }
+}
 @keyframes deNodG  { 0%{transform:rotate(0)} 30%{transform:rotate(-2.4deg)} 66%{transform:rotate(1.4deg)} 100%{transform:rotate(0)} }
 @keyframes deTurnY { 0%{transform:perspective(1200px) rotateY(0deg) translateX(0)} 26%{transform:perspective(1200px) rotateY(-34deg) translateX(-5px)} 62%{transform:perspective(1200px) rotateY(24deg) translateX(4px)} 100%{transform:perspective(1200px) rotateY(0deg) translateX(0)} }
 
@@ -1779,9 +1791,9 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
               <div class="tagline">铝合金背撑 · 稳固落地</div>
             </div>
             <div class="de-face de-front">
-              <img class="de-lqip" src="data:image/webp;base64,UklGRj4BAABXRUJQVlA4IDIBAACQBgCdASoWABwAPrFOoEunJCMhqAqo4BYJQBUlqCq2nvKQc/+eAHcAHsO6qyeh32/DJfjjnF0KuEW/HXMAAM4zN8UamejQ2t+v2TGhlWk+oFAA8Ma4f9RCy5qjNuhwcpyz0gw1fjo5KBN6NEa35nIcADbVMSOVbcVJLitR5556Ea/PbP8oYkj3PpbokT059Tw6rJyM9TAf6RQhi9gbH7kQQEwJXVX27SRGdqIrc0pQmdP9+RNGr5Nv0ZGEF2qWq0WeLNF/LLViRjsyao122tbPk6zPSHhvAQmXHU1liebYvuem/hxuX7/JEUR0/4Usw9yvvhY9iFDmxBc+PQeyL/fPQnmCcKpZJ43KHMYLxsORm3oHsyIfVtguXU57NlIAfRxD01hZTY9fWIwXHNBCVE0f4AA=" alt="" aria-hidden="true">
+              <img class="de-lqip" src="data:image/webp;base64,UklGRhIBAABXRUJQVlA4IAYBAADwBQCdASoWABwAPrFKoEsnJCMhsBgIAOAWCWMAqRS5Os+f/APYeI67ZJ3ItaTpp9WEMqe2XYwWAADOMzfFGppG2hq31PxRd8Iudd/SrneZUCPQCbSPcoa2MS264jjtBf3PmWx7EgTRwx6YKXXCahPFVXV2hlDf9ybieM5UaTGnVnlyzFayf3PhCGVPRWVCOM1Hd/tN8lrCZmtHOCJkMlFUg1gstQt2noGUt+lzDZhWKW456ildO2cqX4zAXW0aFPXkOkPgf0dG9Cqr4G1U9mO4cVu+pAlsJTJ9qDLnC60SlW2G2eQBT3YRQuvtLp0iDYWzylv1FyNLkiFDo35sbY8ApvnUAAAA" alt="" aria-hidden="true">
               <picture><source type="image/avif" srcset="media/de_board_front_m.avif 640w, media/de_board_front_1x.avif 560w, media/de_board_front.avif 1120w" sizes="(max-width:768px) 320px, 560px"><img class="de-img" src="media/de_board_front_1x.webp" srcset="media/de_board_front_m.webp 640w, media/de_board_front_1x.webp 560w, media/de_board_front.webp 1120w" sizes="(max-width:768px) 320px, 560px" width="560" height="715" alt="营销AI小秘 场景能力立牌" decoding="async" fetchpriority="high"></picture>
-              <div class="de-char" id="deChar" title="点我切换动作"><img class="de-l de-l-body" src="media/de_char_body.webp?v=1790253593" alt="" decoding="async"><img class="de-l de-l-tab" src="media/de_char_tab.webp?v=1790253596" alt="" decoding="async"><img class="de-l de-l-arm" src="media/de_char_arm.webp?v=1790253597" alt="" decoding="async"><img class="de-l de-l-head" src="media/de_char_head.webp?v=1790253594" alt="" decoding="async"><img class="de-l de-l-arm de-arm-wave" src="media/de_char_wave_arm.webp?v=1790253598" alt="" decoding="async"></div>
+              <div class="de-char" id="deChar" title="点我切换动作"><img class="de-l de-l-body" src="media/de_char_body.webp?v=1790254652" alt="" decoding="async"><img class="de-l de-l-tab" src="media/de_char_tab.webp?v=1790254658" alt="" decoding="async"><img class="de-l de-l-arm" src="media/de_char_arm.webp?v=1790254660" alt="" decoding="async"><img class="de-l de-l-head" src="media/de_char_head.webp?v=1790254655" alt="" decoding="async"></div>
               <div class="de-sheen"></div>
             </div>
           </div>
@@ -1803,7 +1815,7 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
       </div>
     </div>
   </div>
-  <div class="de-lb" id="deLb" data-lb data-base="media/de_board_front_1x.webp" data-avif="media/de_board_front_zoom.avif" data-webp="media/de_board_front_zoom.webp">
+  <div class="de-lb" id="deLb" data-lb data-base="media/de_board_front_lb_1x.webp" data-avif="media/de_board_front_lb_zoom.avif" data-webp="media/de_board_front_lb_zoom.webp">
   <span class="cl" title="关闭">✕</span>
   <div class="de-lb-stage">
     <img class="de-lb-base" alt="" aria-hidden="true">
@@ -1920,7 +1932,7 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
   <div class="cap-desc">写方案、查人员、找案例、查资质、解析标书、查价格，投标资料不再靠翻库，说出条件就能下载</div>
   <div class="cap-loop"><span class="cap-loop-t">招投标场景闭环</span><div class="cap-loop-chain"><span class="cp">标书解析</span><i>→</i><span class="cp">方案初版</span><i>→</i><span class="cp">人员/案例/资质检索</span><i>→</i><span class="cp">标前检查</span><i>→</i><span class="cp">价格核对</span></div></div>
   
-  <div class="cap-tbl-wrap"><table class="cap-tbl"><thead><tr><th>skill / 功能</th><th>介绍 / 输入示例</th><th>数据来源</th><th>入口 / 链接</th></tr></thead><tbody><tr><td class="sk">写方案</td><td class="dm">XXXX对于政策分析，输出方案（可直接下载方案初版）<br>示例：请解读下公安176号文的政策，帮我写一份汇报PPT初版方案</td><td class="dt" data-l="数据来源">知识中心</td><td class="ent ent-span" rowspan="5" data-l="入口"><a class="ent ent-chip ent-a" href="https://applink.dingtalk.com/action/jumprobot?dingtalkid=%24%3aLWCP_v1%3a%24jNpCmgi%2fFOAC4IeQJVQM%2bm3Lp3xG0gCb" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">营销AI小秘</span><i class="ent-arw">↗</i></a></td></tr><tr><td class="sk">找人员</td><td class="dm">人员符合XXXXX条件（学历、资质等）<br>XXXX学历证明、XXX人员的社保等（输入我要下载，可直接下载）<br>示例：查询具有CISP-CISO、PMP、CISAW的人员</td><td class="dt" data-l="数据来源">人员信息库</td><td class="ent-m" data-l="入口"><a class="ent ent-chip ent-a" href="https://applink.dingtalk.com/action/jumprobot?dingtalkid=%24%3aLWCP_v1%3a%24jNpCmgi%2fFOAC4IeQJVQM%2bm3Lp3xG0gCb" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">营销AI小秘</span><i class="ent-arw">↗</i></a></td></tr><tr><td class="sk">找案例</td><td class="dm">行业/区域/金额/产品/客户等符合条件案例合同、回单、中标通知书等扫描件（输入我要下载，可直接下载）<br>示例：我需要杭州近三年金融行业的案例</td><td class="dt" data-l="数据来源">OA案例库</td><td class="ent-m" data-l="入口"><a class="ent ent-chip ent-a" href="https://applink.dingtalk.com/action/jumprobot?dingtalkid=%24%3aLWCP_v1%3a%24jNpCmgi%2fFOAC4IeQJVQM%2bm3Lp3xG0gCb" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">营销AI小秘</span><i class="ent-arw">↗</i></a></td></tr><tr><td class="sk">找资质</td><td class="dm">XX产品/XX名称/XX漏洞证明等（输入我要下载，可直接下载）<br>示例：查询明御WEB应用防火墙相关的产品资质</td><td class="dt" data-l="数据来源">OA资质库</td><td class="ent-m" data-l="入口"><a class="ent ent-chip ent-a" href="https://applink.dingtalk.com/action/jumprobot?dingtalkid=%24%3aLWCP_v1%3a%24jNpCmgi%2fFOAC4IeQJVQM%2bm3Lp3xG0gCb" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">营销AI小秘</span><i class="ent-arw">↗</i></a></td></tr><tr><td class="sk">查价格</td><td class="dm">查询XXXXX型号的价格、查询某渠道的XX型号的价格<br>示例：查询DAS-WAF-880AG的价格</td><td class="dt" data-l="数据来源">报价器</td><td class="ent-m" data-l="入口"><a class="ent ent-chip ent-a" href="https://applink.dingtalk.com/action/jumprobot?dingtalkid=%24%3aLWCP_v1%3a%24jNpCmgi%2fFOAC4IeQJVQM%2bm3Lp3xG0gCb" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">营销AI小秘</span><i class="ent-arw">↗</i></a></td></tr><tr><td class="sk">招投标全场景</td><td class="dm">招标文件智能解析-智写商务标初版-标前智能检查-文件智能查重四大AI功能（下载初版标书）<br>点击平台直接使用</td><td class="dt" data-l="数据来源">已集成</td><td class="ent" data-l="入口"><a class="ent ent-chip ent-a" href="http://bid.xxzx.dbappsecurity.com.cn/project" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">营销AI小秘-写标书</span><i class="ent-arw">↗</i></a></td></tr></tbody></table></div>
+  <div class="cap-tbl-wrap"><table class="cap-tbl"><thead><tr><th>skill / 功能</th><th>介绍 / 输入示例</th><th>数据来源</th><th>入口 / 链接</th></tr></thead><tbody><tr><td class="sk">写方案</td><td class="dm">输入用户行业场景，输出 WORD/PPT 方案（可直接下载方案初版）<br>示例：请解读下公安176号文的政策，帮我写一份汇报PPT初版方案</td><td class="dt" data-l="数据来源">知识中心</td><td class="ent ent-span" rowspan="5" data-l="入口"><a class="ent ent-chip ent-a" href="https://applink.dingtalk.com/action/jumprobot?dingtalkid=%24%3aLWCP_v1%3a%24jNpCmgi%2fFOAC4IeQJVQM%2bm3Lp3xG0gCb" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">营销AI小秘</span><i class="ent-arw">↗</i></a></td></tr><tr><td class="sk">找人员</td><td class="dm">人员符合XXXXX条件（学历、资质等）<br>XXXX学历证明、XXX人员的社保等（输入我要下载，可直接下载）<br>示例：查询具有CISP-CISO、PMP、CISAW的人员</td><td class="dt" data-l="数据来源">人员信息库</td><td class="ent-m" data-l="入口"><a class="ent ent-chip ent-a" href="https://applink.dingtalk.com/action/jumprobot?dingtalkid=%24%3aLWCP_v1%3a%24jNpCmgi%2fFOAC4IeQJVQM%2bm3Lp3xG0gCb" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">营销AI小秘</span><i class="ent-arw">↗</i></a></td></tr><tr><td class="sk">找案例</td><td class="dm">行业/区域/金额/产品/客户等符合条件案例合同、回单、中标通知书等扫描件（输入我要下载，可直接下载）<br>示例：我需要杭州近三年金融行业的案例</td><td class="dt" data-l="数据来源">OA案例库</td><td class="ent-m" data-l="入口"><a class="ent ent-chip ent-a" href="https://applink.dingtalk.com/action/jumprobot?dingtalkid=%24%3aLWCP_v1%3a%24jNpCmgi%2fFOAC4IeQJVQM%2bm3Lp3xG0gCb" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">营销AI小秘</span><i class="ent-arw">↗</i></a></td></tr><tr><td class="sk">找资质</td><td class="dm">XX产品/XX名称/XX漏洞证明等（输入我要下载，可直接下载）<br>示例：查询明御WEB应用防火墙相关的产品资质</td><td class="dt" data-l="数据来源">OA资质库</td><td class="ent-m" data-l="入口"><a class="ent ent-chip ent-a" href="https://applink.dingtalk.com/action/jumprobot?dingtalkid=%24%3aLWCP_v1%3a%24jNpCmgi%2fFOAC4IeQJVQM%2bm3Lp3xG0gCb" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">营销AI小秘</span><i class="ent-arw">↗</i></a></td></tr><tr><td class="sk">查价格</td><td class="dm">查询XXXXX型号的价格、查询某渠道的XX型号的价格<br>示例：查询DAS-WAF-880AG的价格</td><td class="dt" data-l="数据来源">报价器</td><td class="ent-m" data-l="入口"><a class="ent ent-chip ent-a" href="https://applink.dingtalk.com/action/jumprobot?dingtalkid=%24%3aLWCP_v1%3a%24jNpCmgi%2fFOAC4IeQJVQM%2bm3Lp3xG0gCb" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">营销AI小秘</span><i class="ent-arw">↗</i></a></td></tr><tr><td class="sk">招投标全场景</td><td class="dm">招标文件智能解析-智写商务标初版-标前智能检查-文件智能查重四大AI功能（下载初版标书）<br>点击平台直接使用</td><td class="dt" data-l="数据来源">已集成</td><td class="ent" data-l="入口"><a class="ent ent-chip ent-a" href="http://bid.xxzx.dbappsecurity.com.cn/project" target="_blank" rel="noopener noreferrer" title="点击跳转前往体验"><span class="ent-n">营销AI小秘-写标书</span><i class="ent-arw">↗</i></a></td></tr></tbody></table></div>
   
 </div><div class="cap-card" style="--cc:#64748b" data-scene="合同场景">
   <div class="cap-top">

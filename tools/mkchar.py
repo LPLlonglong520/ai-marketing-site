@@ -5,14 +5,16 @@
 
 背景
 ----
-页头立牌 = 立牌图（人物已烘焙在图里） + 叠在上面的一层"可点击角色"（media/de_char_*.webp）。
-点击「打招呼 / 转身」动的是上层那 5 张分层图。所以：
+页头立牌 = **无人版底图**（`tools/mkplate.py` 出的，里面没有人） + 叠在上面的可点击角色分层
+（`media/de_char_*.webp`，本脚本切出来的这 5 层）。
 
-    ⚠️ 立牌图换成哪个版本（男/女），de_char_*.webp 就必须换成同一个版本，
-       否则上层的男角色压在底图女角色上 → 出现"男女重影"。
+    ⚠️ 底图里绝不能烘焙人物：一旦烘焙，做「打招呼 / 转身」时底图那个人不跟着动，
+       就会和分层叠成重影（挥手多一只手、转身整个人变两个）。
+    ⚠️ 5 层必须来自和底图同一版立牌（男/女不能混），否则人物会对不上。
 
-本脚本：从立牌源目录里的 character_standee.png（带 alpha 的人物素材）切出 5 层，
-按立牌图的几何对齐，写回 media/de_char_*.webp。
+切法：从立牌源目录里的 `assets/character_standee.png`（带 alpha 的人物素材）按立牌图的几何
+对齐，切成 head / arm / tab / body 四块（+ 一份 wave_arm 备用），写回 `media/de_char_*.webp`。
+每层 mask 会向外膨胀 1px，让相邻层边缘互相压住，避免浏览器缩放后出现发丝缝。
 
 用法
 ----
@@ -86,7 +88,11 @@ def build_canvas(standee_path):
 
 
 def split(canvas):
-    """按 HEAD_Y / ARM_BOX / TAB_BOX 把人物轮廓切成 4 块（和为全体）。"""
+    """按 HEAD_Y / ARM_BOX / TAB_BOX 把人物轮廓切成 4 块（和为全体）。
+
+    轮廓阈值取 alpha > 8（不是 > 100）：把人物最外圈的半透明描边也带上，
+    这样几层拼回去 == 原素材（含软边），底图换成"无人版"后边缘才不会发硬。
+    """
     A = canvas.getchannel('A').load()
     L = canvas.convert('L').load()
     w, h = canvas.size
@@ -94,7 +100,7 @@ def split(canvas):
     sil = set()
     for y in range(h):
         for x in range(w):
-            if A[x, y] <= 100:
+            if A[x, y] <= 8:
                 continue
             sil.add((x, y))
             if y < HEAD_Y:
@@ -106,6 +112,17 @@ def split(canvas):
                 parts['tab'].add((x, y))
     parts['body'] = sil - parts['head'] - parts['arm'] - parts['tab']
     return parts, sil
+
+
+def dilate(pts, w, h):
+    """mask 向外膨胀 1px：相邻层边缘互相压住，避免缩放后出现发丝缝。"""
+    out = set(pts)
+    for (x, y) in pts:
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < w and 0 <= ny < h:
+                out.add((nx, ny))
+    return out
 
 
 def to_image(canvas, pts, pivot=None, deg=0.0):
@@ -180,10 +197,16 @@ def main():
     if dry:
         print('（--dry 只校验，未写文件）')
         return 0
+
+    # 写文件时用「膨胀 1px」的 mask（相邻层边缘互相压住，缩放后没有发丝缝）
+    cw, chh = CANVAS
+    out_imgs = {n: to_image(canvas, dilate(parts[n], cw, chh))
+                for n in ('body', 'head', 'tab', 'arm')}
+    out_imgs['wave_arm'] = out_imgs['arm']
     for n in LAYERS:
         out = os.path.join(MEDIA, 'de_char_%s.webp' % n)
-        imgs[n].save(out, 'WEBP', quality=92, alpha_quality=100, method=6)
-        print('  写出 %-26s %6.1f KB  %s' % (os.path.basename(out), os.path.getsize(out) / 1024, imgs[n].size))
+        out_imgs[n].save(out, 'WEBP', quality=92, alpha_quality=100, method=6)
+        print('  写出 %-26s %6.1f KB  %s' % (os.path.basename(out), os.path.getsize(out) / 1024, out_imgs[n].size))
     print('─' * 62)
     return 0
 
