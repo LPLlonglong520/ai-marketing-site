@@ -14,8 +14,12 @@ if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
 
-def media_path(path):
-    """Auto-upgrade image paths to .webp if a compressed version exists."""
+def media_path(path, ver=False):
+    """Auto-upgrade image paths to .webp if a compressed version exists.
+
+    ver=True 时追加 `?v=<文件 mtime>`：立牌人物分层这类**文件名不变、内容会换**的素材
+    必须带版本号，否则浏览器会用旧图盖在新立牌上（男女重影就是这么来的）。
+    """
     if not path:
         return path
     # 自动补 media/ 前缀
@@ -27,7 +31,12 @@ def media_path(path):
         webp_path = base + '.webp'
         webp_full = os.path.join(os.path.dirname(os.path.abspath(__file__)), webp_path)
         if os.path.exists(webp_full):
-            return webp_path
+            path, full = webp_path, webp_full
+    if ver:
+        try:
+            path += '?v=%d' % int(os.path.getmtime(full))
+        except OSError:
+            pass
     return path
 
 
@@ -1695,8 +1704,10 @@ DE_CSS = '''<style>
 /* 5 个分层全部 load 完成后由 JS 加 .ready 整体淡入，避免"身体→头→手"逐块弹出的拼装感 */
 .de-char.ready { opacity:1; }
 .de-l { position:absolute; inset:0; width:100%; height:100%; display:block; pointer-events:none; }
-.de-l-head { transform-origin:57.16% 23.62%; }
-.de-l-arm  { transform-origin:29.08% 31.44%; }
+/* ⚠️ 人物分层的转动轴心必须与 media/de_char_*.webp 对应：
+   换立牌人物（男/女）后跑 tools/mkchar.py，把它打印的两个百分比抄到这里 */
+.de-l-head { transform-origin:50.08% 22.30%; }
+.de-l-arm  { transform-origin:38.16% 38.61%; }
 .de-l-tab  { transform-origin:84.75% 41.87%; }
 @keyframes deIdle { 0%,100%{ transform:translateY(0) rotate(0deg);} 50%{ transform:translateY(-5px) rotate(.3deg);} }
 /* 动作：打招呼（挥手·不拿笔）/ 转身（人物侧身）/ 转到背面 / 复位 */
@@ -4004,9 +4015,9 @@ def build_digital_employee_page(data):
         lqip_html = f'<img class="de-lqip" src="{lqip_src}" alt="" aria-hidden="true">'
     layers = ''
     for nm in ('body', 'tab', 'arm', 'head'):
-        layers += f'<img class="de-l de-l-{nm}" src="{media_path(prefix + nm + ".png")}" alt="" decoding="async">'
+        layers += f'<img class="de-l de-l-{nm}" src="{media_path(prefix + nm + ".png", ver=True)}" alt="" decoding="async">'
     # 挥手版手臂（打招呼时切换显示，去掉手中的笔）
-    layers += f'<img class="de-l de-l-arm de-arm-wave" src="{media_path(prefix + "wave_arm.png")}" alt="" decoding="async">'
+    layers += f'<img class="de-l de-l-arm de-arm-wave" src="{media_path(prefix + "wave_arm.png", ver=True)}" alt="" decoding="async">'
 
     kpi_meta = de.get('kpi_meta', {})
     kpi = ''

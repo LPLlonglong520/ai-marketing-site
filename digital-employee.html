@@ -957,8 +957,10 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 /* 5 个分层全部 load 完成后由 JS 加 .ready 整体淡入，避免"身体→头→手"逐块弹出的拼装感 */
 .de-char.ready { opacity:1; }
 .de-l { position:absolute; inset:0; width:100%; height:100%; display:block; pointer-events:none; }
-.de-l-head { transform-origin:57.16% 23.62%; }
-.de-l-arm  { transform-origin:29.08% 31.44%; }
+/* ⚠️ 人物分层的转动轴心必须与 media/de_char_*.webp 对应：
+   换立牌人物（男/女）后跑 tools/mkchar.py，把它打印的两个百分比抄到这里 */
+.de-l-head { transform-origin:50.08% 22.30%; }
+.de-l-arm  { transform-origin:38.16% 38.61%; }
 .de-l-tab  { transform-origin:84.75% 41.87%; }
 @keyframes deIdle { 0%,100%{ transform:translateY(0) rotate(0deg);} 50%{ transform:translateY(-5px) rotate(.3deg);} }
 /* 动作：打招呼（挥手·不拿笔）/ 转身（人物侧身）/ 转到背面 / 复位 */
@@ -1779,7 +1781,7 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
             <div class="de-face de-front">
               <img class="de-lqip" src="data:image/webp;base64,UklGRj4BAABXRUJQVlA4IDIBAACQBgCdASoWABwAPrFOoEunJCMhqAqo4BYJQBUlqCq2nvKQc/+eAHcAHsO6qyeh32/DJfjjnF0KuEW/HXMAAM4zN8UamejQ2t+v2TGhlWk+oFAA8Ma4f9RCy5qjNuhwcpyz0gw1fjo5KBN6NEa35nIcADbVMSOVbcVJLitR5556Ea/PbP8oYkj3PpbokT059Tw6rJyM9TAf6RQhi9gbH7kQQEwJXVX27SRGdqIrc0pQmdP9+RNGr5Nv0ZGEF2qWq0WeLNF/LLViRjsyao122tbPk6zPSHhvAQmXHU1liebYvuem/hxuX7/JEUR0/4Usw9yvvhY9iFDmxBc+PQeyL/fPQnmCcKpZJ43KHMYLxsORm3oHsyIfVtguXU57NlIAfRxD01hZTY9fWIwXHNBCVE0f4AA=" alt="" aria-hidden="true">
               <picture><source type="image/avif" srcset="media/de_board_front_m.avif 640w, media/de_board_front_1x.avif 560w, media/de_board_front.avif 1120w" sizes="(max-width:768px) 320px, 560px"><img class="de-img" src="media/de_board_front_1x.webp" srcset="media/de_board_front_m.webp 640w, media/de_board_front_1x.webp 560w, media/de_board_front.webp 1120w" sizes="(max-width:768px) 320px, 560px" width="560" height="715" alt="营销AI小秘 场景能力立牌" decoding="async" fetchpriority="high"></picture>
-              <div class="de-char" id="deChar" title="点我切换动作"><img class="de-l de-l-body" src="media/de_char_body.webp" alt="" decoding="async"><img class="de-l de-l-tab" src="media/de_char_tab.webp" alt="" decoding="async"><img class="de-l de-l-arm" src="media/de_char_arm.webp" alt="" decoding="async"><img class="de-l de-l-head" src="media/de_char_head.webp" alt="" decoding="async"><img class="de-l de-l-arm de-arm-wave" src="media/de_char_wave_arm.webp" alt="" decoding="async"></div>
+              <div class="de-char" id="deChar" title="点我切换动作"><img class="de-l de-l-body" src="media/de_char_body.webp?v=1790253593" alt="" decoding="async"><img class="de-l de-l-tab" src="media/de_char_tab.webp?v=1790253596" alt="" decoding="async"><img class="de-l de-l-arm" src="media/de_char_arm.webp?v=1790253597" alt="" decoding="async"><img class="de-l de-l-head" src="media/de_char_head.webp?v=1790253594" alt="" decoding="async"><img class="de-l de-l-arm de-arm-wave" src="media/de_char_wave_arm.webp?v=1790253598" alt="" decoding="async"></div>
               <div class="de-sheen"></div>
             </div>
           </div>
