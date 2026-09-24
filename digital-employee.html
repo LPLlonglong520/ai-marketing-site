@@ -938,6 +938,8 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .de-front { transform:translateZ(9px); background:#fff; box-shadow:0 2px 0 rgba(255,255,255,.9) inset, 0 0 0 1px rgba(15,35,80,.07); }
 .de-back { transform:translateZ(-9px) rotateY(180deg); background:#fff; box-shadow:0 0 0 1px rgba(15,35,80,.07); }
 .de-img { position:absolute; inset:0; width:100%; height:100%; object-fit:fill; display:block; user-select:none; -webkit-user-drag:none; }
+/* <picture> 只做格式分支，不要产生盒子，否则 .de-img 的绝对定位父级会错位 */
+.de-face picture, .de-front picture, .de-eco-front picture { display:contents; }
 /* 内联占位图：主图未到时先铺一层模糊海报轮廓（主图为不透明整图，加载完成后自然完全遮盖） */
 .de-lqip { position:absolute; inset:0; width:100%; height:100%; object-fit:fill; display:block;
   filter:blur(6px) saturate(1.04); transform:scale(1.035); pointer-events:none; user-select:none; }
@@ -1089,11 +1091,32 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .de-char.cursor-tap::after { content:''; position:absolute; inset:0; border-radius:50%; pointer-events:none; }
 
 /* 放大查看立牌 */
-.de-lb { position:fixed; inset:0; z-index:900; background:rgba(6,12,30,.86); display:none; align-items:center; justify-content:center; padding:28px; }
+/* ---------- 放大查看（两处立牌共用） ----------
+   两段式：.de-lb-base 用页面上已经缓存过的显示图，点开瞬间就有画面；
+   .de-lb-hi 是点开后才拉的放大图（约 150KB，AVIF），加载完淡入替换。
+   两张图同比例，尺寸完全一致，替换过程不跳动。 */
+.de-lb { position:fixed; inset:0; z-index:900; background:rgba(6,12,30,.9); display:none;
+  overflow:auto; overscroll-behavior:contain; padding:26px; cursor:zoom-out; }
 .de-lb.open { display:flex; }
-.de-lb img { max-width:min(94vw,1000px); max-height:92vh; width:auto; border-radius:8px; box-shadow:0 30px 80px rgba(0,0,0,.5); }
-.de-lb .cl { position:absolute; top:20px; right:26px; color:#fff; font-size:30px; line-height:1; cursor:pointer; opacity:.75; }
+.de-lb-stage { position:relative; margin:auto; line-height:0; cursor:zoom-in; }
+.de-lb-base, .de-lb-hi { display:block; max-width:min(94vw,1000px); max-height:88vh; width:auto; height:auto;
+  border-radius:8px; box-shadow:0 30px 80px rgba(0,0,0,.5); }
+.de-lb-base { filter:blur(1.2px); }
+.de-lb.hi-ready .de-lb-base { filter:none; }
+.de-lb-hi { position:absolute; inset:0; margin:auto; opacity:0; transition:opacity .32s ease; }
+.de-lb.hi-ready .de-lb-hi { opacity:1; }
+/* 2× 细节模式：图片放大到 2 倍，弹层可滚动查看小字 */
+.de-lb.z2 { cursor:zoom-out; }
+.de-lb.z2 .de-lb-stage { cursor:zoom-out; }
+.de-lb.z2 .de-lb-base, .de-lb.z2 .de-lb-hi { max-width:min(184vw,2000px); max-height:none; }
+.de-lb .cl { position:fixed; top:16px; right:22px; z-index:2; color:#fff; font-size:30px; line-height:1;
+  cursor:pointer; opacity:.7; }
 .de-lb .cl:hover { opacity:1; }
+.de-lb-tip { position:fixed; left:50%; bottom:14px; transform:translateX(-50%); z-index:2;
+  color:rgba(214,228,255,.62); font-size:12px; letter-spacing:.2px; white-space:nowrap;
+  background:rgba(6,12,30,.55); padding:6px 13px; border-radius:20px; pointer-events:none; }
+.de-lb-tip .ic { font-size:12px; }
+@media (max-width:640px) { .de-lb { padding:12px; } .de-lb-tip { font-size:10.5px; padding:5px 10px; } }
 
 /* ============ 2. 业务流（深色） ============ */
 .de-flow-sec { position:relative; padding:86px 0 56px; overflow:hidden;
@@ -1169,10 +1192,31 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 /* 场景能力集合这一屏单独放宽：表格 4 列，窄容器会把「介绍 / 输入示例」挤成一条。
    宽度与列数由 content.md「能力集容器宽度 / 能力集列数」控制（注入下面的 1760px / 2 占位符） */
 .de-cap-sec .de-wrap { max-width:1760px; }
-/* 主能力卡：默认一行两张（`能力集列数`）。每张卡至少 ~660px 才放得下 4 列表格，
-   视口窄于「列数 × 660 + 64」就自动收成一行一张（断点由 1384 注入） */
+/* 主能力卡：默认一行两张（`能力集列数`）。窗口收成一行一张的断点由
+   `能力集列数断点` 控制（默认 1024 = PC 恒定两列），断点之上会启用紧凑表格
+   样式，让每张卡窄到 ~470px 时 4 列表格依然读得下去 */
 .cap-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
-@media (max-width:1384px) { .cap-grid { grid-template-columns:1fr; } }
+@media (max-width:1024px) { .cap-grid { grid-template-columns:1fr; } }
+/* 两列但还不够宽的区间（1025 ~ 1560）：压缩留白 + 允许表头换行，防止挤压换行 */
+@media (min-width:1025px) and (max-width:1560px) {
+  .de-cap-sec .de-wrap { padding:0 24px; }
+  .cap-top { padding:20px 18px 13px; gap:11px; }
+  .cap-name { font-size:19px; }
+  .cap-desc { padding:0 18px 12px; }
+  .cap-loop { margin:0 18px 12px; padding:11px 13px 12px; }
+  .cap-loop-chain .cp { font-size:11px; padding:3px 8px; }
+  .cap-tbl-wrap { padding:0 10px 12px; }
+  .cap-tbl { font-size:12px; }
+  .cap-tbl th { white-space:normal; padding:9px 9px; font-size:11px; }
+  .cap-tbl td { padding:9px 9px; }
+  .cap-tbl td.sk { min-width:76px; }
+  .cap-tbl td.ent { white-space:normal; }
+  .cap-tbl th, .cap-tbl td { overflow-wrap:anywhere; }
+  .cap-tbl th:nth-child(1), .cap-tbl td.sk { width:20%; }
+  .cap-tbl th:nth-child(3), .cap-tbl td.dt { width:15%; }
+  .cap-tbl th:nth-child(4), .cap-tbl td.ent, .cap-tbl td.ent-m { width:17%; }
+  .cap-row-side { max-width:60%; }
+}
 .cap-card { position:relative; background:var(--white); border:1px solid rgba(15,35,80,.07); border-radius:20px; overflow:hidden;
   box-shadow:var(--shadow); transition:transform .34s cubic-bezier(.4,0,.2,1), box-shadow .34s; display:flex; flex-direction:column; }
 .cap-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:var(--cc,#1e6fd9); }
@@ -1361,7 +1405,6 @@ a.pth-a .ent-arw { margin-left:3px; font-size:9px; }
   .de-h2-go { padding:7px 13px; font-size:12px; gap:5px; }
   .de-sec { padding:66px 0; }
   .de-wrap { padding:0 22px; }
-  .cap-grid { grid-template-columns:1fr; }
   .de-flow-stat { font-size:14px; gap:4px 9px; }
   .de-flow-stat .seg b { font-size:21px; }
 }
@@ -1668,6 +1711,9 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
 .de-eco-stage .de-bhint { bottom:0; color:#cfdcff; background:rgba(255,255,255,.07);
   border-color:rgba(255,255,255,.14); box-shadow:none; }
 .de-eco-stage.dragging .de-bhint { opacity:0; }
+/* 生态立牌的「放大查看」：贴在立牌右下角，与页头立牌同款位置（提示文字上方） */
+.de-eco-stage { position:relative; }
+.de-eco-stage .de-board-tools { right:calc(50% - min(260px,46%) + 10px); bottom:44px; }
 
 /* 右栏：能力卡（与左栏立牌等高，按钮贴底） */
 .de-eco-side { min-width:0; }
@@ -1680,7 +1726,7 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
   .de-eco-sec { padding:62px 0 70px; }
 }
 </style>
-<link rel="preload" as="image" href="media/de_board_front.webp" imagesrcset="media/de_board_front_1x.webp 560w, media/de_board_front.webp 1120w" imagesizes="(max-width:768px) 320px, 560px" fetchpriority="high">
+<link rel="preload" as="image" type="image/avif" href="media/de_board_front_1x.avif" imagesrcset="media/de_board_front_m.avif 640w, media/de_board_front_1x.avif 560w, media/de_board_front.avif 1120w" imagesizes="(max-width:768px) 320px, 560px" fetchpriority="high">
 <link rel="preload" as="image" href="media/de_char_body.webp">
 </head>
 <body class="de-body">
@@ -1731,15 +1777,13 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
               <div class="tagline">铝合金背撑 · 稳固落地</div>
             </div>
             <div class="de-face de-front">
-              <img class="de-lqip" src="data:image/webp;base64,UklGRswAAABXRUJQVlA4IMAAAABwBQCdASoWABwAPwlus1KrpaSisBgIAXAhCWMArjz2PLW3+Aex57HhSKwLXYv7X8sdjRU8AM4NINYvP+Vdv91FpKDbI1VrNLY5qvpwqhialuCVhhgmyscLoHHArqvvxT9Xbv/9buEjGMc0AQ51h+PTSSgaK9dVABnaLoDDCipviTHJasysd20JO3hjAQKYPZFNFOcIFRBGJV8U7Q5g2/NMEO8GjTTtzSMk+TB/KAnfeAJWCi6Gc16IN908UAOgAAA=" alt="" aria-hidden="true">
-              <img class="de-img" src="media/de_board_front.webp" srcset="media/de_board_front_1x.webp 560w, media/de_board_front.webp 1120w" sizes="(max-width:768px) 320px, 560px" alt="营销AI小秘 场景能力立牌" fetchpriority="high" decoding="async">
+              <img class="de-lqip" src="data:image/webp;base64,UklGRk4BAABXRUJQVlA4IEIBAABQBgCdASoWABwAPrFOoEunJCMhqAqo4BYJQBOmYZ2lEo5+0bwLhyOMgintBhuwm972BvR1zA9jkqQKYADOMzfFGoOKJY+v4sWM4MA64pe9c+Wp1lUGS+MICeiS99oydTIG85YO2SnkXUzVlGyeGWrFi5+vAbWqsuMLb67LAzA20XJ/LS5Xtgd8ALBiVE45bUuH8n7Cw/k0CLv3A9D8UzW0nmPOWkC7Alh+xriXez7sqinpVOPQvZyyzD/NA3nhue/RyOvG0XX/IpXWGFLuglT/cTUxF4sD8aoLDT9O1LoRu0r/XvPosSLd/UuU67mWMRaoS+Wr/lyhZqdXafhcxG7h7G7ZHI7ee30fxPz8Ima95w3NmTg1Kwxi3NbVH1nlevrFz+HsabCBO1zK2rIZjE1xtN7Ei6l4dE0PGsx64wDYR1AA" alt="" aria-hidden="true">
+              <picture><source type="image/avif" srcset="media/de_board_front_m.avif 640w, media/de_board_front_1x.avif 560w, media/de_board_front.avif 1120w" sizes="(max-width:768px) 320px, 560px"><img class="de-img" src="media/de_board_front_1x.webp" srcset="media/de_board_front_m.webp 640w, media/de_board_front_1x.webp 560w, media/de_board_front.webp 1120w" sizes="(max-width:768px) 320px, 560px" width="560" height="715" alt="营销AI小秘 场景能力立牌" decoding="async" fetchpriority="high"></picture>
               <div class="de-char" id="deChar" title="点我切换动作"><img class="de-l de-l-body" src="media/de_char_body.webp" alt="" decoding="async"><img class="de-l de-l-tab" src="media/de_char_tab.webp" alt="" decoding="async"><img class="de-l de-l-arm" src="media/de_char_arm.webp" alt="" decoding="async"><img class="de-l de-l-head" src="media/de_char_head.webp" alt="" decoding="async"><img class="de-l de-l-arm de-arm-wave" src="media/de_char_wave_arm.webp" alt="" decoding="async"></div>
               <div class="de-sheen"></div>
             </div>
           </div>
-          <div class="de-board-tools">
-            <button class="de-lb-btn" data-de-lightbox><span class="ic">🔍</span>放大查看</button>
-          </div>
+          <div class="de-board-tools"><button class="de-lb-btn" type="button" data-lb-open="deLb"><span class="ic">🔍</span>放大查看</button></div>
         </div>
         <div class="de-bhint"><span class="k">⇄</span> 按住立牌左右拖动，可 180° 转动查看</div>
       </div>
@@ -1757,7 +1801,14 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
       </div>
     </div>
   </div>
-  <div class="de-lb" id="deLb"><span class="cl">✕</span><img data-src="media/de_poster_full.webp" alt="营销AI小秘 场景能力立牌 全图" decoding="async"></div>
+  <div class="de-lb" id="deLb" data-lb data-base="media/de_board_front_1x.webp" data-avif="media/de_board_front_zoom.avif" data-webp="media/de_board_front_zoom.webp">
+  <span class="cl" title="关闭">✕</span>
+  <div class="de-lb-stage">
+    <img class="de-lb-base" alt="" aria-hidden="true">
+    <img class="de-lb-hi" alt="营销AI小秘 场景能力立牌 放大图" decoding="async">
+  </div>
+  <div class="de-lb-tip"><span class="ic">🔍</span> 点图片 1× / 2× 切换 · 点空白处或按 Esc 关闭</div>
+</div>
 </div>
 
 <section class="de-flow-sec" id="de-flow">
@@ -1966,7 +2017,7 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
       <div class="de-eco-stage">
         <div class="de-floor"></div>
         <div class="de-eco-persp">
-          <div class="de-eco-board" id="ecoBoard" style="aspect-ratio:1120/1429" role="img" aria-label="渠道数字员工能力立牌，可按住左右拖动翻转">
+          <div class="de-eco-board" id="ecoBoard" style="aspect-ratio:520/664" role="img" aria-label="渠道数字员工能力立牌，可按住左右拖动翻转">
             <div class="de-edge l"></div>
             <div class="de-edge r"></div>
             <div class="de-face de-eco-back"><div class="de-bi">
@@ -1988,12 +2039,14 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
   </div>
 </div></div>
             <div class="de-face de-eco-front">
-              <img class="de-img" src="media/eco_board.webp" srcset="media/eco_board_1x.webp 520w, media/eco_board.webp 1040w" sizes="(max-width:900px) 82vw, 520px" width="1120" height="1429" alt="渠道数字员工 能力立牌" loading="lazy" decoding="async">
+              <img class="de-lqip" src="data:image/webp;base64,UklGRjYBAABXRUJQVlA4ICoBAAAwBwCdASoWABwAPrFOnkwnJCKiKAqo4BYJYwCdMt3P/s1qgc/ZY/9bNkQHK0IPmp6sKPr/zBIsAuDegEmfDh+FtbAA4nGH2kw1LIWgS/Bb22ASoA1lc+p4DDh1I7TM8/Zt05U1Q2W3EuuCx+MhI3cggFEb52hKq7NJio1m6n0Kwbj1Op4epMOgVofPO1sTNg2xhcRjzAkMVukBeqhKE13ATdx9r1pe6MSId/x0EIY9ftqSTMajKh3IigAqESal/1NoOiHeO2he5ffvxNs1kxtwLMXgOHZHetJFA+ikFf/6sNFCYvAa/+iZ/5JToK41+Q8OtZmFxzJB3chW21Pr58IKNtO2Kb85r7nl3uDJaHsrrEb481mTgnkX36WVjsFnLimyEh6X5qhpFQAA" alt="" aria-hidden="true">
+              <picture><source type="image/avif" srcset="media/eco_board_m.avif 720w, media/eco_board_1x.avif 520w, media/eco_board.avif 1040w" sizes="(max-width:980px) 92vw, 520px"><img class="de-img" src="media/eco_board_1x.webp" srcset="media/eco_board_m.webp 720w, media/eco_board_1x.webp 520w, media/eco_board.webp 1040w" sizes="(max-width:980px) 92vw, 520px" width="520" height="664" alt="渠道数字员工 能力立牌" decoding="async" loading="lazy"></picture>
             </div>
             <div class="de-sheen"></div>
           </div>
         </div>
         <div class="de-bhint"><span class="k">↔</span> 按住立牌左右拖动，可 180° 转动查看</div>
+        <div class="de-board-tools"><button class="de-lb-btn" type="button" data-lb-open="ecoLb"><span class="ic">🔍</span>放大查看</button></div>
       </div>
       <div class="de-eco-side"><div class="cap-card compact" style="--cc:#059669" data-scene="渠道赋能">
   <div class="cap-top">
@@ -2012,6 +2065,14 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
 </div></div>
     </div>
   </div>
+  <div class="de-lb" id="ecoLb" data-lb data-base="media/eco_board_1x.webp" data-avif="media/eco_board_zoom.avif" data-webp="media/eco_board_zoom.webp">
+  <span class="cl" title="关闭">✕</span>
+  <div class="de-lb-stage">
+    <img class="de-lb-base" alt="" aria-hidden="true">
+    <img class="de-lb-hi" alt="渠道数字员工 能力立牌 放大图" decoding="async">
+  </div>
+  <div class="de-lb-tip"><span class="ic">🔍</span> 点图片 1× / 2× 切换 · 点空白处或按 Esc 关闭</div>
+</div>
 </section>
 
 <section class="inc-section">
@@ -2216,19 +2277,55 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
     });
   }
 
-  /* ---------- 放大查看（大图首次点击时才加载，避免首屏白下载 200KB+） ---------- */
-  var lb = document.getElementById('deLb');
-  var lbBtn = document.querySelector('[data-de-lightbox]');
-  if(lb && lbBtn){
-    var lbImg = lb.querySelector('img');
-    lbBtn.addEventListener('click', function(e){
-      e.stopPropagation();
-      if(lbImg && !lbImg.getAttribute('src')){ lbImg.setAttribute('src', lbImg.getAttribute('data-src') || ''); }
-      lb.classList.add('open');
+  /* ---------- 放大查看（页头立牌 + 生态板块立牌共用一套） ----------
+     两段式：先用页面上已缓存的小图瞬间铺满（点开零等待），
+     放大图（AVIF，约 150KB）到达后淡入替换；鼠标悬停 / 手指按下就预热。
+     放大图不点不下载，不占首屏体积。 */
+  (function(){
+    var AVIF_OK = (function(){
+      try { return document.createElement('canvas').toDataURL('image/avif').indexOf('data:image/avif') === 0; }
+      catch(e){ return false; }
+    })();
+    var boxes = document.querySelectorAll('[data-lb]');
+    Array.prototype.forEach.call(boxes, function(lb){
+      var btn  = document.querySelector('[data-lb-open="' + lb.id + '"]');
+      var base = lb.querySelector('.de-lb-base');
+      var hi   = lb.querySelector('.de-lb-hi');
+      var url  = (AVIF_OK && lb.getAttribute('data-avif')) || lb.getAttribute('data-webp') || '';
+      var warm = 0;
+      function warmup(){
+        if(warm || !url) return;
+        warm = 1;
+        var im = new Image();
+        im.onload = function(){ hi.src = url; lb.classList.add('hi-ready'); };
+        im.src = url;
+      }
+      function open(){
+        if(base && !base.getAttribute('src')) base.setAttribute('src', lb.getAttribute('data-base') || '');
+        lb.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        warmup();
+      }
+      function close(){
+        lb.classList.remove('open', 'z2');
+        document.body.style.overflow = '';
+      }
+      if(btn){
+        btn.addEventListener('click', function(e){ e.stopPropagation(); open(); });
+        btn.addEventListener('pointerenter', warmup);                       // 桌面：悬停即预热
+        btn.addEventListener('touchstart', warmup, {passive:true});         // 触屏：按下即预热
+      }
+      lb.addEventListener('click', function(e){
+        if(e.target === base || e.target === hi){ lb.classList.toggle('z2'); return; }  // 点图 1×↔2×
+        close();
+      });
+      lb.lbClose = close;
     });
-    lb.addEventListener('click', function(){ lb.classList.remove('open'); });
-    document.addEventListener('keydown', function(e){ if(e.key === 'Escape') lb.classList.remove('open'); });
-  }
+    document.addEventListener('keydown', function(e){
+      if(e.key !== 'Escape') return;
+      Array.prototype.forEach.call(boxes, function(lb){ if(lb.lbClose) lb.lbClose(); });
+    });
+  })();
 
   /* ---------- KPI 悬浮明细（触屏点击展开） ---------- */
   var kpiCards = Array.prototype.slice.call(document.querySelectorAll('.de-kpi'));

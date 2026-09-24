@@ -69,6 +69,110 @@ def _img_size(path):
     return None
 
 
+def _read_text_asset(path):
+    """读纯文本资产（如 LQIP 的 data URI）；没有就返回空串。"""
+    try:
+        with open(path, encoding='ascii') as f:
+            return f.read().strip()
+    except Exception:
+        return ''
+
+
+def _board_manifest(name):
+    """读 tools/mkboard.py 写出的立牌档位清单（没有就返回 None，退回单张图方案）。"""
+    try:
+        with open(media_path(name + '_variants.json'), encoding='utf-8') as f:
+            m = json.load(f)
+        return m if m.get('variants') else None
+    except Exception:
+        return None
+
+
+def board_picture(name, alt, sizes, priority=False, lazy=False, cls='de-img'):
+    """生成立牌 <picture>（AVIF 优先 / WebP 兜底 / 多档 srcset）+ 对应的预加载标签。
+
+    AVIF 用 AV1 帧内压缩，同画质体积约 WebP 的 55%（实测 144KB → 65KB），
+    且移动端能命中更小的 _m 档（手机 DPR2 只下 640w，不再下 1120w）。
+    返回 (html, preload_html, 宽, 高)。
+    """
+    m = _board_manifest(name)
+    if not m:
+        p = media_path(name + '_1x.webp')
+        if not os.path.exists(p):
+            p = media_path(name + '.webp')
+        sz = _img_size(p) or (0, 0)
+        dim = ' width="%d" height="%d"' % sz if sz[0] else ''
+        attr = 'fetchpriority="high"' if priority else ('loading="lazy"' if lazy else '')
+        img = '<img class="%s" src="%s"%s alt="%s" decoding="async" %s>' % (cls, p, dim, alt, attr)
+        return img, ('<link rel="preload" as="image" href="%s" fetchpriority="high">\n' % p
+                     if priority else ''), sz[0], sz[1]
+
+    v = m['variants']
+
+    def srcset(ext):
+        out = []
+        for tag in ('_m', '_1x', ''):
+            if tag not in v:
+                continue
+            f = media_path('%s%s.%s' % (name, tag, ext))
+            if os.path.exists(f):
+                out.append('%s %dw' % (f, v[tag]['w']))
+        return ', '.join(out)
+
+    avif, webp = srcset('avif'), srcset('webp')
+    base = media_path(name + '_1x.webp')
+    if not os.path.exists(base):
+        base = media_path(name + '_1x.avif')
+    size_1x = v.get('_1x') or v.get('') or {'w': 0, 'h': 0}
+    dim = ' width="%d" height="%d"' % (size_1x['w'], size_1x['h']) if size_1x['w'] else ''
+    attr = 'fetchpriority="high"' if priority else ('loading="lazy"' if lazy else '')
+    img = ('<img class="%s" src="%s" srcset="%s" sizes="%s"%s alt="%s" decoding="async" %s>'
+           % (cls, base, webp, sizes, dim, alt, attr))
+    html = img
+    if avif:
+        html = ('<picture><source type="image/avif" srcset="%s" sizes="%s">%s</picture>'
+                % (avif, sizes, img))
+    preload = ''
+    if priority:
+        if avif:
+            preload = ('<link rel="preload" as="image" type="image/avif" href="%s" '
+                       'imagesrcset="%s" imagesizes="%s" fetchpriority="high">\n'
+                       % (media_path(name + '_1x.avif'), avif, sizes))
+        else:
+            preload = ('<link rel="preload" as="image" href="%s" imagesrcset="%s" '
+                       'imagesizes="%s" fetchpriority="high">\n' % (base, webp, sizes))
+    return html, preload, size_1x.get('w', 0), size_1x.get('h', 0)
+
+
+def board_lightbox(lid, name, alt, label, lqip=''):
+    """「点击放大」弹层：先用已缓存的小图瞬间铺满，高清图到达后再渐进替换。
+
+    关键点：`data-src` 挂在 `<img>` 上，首次点开才请求放大图（约 150KB），
+    不点就不下载；鼠标悬停 / 手指按下按钮时预热，点开时通常已经就绪。
+    两张图同为立牌比例，尺寸一致，替换过程无跳动。
+    """
+    zoom_avif = media_path(name + '_zoom.avif')
+    zoom_webp = media_path(name + '_zoom.webp')
+    disp = media_path(name + '_1x.webp')
+    avif_attr = ' data-avif="%s"' % zoom_avif if os.path.exists(zoom_avif) else ''
+    if not os.path.exists(zoom_webp):
+        zoom_webp = media_path(name + '.webp')
+    return f'''<div class="de-lb" id="{lid}" data-lb data-base="{disp}"{avif_attr} data-webp="{zoom_webp}">
+  <span class="cl" title="关闭">✕</span>
+  <div class="de-lb-stage">
+    <img class="de-lb-base" alt="" aria-hidden="true">
+    <img class="de-lb-hi" alt="{alt}" decoding="async">
+  </div>
+  <div class="de-lb-tip"><span class="ic">🔍</span> 点图片 1× / 2× 切换 · 点空白处或按 Esc 关闭</div>
+</div>'''
+
+
+def board_zoom_btn(lid, label):
+    """立牌下方的「放大查看」按钮。"""
+    return ('<div class="de-board-tools"><button class="de-lb-btn" type="button" '
+            'data-lb-open="%s"><span class="ic">🔍</span>%s</button></div>' % (lid, label))
+
+
 def _de_table(block, keys):
     """从 markdown 块中解析 | 字段 | 值 | 表，只保留 keys 中的字段"""
     out = {}
@@ -101,7 +205,7 @@ def parse_de_page(text):
         '立牌正面图', '立牌正面图小图', '立牌全图', '立牌显示宽度', '人物层前缀', '立牌占位图',
         '旋转提示', '翻转按钮', '背回按钮', '放大按钮',
         '返回按钮', '返回链接', '来源参数', '来源返回文字', '页尾标语',
-        '能力集列数', '能力集容器宽度', '能力集上间距',
+        '能力集列数', '能力集列数断点', '能力集容器宽度', '能力集上间距',
     }) if m else {}
 
     def sub(name, keys=None, upto=None):
@@ -185,7 +289,7 @@ def parse_de_page(text):
     blk = sub('生态板块')
     de['eco'] = _de_table(blk, {
         '标题', '说明', '卡片名称',
-        '立牌正面图', '立牌正面图小图', '立牌显示宽度', '旋转提示',
+        '立牌正面图', '立牌正面图小图', '立牌显示宽度', '立牌占位图', '放大按钮', '旋转提示',
         '背面眉标', '背面主标题', '背面副标题', '背面标语', '背面说明',
         '背面入口文字', '支架文字',
     })
@@ -1572,6 +1676,8 @@ DE_CSS = '''<style>
 .de-front { transform:translateZ(9px); background:#fff; box-shadow:0 2px 0 rgba(255,255,255,.9) inset, 0 0 0 1px rgba(15,35,80,.07); }
 .de-back { transform:translateZ(-9px) rotateY(180deg); background:#fff; box-shadow:0 0 0 1px rgba(15,35,80,.07); }
 .de-img { position:absolute; inset:0; width:100%; height:100%; object-fit:fill; display:block; user-select:none; -webkit-user-drag:none; }
+/* <picture> 只做格式分支，不要产生盒子，否则 .de-img 的绝对定位父级会错位 */
+.de-face picture, .de-front picture, .de-eco-front picture { display:contents; }
 /* 内联占位图：主图未到时先铺一层模糊海报轮廓（主图为不透明整图，加载完成后自然完全遮盖） */
 .de-lqip { position:absolute; inset:0; width:100%; height:100%; object-fit:fill; display:block;
   filter:blur(6px) saturate(1.04); transform:scale(1.035); pointer-events:none; user-select:none; }
@@ -1723,11 +1829,32 @@ DE_CSS = '''<style>
 .de-char.cursor-tap::after { content:''; position:absolute; inset:0; border-radius:50%; pointer-events:none; }
 
 /* 放大查看立牌 */
-.de-lb { position:fixed; inset:0; z-index:900; background:rgba(6,12,30,.86); display:none; align-items:center; justify-content:center; padding:28px; }
+/* ---------- 放大查看（两处立牌共用） ----------
+   两段式：.de-lb-base 用页面上已经缓存过的显示图，点开瞬间就有画面；
+   .de-lb-hi 是点开后才拉的放大图（约 150KB，AVIF），加载完淡入替换。
+   两张图同比例，尺寸完全一致，替换过程不跳动。 */
+.de-lb { position:fixed; inset:0; z-index:900; background:rgba(6,12,30,.9); display:none;
+  overflow:auto; overscroll-behavior:contain; padding:26px; cursor:zoom-out; }
 .de-lb.open { display:flex; }
-.de-lb img { max-width:min(94vw,1000px); max-height:92vh; width:auto; border-radius:8px; box-shadow:0 30px 80px rgba(0,0,0,.5); }
-.de-lb .cl { position:absolute; top:20px; right:26px; color:#fff; font-size:30px; line-height:1; cursor:pointer; opacity:.75; }
+.de-lb-stage { position:relative; margin:auto; line-height:0; cursor:zoom-in; }
+.de-lb-base, .de-lb-hi { display:block; max-width:min(94vw,1000px); max-height:88vh; width:auto; height:auto;
+  border-radius:8px; box-shadow:0 30px 80px rgba(0,0,0,.5); }
+.de-lb-base { filter:blur(1.2px); }
+.de-lb.hi-ready .de-lb-base { filter:none; }
+.de-lb-hi { position:absolute; inset:0; margin:auto; opacity:0; transition:opacity .32s ease; }
+.de-lb.hi-ready .de-lb-hi { opacity:1; }
+/* 2× 细节模式：图片放大到 2 倍，弹层可滚动查看小字 */
+.de-lb.z2 { cursor:zoom-out; }
+.de-lb.z2 .de-lb-stage { cursor:zoom-out; }
+.de-lb.z2 .de-lb-base, .de-lb.z2 .de-lb-hi { max-width:min(184vw,2000px); max-height:none; }
+.de-lb .cl { position:fixed; top:16px; right:22px; z-index:2; color:#fff; font-size:30px; line-height:1;
+  cursor:pointer; opacity:.7; }
 .de-lb .cl:hover { opacity:1; }
+.de-lb-tip { position:fixed; left:50%; bottom:14px; transform:translateX(-50%); z-index:2;
+  color:rgba(214,228,255,.62); font-size:12px; letter-spacing:.2px; white-space:nowrap;
+  background:rgba(6,12,30,.55); padding:6px 13px; border-radius:20px; pointer-events:none; }
+.de-lb-tip .ic { font-size:12px; }
+@media (max-width:640px) { .de-lb { padding:12px; } .de-lb-tip { font-size:10.5px; padding:5px 10px; } }
 
 /* ============ 2. 业务流（深色） ============ */
 .de-flow-sec { position:relative; padding:86px 0 56px; overflow:hidden;
@@ -1803,10 +1930,31 @@ DE_CSS = '''<style>
 /* 场景能力集合这一屏单独放宽：表格 4 列，窄容器会把「介绍 / 输入示例」挤成一条。
    宽度与列数由 content.md「能力集容器宽度 / 能力集列数」控制（注入下面的 __CAP_W__ / __CAP_COLS__ 占位符） */
 .de-cap-sec .de-wrap { max-width:__CAP_W__; }
-/* 主能力卡：默认一行两张（`能力集列数`）。每张卡至少 ~660px 才放得下 4 列表格，
-   视口窄于「列数 × 660 + 64」就自动收成一行一张（断点由 __CAP_BP__ 注入） */
+/* 主能力卡：默认一行两张（`能力集列数`）。窗口收成一行一张的断点由
+   `能力集列数断点` 控制（默认 1024 = PC 恒定两列），断点之上会启用紧凑表格
+   样式，让每张卡窄到 ~470px 时 4 列表格依然读得下去 */
 .cap-grid { display:grid; grid-template-columns:repeat(__CAP_COLS__,minmax(0,1fr)); gap:20px; }
 @media (max-width:__CAP_BP__px) { .cap-grid { grid-template-columns:1fr; } }
+/* 两列但还不够宽的区间（1025 ~ 1560）：压缩留白 + 允许表头换行，防止挤压换行 */
+@media (min-width:__CAP_BP_NEXT__px) and (max-width:1560px) {
+  .de-cap-sec .de-wrap { padding:0 24px; }
+  .cap-top { padding:20px 18px 13px; gap:11px; }
+  .cap-name { font-size:19px; }
+  .cap-desc { padding:0 18px 12px; }
+  .cap-loop { margin:0 18px 12px; padding:11px 13px 12px; }
+  .cap-loop-chain .cp { font-size:11px; padding:3px 8px; }
+  .cap-tbl-wrap { padding:0 10px 12px; }
+  .cap-tbl { font-size:12px; }
+  .cap-tbl th { white-space:normal; padding:9px 9px; font-size:11px; }
+  .cap-tbl td { padding:9px 9px; }
+  .cap-tbl td.sk { min-width:76px; }
+  .cap-tbl td.ent { white-space:normal; }
+  .cap-tbl th, .cap-tbl td { overflow-wrap:anywhere; }
+  .cap-tbl th:nth-child(1), .cap-tbl td.sk { width:20%; }
+  .cap-tbl th:nth-child(3), .cap-tbl td.dt { width:15%; }
+  .cap-tbl th:nth-child(4), .cap-tbl td.ent, .cap-tbl td.ent-m { width:17%; }
+  .cap-row-side { max-width:60%; }
+}
 .cap-card { position:relative; background:var(--white); border:1px solid rgba(15,35,80,.07); border-radius:20px; overflow:hidden;
   box-shadow:var(--shadow); transition:transform .34s cubic-bezier(.4,0,.2,1), box-shadow .34s; display:flex; flex-direction:column; }
 .cap-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:var(--cc,#1e6fd9); }
@@ -1995,7 +2143,6 @@ a.pth-a .ent-arw { margin-left:3px; font-size:9px; }
   .de-h2-go { padding:7px 13px; font-size:12px; gap:5px; }
   .de-sec { padding:66px 0; }
   .de-wrap { padding:0 22px; }
-  .cap-grid { grid-template-columns:1fr; }
   .de-flow-stat { font-size:14px; gap:4px 9px; }
   .de-flow-stat .seg b { font-size:21px; }
 }
@@ -2302,6 +2449,9 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
 .de-eco-stage .de-bhint { bottom:0; color:#cfdcff; background:rgba(255,255,255,.07);
   border-color:rgba(255,255,255,.14); box-shadow:none; }
 .de-eco-stage.dragging .de-bhint { opacity:0; }
+/* 生态立牌的「放大查看」：贴在立牌右下角，与页头立牌同款位置（提示文字上方） */
+.de-eco-stage { position:relative; }
+.de-eco-stage .de-board-tools { right:calc(50% - min(260px,46%) + 10px); bottom:44px; }
 
 /* 右栏：能力卡（与左栏立牌等高，按钮贴底） */
 .de-eco-side { min-width:0; }
@@ -2440,19 +2590,55 @@ DE_JS = '''<script>
     });
   }
 
-  /* ---------- 放大查看（大图首次点击时才加载，避免首屏白下载 200KB+） ---------- */
-  var lb = document.getElementById('deLb');
-  var lbBtn = document.querySelector('[data-de-lightbox]');
-  if(lb && lbBtn){
-    var lbImg = lb.querySelector('img');
-    lbBtn.addEventListener('click', function(e){
-      e.stopPropagation();
-      if(lbImg && !lbImg.getAttribute('src')){ lbImg.setAttribute('src', lbImg.getAttribute('data-src') || ''); }
-      lb.classList.add('open');
+  /* ---------- 放大查看（页头立牌 + 生态板块立牌共用一套） ----------
+     两段式：先用页面上已缓存的小图瞬间铺满（点开零等待），
+     放大图（AVIF，约 150KB）到达后淡入替换；鼠标悬停 / 手指按下就预热。
+     放大图不点不下载，不占首屏体积。 */
+  (function(){
+    var AVIF_OK = (function(){
+      try { return document.createElement('canvas').toDataURL('image/avif').indexOf('data:image/avif') === 0; }
+      catch(e){ return false; }
+    })();
+    var boxes = document.querySelectorAll('[data-lb]');
+    Array.prototype.forEach.call(boxes, function(lb){
+      var btn  = document.querySelector('[data-lb-open="' + lb.id + '"]');
+      var base = lb.querySelector('.de-lb-base');
+      var hi   = lb.querySelector('.de-lb-hi');
+      var url  = (AVIF_OK && lb.getAttribute('data-avif')) || lb.getAttribute('data-webp') || '';
+      var warm = 0;
+      function warmup(){
+        if(warm || !url) return;
+        warm = 1;
+        var im = new Image();
+        im.onload = function(){ hi.src = url; lb.classList.add('hi-ready'); };
+        im.src = url;
+      }
+      function open(){
+        if(base && !base.getAttribute('src')) base.setAttribute('src', lb.getAttribute('data-base') || '');
+        lb.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        warmup();
+      }
+      function close(){
+        lb.classList.remove('open', 'z2');
+        document.body.style.overflow = '';
+      }
+      if(btn){
+        btn.addEventListener('click', function(e){ e.stopPropagation(); open(); });
+        btn.addEventListener('pointerenter', warmup);                       // 桌面：悬停即预热
+        btn.addEventListener('touchstart', warmup, {passive:true});         // 触屏：按下即预热
+      }
+      lb.addEventListener('click', function(e){
+        if(e.target === base || e.target === hi){ lb.classList.toggle('z2'); return; }  // 点图 1×↔2×
+        close();
+      });
+      lb.lbClose = close;
     });
-    lb.addEventListener('click', function(){ lb.classList.remove('open'); });
-    document.addEventListener('keydown', function(e){ if(e.key === 'Escape') lb.classList.remove('open'); });
-  }
+    document.addEventListener('keydown', function(e){
+      if(e.key !== 'Escape') return;
+      Array.prototype.forEach.call(boxes, function(lb){ if(lb.lbClose) lb.lbClose(); });
+    });
+  })();
 
   /* ---------- KPI 悬浮明细（触屏点击展开） ---------- */
   var kpiCards = Array.prototype.slice.call(document.querySelectorAll('.de-kpi'));
@@ -3695,21 +3881,30 @@ def build_eco_section(ec, cards_html):
     hint = (ec.get('旋转提示') or '').strip()
 
     bimg = media_path(ec.get('立牌正面图', 'media/eco_board.png'))
-    b1x = media_path(ec.get('立牌正面图小图', 'media/eco_board_1x.png'))
+    _bname = os.path.splitext(os.path.basename(bimg))[0]
     _bw = re.sub(r'[^\d.]', '', ec.get('立牌显示宽度', '') or '')
     try:
         BW = int(float(_bw)) or 520
     except Exception:
         BW = 520
-    if os.path.exists(b1x):
-        bsrc = (f'src="{bimg}" srcset="{b1x} {BW}w, {bimg} {BW * 2}w" '
-                f'sizes="(max-width:900px) 82vw, {BW}px"')
+    # 与页头立牌同一套 <picture>（AVIF 优先 + _m/_1x/2× 三档）；立牌在视口外，走懒加载
+    bsrc, _bpre, _bw_real, _bh_real = board_picture(
+        _bname, '渠道数字员工 能力立牌', f'(max-width:980px) 92vw, {BW}px', lazy=True)
+    # 模糊占位图：主图到达前先铺一层 22px 轮廓
+    _blq = (ec.get('立牌占位图', '') or '').strip()
+    if _blq in ('无', '关闭', 'none', 'None', 'off', 'OFF'):
+        blqip_html = ''
     else:
-        bsrc = f'src="{bimg}"'
+        blqip_src = (_blq if _blq.startswith('data:')
+                     else (media_path(_blq) if _blq
+                           else _read_text_asset(media_path(_bname + '_lqip.txt'))))
+        blqip_html = (f'<img class="de-lqip" src="{blqip_src}" alt="" aria-hidden="true">'
+                      if blqip_src else '')
+    lb_label = (ec.get('放大按钮', '放大查看') or '').strip()
     # 立牌宽高比取图片真实尺寸（换任意比例的立牌图都不会变形）
-    _sz = _img_size(bimg) or _img_size(b1x)
+    _sz = (_bw_real, _bh_real) if _bw_real else None
+    _sz = _sz or _img_size(bimg)
     _ar = f'{_sz[0]}/{_sz[1]}' if _sz else '4200/5360'
-    _dim = f' width="{_sz[0]}" height="{_sz[1]}"' if _sz else ''
 
     # 背板结构与页头立牌背面同款（复用 .de-bi 的样式），只换文案
     back_panel = f'''<div class="de-bi">
@@ -3744,16 +3939,19 @@ def build_eco_section(ec, cards_html):
             <div class="de-edge r"></div>
             <div class="de-face de-eco-back">{back_panel}</div>
             <div class="de-face de-eco-front">
-              <img class="de-img" {bsrc}{_dim} alt="渠道数字员工 能力立牌" loading="lazy" decoding="async">
+              {blqip_html}
+              {bsrc}
             </div>
             <div class="de-sheen"></div>
           </div>
         </div>
         {f'<div class="de-bhint"><span class="k">↔</span> {hint}</div>' if hint else ''}
+        {board_zoom_btn('ecoLb', lb_label)}
       </div>
       <div class="de-eco-side">{cards_html}</div>
     </div>
   </div>
+  {board_lightbox('ecoLb', _bname, '渠道数字员工 能力立牌 放大图', lb_label)}
 </section>'''
 
 
@@ -3781,28 +3979,28 @@ def build_digital_employee_page(data):
     # ---------- 1. 立牌 ----------
     board_img = media_path(meta.get('立牌正面图', 'media/de_board_front.webp'))
     prefix = meta.get('人物层前缀', 'media/de_char_')
-    poster_full = media_path(meta.get('立牌全图', 'media/de_poster_full.webp'))
-    # 「立牌显示宽度」= 立牌在页面上的实际显示宽度（px）。据此推导 srcset/sizes：
-    #   大图 = 2× 显示宽度（高清屏用），小图 = 1× 显示宽度（普通屏用，体积约 1/3）
+    # 「立牌显示宽度」= 立牌在页面上的实际显示宽度（px）。
+    # 图片档位（_m / _1x / 2×）与 avif/webp 由 tools/mkboard.py 生成，
+    # srcset 直接从 {name}_variants.json 读真实像素宽度拼出来。
     _bw_raw = re.sub(r'[^\d.]', '', meta.get('立牌显示宽度', '') or '')
     try:
         BW = int(float(_bw_raw)) or 560
     except Exception:
         BW = 560
     BW_SM = int(round(BW * 4 / 7))         # 窄屏（≤768px）显示宽度，约等于大屏的 4/7
-    _b1x = media_path(meta.get('立牌正面图小图', 'media/de_board_front_1x.webp'))
-    if os.path.exists(_b1x):
-        board_src = (f'src="{board_img}" srcset="{_b1x} {BW}w, {board_img} {BW * 2}w" '
-                     f'sizes="(max-width:768px) {BW_SM}px, {BW}px"')
-    else:
-        board_src = f'src="{board_img}"'
+    _bname = os.path.splitext(os.path.basename(board_img))[0]
+    board_src, board_preload, _bw_real, _bh_real = board_picture(
+        _bname, '营销AI小秘 场景能力立牌',
+        f'(max-width:768px) {BW_SM}px, {BW}px', priority=True)
     # 模糊占位图（LQIP）：主图到达前先显示轮廓，避免白板期。
-    # content.md 写「无」可关闭；写 data:image/... 或图片路径可替换；留空用内置默认。
+    # content.md 写「无」可关闭；写 data:image/... 或图片路径可替换；留空用 mkboard.py 产物。
     _lq = (meta.get('立牌占位图', '') or '').strip()
     if _lq in ('无', '关闭', 'none', 'None', 'off', 'OFF'):
         lqip_html = ''
     else:
-        lqip_src = _lq if _lq.startswith('data:') else (media_path(_lq) if _lq else DE_BOARD_LQIP)
+        _lqip_file = media_path(_bname + '_lqip.txt')
+        lqip_src = (_lq if _lq.startswith('data:')
+                    else (media_path(_lq) if _lq else (_read_text_asset(_lqip_file) or DE_BOARD_LQIP)))
         lqip_html = f'<img class="de-lqip" src="{lqip_src}" alt="" aria-hidden="true">'
     layers = ''
     for nm in ('body', 'tab', 'arm', 'head'):
@@ -3896,14 +4094,12 @@ def build_digital_employee_page(data):
             </div>
             <div class="de-face de-front">
               {lqip_html}
-              <img class="de-img" {board_src} alt="营销AI小秘 场景能力立牌" fetchpriority="high" decoding="async">
+              {board_src}
               <div class="de-char" id="deChar" title="点我切换动作">{layers}</div>
               <div class="de-sheen"></div>
             </div>
           </div>
-          <div class="de-board-tools">
-            <button class="de-lb-btn" data-de-lightbox><span class="ic">🔍</span>{lb_label}</button>
-          </div>
+          {board_zoom_btn('deLb', lb_label)}
         </div>
         <div class="de-bhint"><span class="k">⇄</span> {meta.get('旋转提示','按住立牌左右拖动，可 180° 转动查看')}</div>
       </div>
@@ -3921,7 +4117,7 @@ def build_digital_employee_page(data):
       </div>
     </div>
   </div>
-  <div class="de-lb" id="deLb"><span class="cl">✕</span><img data-src="{poster_full}" alt="营销AI小秘 场景能力立牌 全图" decoding="async"></div>
+  {board_lightbox('deLb', _bname, '营销AI小秘 场景能力立牌 放大图', lb_label, lqip_html)}
 </div>'''
 
     # ---------- 2. 业务流 ----------
@@ -4274,14 +4470,9 @@ def build_digital_employee_page(data):
     future_section = build_future_section_home(data, tag_origin=True)
 
     title = meta.get('浏览器标题', '超级数字员工 — 安恒信息 AI赋能营销')
-    if os.path.exists(_b1x):
-        preload = (f'<link rel="preload" as="image" href="{board_img}" '
-                   f'imagesrcset="{_b1x} {BW}w, {board_img} {BW * 2}w" '
-                   f'imagesizes="(max-width:768px) {BW_SM}px, {BW}px" fetchpriority="high">\n'
-                   f'<link rel="preload" as="image" href="{media_path(prefix + "body.png")}">\n')
-    else:
-        preload = (f'<link rel="preload" as="image" href="{board_img}" fetchpriority="high">\n'
-                   f'<link rel="preload" as="image" href="{media_path(prefix + "body.png")}">\n')
+    # 立牌用 <picture>（AVIF 优先），预加载也要带 type，否则不支持 AVIF 的浏览器会白下一份
+    preload = (board_preload
+               + f'<link rel="preload" as="image" href="{media_path(prefix + "body.png")}">\n')
     # 副标题字号比（content.md「页头副标题字号比」，如 .72）：注入 DE_CSS 占位符
     _sub_raw = re.sub(r'[^\d.]', '', meta.get('页头副标题字号比', '') or '')
     try:
@@ -4295,12 +4486,15 @@ def build_digital_employee_page(data):
     _cols = re.sub(r'\D', '', meta.get('能力集列数', '') or '') or '2'
     _cw = re.sub(r'[^\d.]', '', meta.get('能力集容器宽度', '') or '')
     _pt = re.sub(r'\D', '', meta.get('能力集上间距', '') or '') or '56'
-    # 每张主卡至少 660px（4 列表格的下限），据此推出「收成一行一张」的断点
-    _bp = str(max(1, int(_cols)) * 660 + 64)
+    # 每张主卡至少 ~660px 才放得下 4 列表格。断点默认 1024（PC 就一直两列，
+    # 不受系统缩放 / 高分屏影响），可在 content.md 用「能力集列数断点」改。
+    _bp_raw = re.sub(r'\D', '', meta.get('能力集列数断点', '') or '')
+    _bp = _bp_raw or str(max(1, int(_cols)) * 660 + 64)
     de_css = (de_css.replace('__CAP_COLS__', _cols)
                     .replace('__CAP_W__', (_cw + 'px') if _cw else '1760px')
                     .replace('__CAP_PT__', _pt)
-                    .replace('__CAP_BP__', _bp))
+                    .replace('__CAP_BP__', _bp)
+                    .replace('__CAP_BP_NEXT__', str(int(_bp) + 1)))
     return ('<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n'
             '<meta name="viewport" content="width=device-width,initial-scale=1.0">\n'
             f'<title>{title}</title>\n{CSS}\n{de_css}\n{preload}</head>\n<body class="de-body">\n'
