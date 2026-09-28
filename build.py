@@ -1691,6 +1691,18 @@ DE_CSS = '''<style>
 .de-lead-sub { margin:12px auto 0; font-size:13px; color:#8b95a8; }
 
 /* ============ 1. 3D 立牌 ============ */
+/* 部门面包屑：一行识别条，左侧路径 + 右侧版本标签。给立牌前一个"站位说明" */
+.de-crumbs { display:flex; align-items:center; flex-wrap:wrap; column-gap:6px; row-gap:6px;
+  padding:0 0 16px; font-size:12.5px; color:rgba(28,46,80,.55); letter-spacing:.2px; }
+.de-crumbs .left { display:flex; align-items:center; flex-wrap:wrap; column-gap:6px; row-gap:4px;
+  min-width:0; flex:1 1 auto; }
+.de-crumbs .b { color:#5a6b8a; }
+.de-crumbs .sep { color:rgba(28,46,80,.28); font-size:13px; padding:0 1px; user-select:none; }
+.de-crumbs .cur { color:var(--brand-deep); font-weight:700; }
+.de-crumbs .ver { padding:3px 10px; border-radius:999px;
+  background:linear-gradient(94deg,#1f5fd0,#7c5ce7); color:#fff; font-size:11px; font-weight:700;
+  letter-spacing:.4px; box-shadow:0 2px 6px rgba(70,80,200,.18); white-space:nowrap; flex:none; }
+/* ============ 1. 3D 立牌 ============ */
 .de-board-sec { position:relative; padding:64px 0 76px; overflow:hidden;
   background:radial-gradient(ellipse 60% 46% at 22% 34%, #e8efff 0%, transparent 62%),
              radial-gradient(ellipse 50% 40% at 82% 22%, #f2ecff 0%, transparent 60%),
@@ -1902,14 +1914,31 @@ DE_CSS = '''<style>
 .de-bubble .bb-tx.pop { animation:deSayPop .42s cubic-bezier(.34,1.2,.5,1); }
 /* 立牌控制：一行 4 个，不换行 */
 .de-acts { display:flex; flex-wrap:nowrap; gap:8px; margin-top:15px; }
-.de-act { flex:1 1 0; min-width:0; display:inline-flex; align-items:center; justify-content:center; gap:5px;
-  padding:10px 6px; border-radius:12px; font-size:12.5px; font-weight:600; white-space:nowrap;
-  color:#2b3a58; background:var(--white); border:1px solid rgba(15,35,80,.1); cursor:pointer; box-shadow:var(--shadow);
-  transition:all .25s; font-family:inherit; }
-.de-act .ic { font-size:14px; line-height:1; flex:none; }
-.de-act:hover { border-color:rgba(91,63,212,.4); color:#4b36c4; transform:translateY(-2px); box-shadow:var(--shadow-md); }
-.de-act.on { background:linear-gradient(118deg,#1f5fd0,#7c5ce7); color:#fff; border-color:transparent; box-shadow:0 5px 18px rgba(70,80,200,.32); }
-.de-act.on .ic { filter:brightness(1.25); }
+/* Action 按钮组 —— 单一主色填充，与能力胶囊按钮视觉互文
+   默认：主色渐变填充 + 白字 + 抬升阴影
+   :hover：上浮 + 增强光晕
+   :active：按下回弹（瞬间缩放 0.98）
+   .on（用户当前选的那个动作）：反相显示 —— 白底主色字，让"现在在做什么"一目了然
+   :disabled（动作进行中）：灰阶 + wait 光标，示意动画未结束
+   :focus-visible：白底主色焦点环，键盘用户友好 */
+.de-act { flex:1 1 0; min-width:0; display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  padding:10px 8px; border-radius:12px; font-size:12.5px; font-weight:700; white-space:nowrap;
+  color:#fff; background:linear-gradient(118deg,#1f5fd0,#7c5ce7);
+  border:1px solid transparent; cursor:pointer; font-family:inherit;
+  box-shadow:0 4px 10px rgba(70,80,200,.22);
+  transition:transform .2s cubic-bezier(.4,0,.2,1), box-shadow .25s, filter .2s; }
+.de-act .ic { font-size:13.5px; line-height:1; flex:none; opacity:.92; }
+.de-act:hover { transform:translateY(-2px); box-shadow:0 8px 18px rgba(70,80,200,.34); filter:brightness(1.05); }
+.de-act:active { transform:translateY(0) scale(.97); box-shadow:0 2px 6px rgba(70,80,200,.22); transition-duration:.1s; }
+.de-act:focus-visible { outline:2px solid #fff; outline-offset:2px;
+  box-shadow:0 0 0 4px rgba(70,80,200,.45), 0 8px 18px rgba(70,80,200,.34); }
+.de-act:disabled, .de-act.is-busy { opacity:.58; cursor:wait; filter:saturate(.4); transform:none; }
+/* .on = 用户当前选中的动作：底色不变（保持"单一主色"），改用一圈白色高亮环 + 加强光晕把它点出来。
+   ⚠️ 别做成描边空心 —— 那样比填充按钮更暗，"当前项"反而显得像禁用。 */
+.de-act.on { box-shadow:0 0 0 2px rgba(255,255,255,.9), 0 0 0 5px rgba(122,140,255,.26),
+  0 8px 20px rgba(70,80,200,.42);
+  filter:brightness(1.1); }
+.de-act.on .ic { opacity:1; }
 /* 人物可点击提示 */
 .de-char { cursor:pointer; }
 .de-char.cursor-tap::after { content:''; position:absolute; inset:0; border-radius:50%; pointer-events:none; }
@@ -2047,7 +2076,7 @@ DE_CSS = '''<style>
 .cap-card:hover { transform:translateY(-5px); box-shadow:0 20px 46px rgba(15,35,80,.13); }
 .cap-card.wide { grid-column:1 / -1; }
 .cap-top { display:flex; align-items:flex-start; gap:14px; padding:23px 24px 15px; }
-.cap-hd { flex:1 1 auto; min-width:0; }
+.cap-hd { flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
 .cap-count { flex:none; text-align:right; padding-left:8px; border-left:1px dashed rgba(15,35,80,.12); min-width:62px; }
 .cap-count b { display:block; font-size:27px; font-weight:800; letter-spacing:-1.1px; line-height:1;
   background:linear-gradient(120deg,var(--cc,#1e6fd9),color-mix(in srgb,var(--cc,#1e6fd9) 45%,#7c5ce7));
@@ -2068,8 +2097,16 @@ DE_CSS = '''<style>
 .cap-loop-chain i { font-style:normal; font-size:11px; color:color-mix(in srgb,var(--cc,#1e6fd9) 42%,#fff); flex:none; }
 .cap-ico { flex:none; width:52px; height:52px; border-radius:15px; display:flex; align-items:center; justify-content:center; font-size:25px;
   background:color-mix(in srgb, var(--cc,#1e6fd9) 12%, #fff); border:1px solid color-mix(in srgb, var(--cc,#1e6fd9) 24%, #fff); }
-.cap-num { font-size:13px; font-weight:800; color:var(--cc,#1e6fd9); letter-spacing:1px; }
-.cap-name { font-size:20px; font-weight:800; color:var(--brand-deep); letter-spacing:-.5px; line-height:1.3; margin-top:2px; }
+.cap-num { display:inline-flex; align-items:center; justify-content:center;
+  width:34px; height:34px; border-radius:50%; background:#fff;
+  color:var(--brand-deep); font-size:12.5px; font-weight:800; letter-spacing:.3px;
+  flex:none; align-self:center;
+  border:1.5px solid color-mix(in srgb,var(--cc,#1e6fd9) 32%,#fff);
+  box-shadow:0 2px 6px rgba(15,35,80,.06); }
+.cap-name { font-size:20px; font-weight:800; color:var(--brand-deep); letter-spacing:-.5px;
+  line-height:1.3; position:relative; padding-bottom:7px; }
+.cap-name::after { content:''; position:absolute; left:0; bottom:0; width:34px; height:2.5px; border-radius:2px;
+  background:var(--cc,#1e6fd9); }
 .cap-stage { display:inline-block; font-size:11.5px; font-weight:700; color:#7382a0; margin-top:6px; }
 .cap-stage b { color:var(--cc,#1e6fd9); font-weight:800; }
 .cap-desc { padding:0 24px 18px; font-size:13.5px; color:var(--muted); line-height:1.78; }
@@ -2231,6 +2268,10 @@ a.pth-a .ent-arw { margin-left:3px; font-size:9px; }
   .cap-row-side { align-items:flex-start; max-width:100%; margin-left:0; }
   .cap-row-side .cap-row-path { justify-content:flex-start; text-align:left; }
   .cap-row-side .cap-row-path .crp-c { justify-content:flex-start; }
+  /* 面包屑在窄屏收一档，避免路径折成三行 */
+  .de-crumbs { font-size:11.5px; column-gap:5px; padding-bottom:12px; }
+  .de-crumbs .sep { font-size:12px; }
+  .de-crumbs .ver { font-size:10px; padding:2.5px 8px; letter-spacing:.2px; }
 }
 
 /* ============ 响应式 ============ */
@@ -2251,7 +2292,9 @@ a.pth-a .ent-arw { margin-left:3px; font-size:9px; }
 @media (max-width:768px) {
   .nav-de-btn { padding:6px 11px; font-size:12px; gap:5px; }
   .nav-back-btn { padding:6px 12px; font-size:12.5px; }
-  .de-board-sec { padding:40px 0 54px; }
+  /* 上内边距必须 ≥ 顶部导航高度（移动端 ~52px，桌面 60px），
+     否则第一条内容——现在最上面是面包屑文字——会被固定导航压住、切掉上半截 */
+  .de-board-sec { padding:64px 0 54px; }
   .de-h2, .de-flow-head h2 { font-size:26px; }
   .de-h2-a { gap:10px; }
   .de-h2-go { padding:6px 11px; font-size:11px; gap:4px; }
@@ -2381,6 +2424,12 @@ a.pth-a .ent-arw { margin-left:3px; font-size:9px; }
 .de-front, .de-back { box-shadow:0 0 0 1px rgba(255,255,255,.07), 0 26px 64px rgba(0,0,0,.52); }
 .de-bhint { color:#c3d6ff; background:rgba(9,22,52,.86); border-color:rgba(130,170,255,.24);
   box-shadow:0 8px 22px rgba(0,0,0,.36); backdrop-filter:blur(9px); -webkit-backdrop-filter:blur(9px); }
+/* 面包屑（深色底）—— 文字一律走亮色，否则深色底上读不出来 */
+.de-body .de-crumbs { font-size:13px; color:rgba(176,198,236,.66); }
+.de-body .de-crumbs .b { color:#a8bce3; }
+.de-body .de-crumbs .sep { color:rgba(150,185,255,.42); }
+.de-body .de-crumbs .cur { color:#fff; }
+.de-body .de-crumbs .ver { box-shadow:0 2px 10px rgba(120,140,255,.42), inset 0 1px 0 rgba(255,255,255,.22); }
 .de-lb-btn { background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.26); color:#eaf1ff;
   box-shadow:0 8px 22px rgba(0,0,0,.34); }
 .de-lb-btn:hover { background:rgba(255,255,255,.24); box-shadow:0 12px 28px rgba(0,0,0,.42); }
@@ -2416,9 +2465,11 @@ a.pth-a .ent-arw { margin-left:3px; font-size:9px; }
 
 /* 气泡 + 动作按钮 */
 .de-bubble { background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.1); color:#dfe9ff; box-shadow:none; }
-.de-act { color:#d6e2ff; background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.13); box-shadow:none; }
-.de-act:hover { color:#fff; background:rgba(255,255,255,.13); border-color:rgba(150,170,255,.5); }
-.de-act.on { color:#fff; border-color:transparent; }
+/* 深色底：默认填充（与浅色态同款，只是底色更暗）；.on 仍用白色高亮环点出当前项 */
+.de-act { background:linear-gradient(118deg,#3a78f0,#9a7af0); box-shadow:0 4px 10px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.18); }
+.de-act:hover { filter:brightness(1.12); }
+.de-act.on { box-shadow:0 0 0 2px rgba(255,255,255,.92), 0 0 0 5px rgba(122,140,255,.3),
+  0 8px 20px rgba(0,0,0,.42); }
 
 /* ---------- 3. 场景能力集合（深色） ---------- */
 .de-cap-sec { background:
@@ -2431,7 +2482,10 @@ a.pth-a .ent-arw { margin-left:3px; font-size:9px; }
   border:1px solid rgba(255,255,255,.09); box-shadow:0 18px 44px rgba(0,0,0,.32); }
 .cap-card:hover { border-color:color-mix(in srgb, var(--cc,#1e6fd9) 42%, transparent);
   box-shadow:0 24px 56px rgba(0,0,0,.44), 0 0 0 1px rgba(255,255,255,.05); }
-.cap-num { color:color-mix(in srgb, var(--cc,#1e6fd9) 44%, #ffffff); }
+.cap-num { background:rgba(255,255,255,.06); color:#fff;
+  border-color:color-mix(in srgb,var(--cc,#1e6fd9) 50%,transparent);
+  box-shadow:0 2px 6px rgba(0,0,0,.32); }
+.cap-name::after { opacity:.85; }
 .cap-name { color:#fff; }
 .cap-stage { color:rgba(158,180,218,.75); }
 .cap-stage b { color:color-mix(in srgb, var(--cc,#1e6fd9) 40%, #cfe0ff); }
@@ -2828,6 +2882,13 @@ DE_JS = '''<script>
       void sayEl.offsetWidth;
       sayEl.classList.add('pop');
     }
+    /* 动作进行中临时禁用所有按钮，避免动画被新点击打断。
+       打招呼/转身 = 1.9s 动画；转到背面/复位 = ~0.6s 3D 过渡 */
+    var busyMs = (a === 'hello' || a === 'turn') ? 1900 : 650;
+    btns.forEach(function(x){ x.classList.add('is-busy'); x.disabled = true; });
+    setTimeout(function(){
+      btns.forEach(function(x){ x.classList.remove('is-busy'); x.disabled = false; });
+    }, busyMs);
   }
 
   btns.forEach(function(b){
@@ -4186,7 +4247,11 @@ def build_digital_employee_page(data):
 
     acts = de.get('actions', [])
     act_btns = ''
-    act_icons = {'hello': '👋', 'turn': '🔄', 'back': '🔃', 'reset': '↺', 'idle': '💤'}
+    # 图标一律用「单色文字字形」而非 emoji：
+    # emoji 各自带色（👋 是黄的、🔄 是蓝的），四个按钮放一起颜色参差；
+    # 想靠 filter 洗成白色又会被烧成白方块（emoji 内部明暗被 clip）。
+    # 下面这套字形直接继承文字颜色，四个按钮天然齐整。
+    act_icons = {'hello': '☺', 'turn': '↻', 'back': '⇄', 'reset': '↺', 'idle': '☾'}
     for a in acts:
         aid = a['id']
         ic = act_icons.get(aid, '✨')
@@ -4221,6 +4286,15 @@ def build_digital_employee_page(data):
 
     board_html = f'''<div class="de-board-sec" id="de-board">
   <div class="de-wrap">
+    <div class="de-crumbs" role="navigation" aria-label="页面位置">
+      <div class="left">
+        <span class="b">安恒信息</span><span class="sep">›</span>
+        <span class="b">营销中心</span><span class="sep">›</span>
+        <span class="b">数字员工体系</span><span class="sep">›</span>
+        <span class="cur">营销 AI 小秘</span>
+      </div>
+      <span class="ver">内部公示版 · 2026 Q4</span>
+    </div>
     <div class="de-bs-grid">
       <div class="de-stage">
         <div class="de-floor"></div>
