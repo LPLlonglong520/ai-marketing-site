@@ -905,19 +905,9 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .de-lead-sub { margin:12px auto 0; font-size:13px; color:#8b95a8; }
 
 /* ============ 1. 3D 立牌 ============ */
-/* 部门面包屑：一行识别条，左侧路径 + 右侧版本标签。给立牌前一个"站位说明" */
-.de-crumbs { display:flex; align-items:center; flex-wrap:wrap; column-gap:6px; row-gap:6px;
-  padding:0 0 16px; font-size:12.5px; color:rgba(28,46,80,.55); letter-spacing:.2px; }
-.de-crumbs .left { display:flex; align-items:center; flex-wrap:wrap; column-gap:6px; row-gap:4px;
-  min-width:0; flex:1 1 auto; }
-.de-crumbs .b { color:#5a6b8a; }
-.de-crumbs .sep { color:rgba(28,46,80,.28); font-size:13px; padding:0 1px; user-select:none; }
-.de-crumbs .cur { color:var(--brand-deep); font-weight:700; }
-.de-crumbs .ver { padding:3px 10px; border-radius:999px;
-  background:linear-gradient(94deg,#1f5fd0,#7c5ce7); color:#fff; font-size:11px; font-weight:700;
-  letter-spacing:.4px; box-shadow:0 2px 6px rgba(70,80,200,.18); white-space:nowrap; flex:none; }
-/* ============ 1. 3D 立牌 ============ */
-.de-board-sec { position:relative; padding:64px 0 76px; overflow:hidden;
+/* 顶部留白：立牌在 .de-stage 里垂直居中（上下各 ~45px 余量），
+   所以 padding-top 要比导航矮一点，最终立牌顶距导航底约 41px（桌面）。 */
+.de-board-sec { position:relative; padding:56px 0 76px; overflow:hidden;
   background:radial-gradient(ellipse 60% 46% at 22% 34%, #e8efff 0%, transparent 62%),
              radial-gradient(ellipse 50% 40% at 82% 22%, #f2ecff 0%, transparent 60%),
              linear-gradient(180deg,#fbfcff,#f5f7fc); }
@@ -1330,11 +1320,13 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .cap-tbl th:nth-child(1), .cap-tbl td.sk { width:17%; }
 .cap-tbl th:nth-child(3), .cap-tbl td.dt { width:14%; }
 .cap-tbl th:nth-child(4), .cap-tbl td.ent, .cap-tbl td.ent-m { width:16%; }
-.cap-tbl th { background:color-mix(in srgb, var(--cc,#1e6fd9) 8%, #fff); color:#43506b; font-weight:700; font-size:11.5px; text-align:left;
-  padding:10px 12px; border-bottom:1px solid rgba(15,35,80,.08); white-space:nowrap; }
+/* 表头：底色带主题色 + 2px 主题色底线 —— 让「表头」真正立起来，不再像第一行普通数据 */
+.cap-tbl th { background:color-mix(in srgb, var(--cc,#1e6fd9) 13%, #fff); color:#33415e; font-weight:800; font-size:11.5px; text-align:left;
+  padding:10px 12px; border-bottom:2px solid color-mix(in srgb, var(--cc,#1e6fd9) 46%, #fff); white-space:nowrap; }
 .cap-tbl th:first-child { border-radius:10px 0 0 0; }
 .cap-tbl th:last-child { border-radius:0 10px 0 0; }
-.cap-tbl td { padding:11px 12px; border-bottom:1px solid rgba(15,35,80,.055); color:#4a5670; line-height:1.62; vertical-align:top; }
+/* 数据行：行距放宽 1px、分隔线提一档 —— 长文案多行时不再糊成一片 */
+.cap-tbl td { padding:12px 12px; border-bottom:1px solid rgba(15,35,80,.08); color:#4a5670; line-height:1.62; vertical-align:top; }
 .cap-tbl tr:last-child td { border-bottom:none; }
 .cap-tbl td.sk { font-weight:700; color:#1f2c48; min-width:104px; }
 .cap-tbl td.sk .plan-tag, .plan-tag { display:block; font-style:normal; font-weight:700; font-size:10px; line-height:1.4;
@@ -1385,7 +1377,7 @@ a.ent-a:hover .ent-arw, a.ent-a:focus-visible .ent-arw { transform:translate(1.5
 .cap-tbl td.ent-m { display:none; }
 .cap-tbl td.dt-m { display:none; }
 .cap-tbl tbody tr { transition:background .2s; }
-.cap-tbl tbody tr:hover { background:color-mix(in srgb, var(--cc,#1e6fd9) 4.5%, #fff); }
+.cap-tbl tbody tr:hover { background:color-mix(in srgb, var(--cc,#1e6fd9) 6.5%, #fff); }
 .cap-empty { padding:26px 24px 28px; text-align:center; border:1px dashed rgba(15,35,80,.16);
   border-radius:12px; margin:0 24px 24px; background:#fafbfd; }
 .cap-empty b { display:block; font-size:14px; color:#5b6577; font-weight:700; }
@@ -1482,10 +1474,6 @@ a.pth-a .ent-arw { margin-left:3px; font-size:9px; }
   .cap-row-side { align-items:flex-start; max-width:100%; margin-left:0; }
   .cap-row-side .cap-row-path { justify-content:flex-start; text-align:left; }
   .cap-row-side .cap-row-path .crp-c { justify-content:flex-start; }
-  /* 面包屑在窄屏收一档，避免路径折成三行 */
-  .de-crumbs { font-size:11.5px; column-gap:5px; padding-bottom:12px; }
-  .de-crumbs .sep { font-size:12px; }
-  .de-crumbs .ver { font-size:10px; padding:2.5px 8px; letter-spacing:.2px; }
 }
 
 /* ============ 响应式 ============ */
@@ -1506,9 +1494,9 @@ a.pth-a .ent-arw { margin-left:3px; font-size:9px; }
 @media (max-width:768px) {
   .nav-de-btn { padding:6px 11px; font-size:12px; gap:5px; }
   .nav-back-btn { padding:6px 12px; font-size:12.5px; }
-  /* 上内边距必须 ≥ 顶部导航高度（移动端 ~52px，桌面 60px），
-     否则第一条内容——现在最上面是面包屑文字——会被固定导航压住、切掉上半截 */
-  .de-board-sec { padding:64px 0 54px; }
+  /* 上内边距必须 ≥ 顶部导航高度（移动端 52px、桌面 60px），
+     否则立牌区第一条内容会被固定导航压住、切掉上半截 */
+  .de-board-sec { padding:62px 0 54px; }
   .de-h2, .de-flow-head h2 { font-size:26px; }
   .de-h2-a { gap:10px; }
   .de-h2-go { padding:6px 11px; font-size:11px; gap:4px; }
@@ -1638,12 +1626,6 @@ a.pth-a .ent-arw { margin-left:3px; font-size:9px; }
 .de-front, .de-back { box-shadow:0 0 0 1px rgba(255,255,255,.07), 0 26px 64px rgba(0,0,0,.52); }
 .de-bhint { color:#c3d6ff; background:rgba(9,22,52,.86); border-color:rgba(130,170,255,.24);
   box-shadow:0 8px 22px rgba(0,0,0,.36); backdrop-filter:blur(9px); -webkit-backdrop-filter:blur(9px); }
-/* 面包屑（深色底）—— 文字一律走亮色，否则深色底上读不出来 */
-.de-body .de-crumbs { font-size:13px; color:rgba(176,198,236,.66); }
-.de-body .de-crumbs .b { color:#a8bce3; }
-.de-body .de-crumbs .sep { color:rgba(150,185,255,.42); }
-.de-body .de-crumbs .cur { color:#fff; }
-.de-body .de-crumbs .ver { box-shadow:0 2px 10px rgba(120,140,255,.42), inset 0 1px 0 rgba(255,255,255,.22); }
 .de-lb-btn { background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.26); color:#eaf1ff;
   box-shadow:0 8px 22px rgba(0,0,0,.34); }
 .de-lb-btn:hover { background:rgba(255,255,255,.24); box-shadow:0 12px 28px rgba(0,0,0,.42); }
@@ -1722,10 +1704,13 @@ a.pth-a .ent-arw { margin-left:3px; font-size:9px; }
 .cap-empty span { color:rgba(162,182,218,.66); }
 
 /* 能力表 */
-.cap-tbl th { background:rgba(255,255,255,.06); color:rgba(198,215,248,.78); border-bottom-color:rgba(255,255,255,.1); }
-.cap-tbl td { color:rgba(193,210,242,.76); border-bottom-color:rgba(255,255,255,.06); }
+/* 能力表（深色）：表头走主题色实底（而非半透明白），与卡片底色拉开；
+   行分隔线提一档，长文案多行时行界清楚；悬停改成主题色微光。 */
+.cap-tbl th { background:color-mix(in srgb, var(--cc,#1e6fd9) 22%, transparent); color:#dbe7ff;
+  border-bottom-color:color-mix(in srgb, var(--cc,#1e6fd9) 58%, transparent); }
+.cap-tbl td { color:rgba(203,219,248,.82); border-bottom-color:rgba(255,255,255,.085); }
 .cap-tbl td.sk { color:#fff; }
-.cap-tbl tbody tr:hover { background:rgba(255,255,255,.05); }
+.cap-tbl tbody tr:hover { background:color-mix(in srgb, var(--cc,#1e6fd9) 11%, rgba(255,255,255,.02)); }
 .plan-tag { color:#ff7583; }
 .cap-tbl td.ent { color:rgba(214,230,255,.62); }
 .cap-tbl td.ent-span, .cap-tbl td.dt-span { background:rgba(255,255,255,.035); }
@@ -1879,15 +1864,6 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
 
 <div class="de-board-sec" id="de-board">
   <div class="de-wrap">
-    <div class="de-crumbs" role="navigation" aria-label="页面位置">
-      <div class="left">
-        <span class="b">安恒信息</span><span class="sep">›</span>
-        <span class="b">营销中心</span><span class="sep">›</span>
-        <span class="b">数字员工体系</span><span class="sep">›</span>
-        <span class="cur">营销 AI 小秘</span>
-      </div>
-      <span class="ver">内部公示版 · 2026 Q4</span>
-    </div>
     <div class="de-bs-grid">
       <div class="de-stage">
         <div class="de-floor"></div>
