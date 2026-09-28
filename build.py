@@ -87,6 +87,42 @@ def _read_text_asset(path):
         return ''
 
 
+def _char_layout():
+    """读 tools/mkchar.py 写出的立牌人物版式（两块立牌的 .de-char 盒 + 转动轴心 %）。
+
+    没有这个文件就退回内置兜底值（当前版式的数值），构建不会因此失败。
+    """
+    try:
+        with open(media_path('de_char_layout.json'), encoding='utf-8') as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def _apply_char_layout(css):
+    """把 DE_CSS 里的 __CH_*__ 占位符换成真实百分比。
+
+    人物在立牌上的位置由立牌源图的 poster.html 决定，`mkchar.py` 算好后写进
+    `media/de_char_layout.json` —— 换立牌/换人物后不用再手工抄一遍 CSS 数字。
+    """
+    lay = _char_layout()
+    hb = (lay.get('hero') or {}).get('box') or [33.0952, 17.3507, 33.5714, 60.8209]
+    bb = (lay.get('back') or {}).get('box') or [31.6762, 17.3582, 36.6476, 60.7985]
+    org = (lay.get('hero') or {}).get('origins') or {}
+    hi = org.get('head') or [48.91, 22.32]
+    ai = org.get('arm') or [38.81, 38.63]
+    pct = lambda v: '%.4f%%' % v
+    out = (css.replace('__CH_HERO_L__', pct(hb[0])).replace('__CH_HERO_T__', pct(hb[1]))
+              .replace('__CH_HERO_W__', pct(hb[2])).replace('__CH_HERO_H__', pct(hb[3]))
+              .replace('__CH_BACK_L__', pct(bb[0])).replace('__CH_BACK_T__', pct(bb[1]))
+              .replace('__CH_BACK_W__', pct(bb[2])).replace('__CH_BACK_H__', pct(bb[3]))
+              .replace('__CH_HEAD_ORIGIN__', '%.2f%% %.2f%%' % (hi[0], hi[1]))
+              .replace('__CH_ARM_ORIGIN__', '%.2f%% %.2f%%' % (ai[0], ai[1])))
+    if '__CH_' in out:
+        print('  ⚠️  de_char_layout.json 里有占位符没被替换，检查 DE_CSS 与 mkchar.py 是否同步')
+    return out
+
+
 def _board_manifest(name):
     """读 tools/mkboard.py 写出的立牌档位清单（没有就返回 None，退回单张图方案）。"""
     try:
@@ -97,7 +133,7 @@ def _board_manifest(name):
         return None
 
 
-def board_picture(name, alt, sizes, priority=False, lazy=False, cls='de-img'):
+def board_picture(name, alt, sizes, priority=False, lazy=False, cls='de-img', low=False):
     """生成立牌 <picture>（AVIF 优先 / WebP 兜底 / 多档 srcset）+ 对应的预加载标签。
 
     AVIF 用 AV1 帧内压缩，同画质体积约 WebP 的 55%（实测 144KB → 65KB），
@@ -111,7 +147,8 @@ def board_picture(name, alt, sizes, priority=False, lazy=False, cls='de-img'):
             p = media_path(name + '.webp')
         sz = _img_size(p) or (0, 0)
         dim = ' width="%d" height="%d"' % sz if sz[0] else ''
-        attr = 'fetchpriority="high"' if priority else ('loading="lazy"' if lazy else '')
+        attr = ('fetchpriority="high"' if priority else
+                ('fetchpriority="low"' if low else ('loading="lazy"' if lazy else '')))
         img = '<img class="%s" src="%s"%s alt="%s" decoding="async" %s>' % (cls, p, dim, alt, attr)
         return img, ('<link rel="preload" as="image" href="%s" fetchpriority="high">\n' % p
                      if priority else ''), sz[0], sz[1]
@@ -134,7 +171,8 @@ def board_picture(name, alt, sizes, priority=False, lazy=False, cls='de-img'):
         base = media_path(name + '_1x.avif')
     size_1x = v.get('_1x') or v.get('') or {'w': 0, 'h': 0}
     dim = ' width="%d" height="%d"' % (size_1x['w'], size_1x['h']) if size_1x['w'] else ''
-    attr = 'fetchpriority="high"' if priority else ('loading="lazy"' if lazy else '')
+    attr = ('fetchpriority="high"' if priority else
+            ('fetchpriority="low"' if low else ('loading="lazy"' if lazy else '')))
     img = ('<img class="%s" src="%s" srcset="%s" sizes="%s"%s alt="%s" decoding="async" %s>'
            % (cls, base, webp, sizes, dim, alt, attr))
     html = img
@@ -212,6 +250,7 @@ def parse_de_page(text):
         'KPI1数值', 'KPI1标签', 'KPI2数值', 'KPI2标签', 'KPI3数值', 'KPI3标签',
         'KPI4数值', 'KPI4标签',
         '立牌正面图', '立牌正面图小图', '立牌全图', '立牌显示宽度', '人物层前缀', '立牌占位图',
+        '背面立牌正面图', '背面人物层前缀',
         '旋转提示', '翻转按钮', '背回按钮', '放大按钮',
         '返回按钮', '返回链接', '来源参数', '来源返回文字', '页尾标语',
         '能力集列数', '能力集列数断点', '能力集容器宽度', '能力集上间距',
@@ -1674,6 +1713,11 @@ DE_CSS = '''<style>
 .de-lb-btn:hover { background:rgba(13,37,80,.94); transform:translateY(-2px); box-shadow:0 10px 26px rgba(13,37,80,.36); }
 .de-lb-btn .ic { font-size:14px; line-height:1; }
 .de-board.dragging .de-board-tools { opacity:.35; transition:opacity .2s; }
+/* 背面那块立牌的右下角按钮组：贴在 .de-face.de-back 里，位置与正面那枚「放大查看」对齐
+   （12px = 正面 right 公式在 560px 宽立牌下的实际内缩量）。放在翻面里 → 跟着 180° 一起翻，不用 JS 显隐。 */
+.de-back-tools { position:absolute; right:12px; bottom:7%; z-index:9;
+  display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
+.de-board.dragging .de-back-tools { opacity:.35; transition:opacity .2s; }
 .de-board { position:relative; width:min(560px,90%); aspect-ratio:4200/5360; transform-style:preserve-3d;
   transform:rotateX(var(--de-tilt,0deg)) rotateY(var(--de-rot,-15deg)); transition:transform .1s linear;
   cursor:grab; touch-action:pan-y; will-change:transform; }
@@ -1687,9 +1731,12 @@ DE_CSS = '''<style>
 .de-img { position:absolute; inset:0; width:100%; height:100%; object-fit:fill; display:block; user-select:none; -webkit-user-drag:none; }
 /* <picture> 只做格式分支，不要产生盒子，否则 .de-img 的绝对定位父级会错位 */
 .de-face picture, .de-front picture, .de-eco-front picture { display:contents; }
-/* 内联占位图：主图未到时先铺一层模糊海报轮廓（主图为不透明整图，加载完成后自然完全遮盖） */
+/* 内联占位图：主图未到时先铺一层模糊海报轮廓（主图为不透明整图，加载完成后自然完全遮盖）
+   ⚠️ 这里**不能**用 filter:blur() —— 见下方 .de-char 的说明：face 内任何 filter 都会让整个
+   face 逃出 backface-visibility:hidden。好在 22px 的小图被 object-fit:fill 拉伸 25 倍时，
+   浏览器默认就走平滑插值，本身就是糊的，不需要再叠加 blur。 */
 .de-lqip { position:absolute; inset:0; width:100%; height:100%; object-fit:fill; display:block;
-  filter:blur(6px) saturate(1.04); transform:scale(1.035); pointer-events:none; user-select:none; }
+  transform:scale(1.035); pointer-events:none; user-select:none; }
 
 /* 底板边缘：模拟板材厚度 */
 .de-edge { position:absolute; top:0; bottom:0; width:18px; pointer-events:none;
@@ -1698,20 +1745,32 @@ DE_CSS = '''<style>
 .de-edge.r { right:0; transform:translateX(9px) rotateY(90deg); transform-origin:left center; }
 
 /* 人物分层
-   ⚠️ 底图是「无人版」（tools/mkplate.py 出的），人物全靠这 5 层拼出来 —— 底图里要是
+   ⚠️ 底图是「无人版」（tools/mkplate.py 出的），人物全靠这几层拼出来 —— 底图里要是
       也烘焙了人物，做动作时底图那个人不跟着动，就会和分层叠成重影。
-   落地阴影原本烘焙在底图里，改无人版后用 filter 补回来（尺寸按海报 28px/52px × 显示缩放）。 */
-.de-char { position:absolute; left:33.0952%; top:17.3507%; width:33.5714%; height:60.8209%; transform-origin:50% 100%;
+   ⚠️⚠️ 这块人物层**绝对不能用 CSS filter**（哪怕只有 1px 的 drop-shadow）—— Chrome 实测：
+      face 内的子元素一旦带 filter，整个 face 就逃出 backface-visibility:hidden，
+      结果是「正面那张立牌图盖在背面之上」，而且看背面时人物会被渲染成一整块白色剪影。
+      落地感改用 ::before 的 radial-gradient 软阴影（纯背景色，不产生 filter）。
+   ⚠️ 盒子的 left/top/width/height 与两个转动轴心由 tools/mkchar.py 算出，
+      写在 media/de_char_layout.json，构建时注入下面这些占位符 —— 换立牌别再手抄数字。 */
+.de-char { position:absolute;
+  left:__CH_HERO_L__; top:__CH_HERO_T__; width:__CH_HERO_W__; height:__CH_HERO_H__;
+  transform-origin:50% 100%;
   animation:deIdle 5.2s ease-in-out infinite;
-  filter:drop-shadow(0 7px 13px rgba(12,40,84,.28));
   opacity:0; transition:opacity .42s ease; }
-/* 5 个分层全部 load 完成后由 JS 加 .ready 整体淡入，避免"身体→头→手"逐块弹出的拼装感 */
+/* 贴脚的软阴影（替代原来的 drop-shadow）：压在人物几层之下（伪元素先绘制） */
+.de-char::before { content:''; position:absolute; left:9%; right:9%; bottom:.6%; height:4.6%;
+  border-radius:50%; pointer-events:none;
+  background:radial-gradient(ellipse at center, rgba(12,40,84,.32) 0%, rgba(12,40,84,.17) 44%, rgba(12,40,84,0) 72%); }
+/* 背面是另一块立牌（不同版式、人物大小不同），单独一套盒尺寸 */
+.de-back .de-char { left:__CH_BACK_L__; top:__CH_BACK_T__; width:__CH_BACK_W__; height:__CH_BACK_H__; }
+/* 各层全部 load 完成后由 JS 加 .ready 整体淡入，避免"身体→头→手"逐块弹出的拼装感 */
 .de-char.ready { opacity:1; }
 .de-l { position:absolute; inset:0; width:100%; height:100%; display:block; pointer-events:none; }
-/* ⚠️ 人物分层的转动轴心必须与 media/de_char_*.webp 对应：
-   换立牌人物（男/女）后跑 tools/mkchar.py，把它打印的两个百分比抄到这里 */
-.de-l-head { transform-origin:49.36% 22.30%; }
-.de-l-arm  { transform-origin:38.16% 38.61%; }
+/* ⚠️ 转动轴心必须与 media/de_char*_*.webp 对应（两块立牌同画布，轴心通用）：
+   换立牌人物（男/女）后跑 tools/mkchar.py，它会顺手刷新 de_char_layout.json */
+.de-l-head { transform-origin:__CH_HEAD_ORIGIN__; }
+.de-l-arm  { transform-origin:__CH_ARM_ORIGIN__; }
 .de-l-tab  { transform-origin:84.75% 41.87%; }
 @keyframes deIdle { 0%,100%{ transform:translateY(0) rotate(0deg);} 50%{ transform:translateY(-5px) rotate(.3deg);} }
 /* 动作：打招呼（整身轻快点头）/ 转身（原地侧身）/ 转到背面 / 复位
@@ -1770,10 +1829,14 @@ DE_CSS = '''<style>
   padding:4px 10px; border-radius:14px; cursor:pointer; transition:all .25s; white-space:nowrap; }
 .de-bi-back-btn:hover { background:#e2e9f8; }
 
-/* 背撑支架 */
+/* 背撑支架
+   ⚠️ 同样不能用 filter（见 .de-char 处的说明）：它自身也带 backface-visibility:hidden +
+   rotateY(180deg)，挂 drop-shadow 会把它从隐藏状态里拽出来、并可能污染整个 board 的合成。 */
 .de-strut { position:absolute; left:7.5%; right:7.5%; top:11%; bottom:11%; transform:translateZ(-30px) rotateY(180deg);
-  backface-visibility:hidden; -webkit-backface-visibility:hidden; pointer-events:none;
-  filter:drop-shadow(0 14px 24px rgba(15,30,60,.2)); }
+  backface-visibility:hidden; -webkit-backface-visibility:hidden; pointer-events:none; }
+/* 立牌转到背面(rot>90)时把支架淡出——strut 在 board-local z=-30,翻 180° 之后世界 z 变 +28.98,
+   比 back face(+8.69)更靠观察者,会盖在背面图上. 实物立牌照片里反面也不会出现挡在画面前的支架。*/
+.de-board.is-back .de-strut { opacity:0; transition:opacity .35s ease; }
 .de-strut .rail { position:absolute; top:0; bottom:0; width:6.2%; border-radius:3px;
   background:linear-gradient(90deg,#98a2b2 0%,#e3e8f0 22%,#c3cbd8 46%,#f4f7fb 58%,#a8b1c0 80%,#838d9d 100%); }
 .de-strut .rail.l { left:0; }
@@ -2551,6 +2614,7 @@ DE_JS = '''<script>
   function apply(){
     board.style.setProperty('--de-rot', rot + 'deg');
     board.style.setProperty('--de-tilt', tilt + 'deg');
+    board.classList.toggle('is-back', rot > 90);
   }
   apply();
 
@@ -2677,14 +2741,18 @@ DE_JS = '''<script>
     kpiCards.forEach(function(o){ o.classList.remove('open'); });
   });
 
-  /* ---------- 人物动作：打招呼 / 转身 / 转到背面 / 复位 ---------- */
-  var charEl = document.getElementById('deChar');
-  /* 5 个分层图全部就绪后整体淡入，避免逐块弹出；2.5s 兜底强制显示，防止图片异常时人物消失 */
-  (function(){
-    if(!charEl) return;
-    var imgs = Array.prototype.slice.call(charEl.querySelectorAll('img'));
+  /* ---------- 人物动作：打招呼 / 转身 / 转到背面 / 复位 ----------
+     正反两面各有一块立牌、各有一个 .de-char（#deChar / #deCharBack）。
+     两面的人物都是同一套 4 层素材切出来的，所以动作类直接同时加到两块上，
+     转到哪一面看到的人都在动 —— 「两面的打招呼 / 转身表现一致」。 */
+  var charEls = Array.prototype.slice.call(document.querySelectorAll('.de-char'));
+  var charEl = charEls[0] || null;
+  /* 每块立牌的分层图全部就绪后各自整体淡入，避免逐块弹出；
+     2.5s 兜底强制显示，防止图片异常时人物消失 */
+  charEls.forEach(function(el){
+    var imgs = Array.prototype.slice.call(el.querySelectorAll('img'));
     var left = imgs.length, shown = false;
-    function ready(){ if(shown) return; shown = true; charEl.classList.add('ready'); }
+    function ready(){ if(shown) return; shown = true; el.classList.add('ready'); }
     imgs.forEach(function(im){
       function one(){ if(--left <= 0) ready(); }
       if(im.complete && im.naturalWidth){ one(); }
@@ -2692,7 +2760,7 @@ DE_JS = '''<script>
     });
     if(left <= 0) ready();
     setTimeout(ready, 2500);
-  })();
+  });
   var sayEl = document.getElementById('deSay');  var btns = Array.prototype.slice.call(document.querySelectorAll('.de-act'));
   var CLS = ['act-hello', 'act-turn'];
   var CYCLE = ['hello', 'turn', 'back', 'reset'];
@@ -2700,10 +2768,11 @@ DE_JS = '''<script>
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   function play(a){
-    if(!charEl) return;
-    CLS.forEach(function(c){ charEl.classList.remove(c); });
-    void charEl.offsetWidth;
-    if(a === 'hello' || a === 'turn') charEl.classList.add('act-' + a);
+    charEls.forEach(function(el){
+      CLS.forEach(function(c){ el.classList.remove(c); });
+      void el.offsetWidth;
+      if(a === 'hello' || a === 'turn') el.classList.add('act-' + a);
+    });
     btns.forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-act') === a); });
     if(a === 'back') flipBoard(true);
     else if(a === 'reset') flipBoard(false);
@@ -2725,16 +2794,16 @@ DE_JS = '''<script>
   });
 
   /* 点击人物：按 打招呼 → 转身 → 转到背面 → 复位 循环 */
-  if(charEl){
-    charEl.addEventListener('click', function(e){
+  charEls.forEach(function(el){
+    el.addEventListener('click', function(e){
       e.stopPropagation();
       ci = (ci + 1) % CYCLE.length;
       play(CYCLE[ci]);
     });
-  }
+  });
 
   /* 入场时自动打一次招呼 */
-  if(!reduce && charEl){
+  if(!reduce && charEls.length){
     setTimeout(function(){ play('hello'); ci = 0; }, 2400);
   }
 })();
@@ -3999,9 +4068,7 @@ def build_digital_employee_page(data):
   </div>
 </nav>'''
 
-    # ---------- 1. 立牌 ----------
-    board_img = media_path(meta.get('立牌正面图', 'media/de_board_front.webp'))
-    prefix = meta.get('人物层前缀', 'media/de_char_')
+    # ---------- 1. 立牌（正面 + 翻过去的背面，两块都是真立牌图）----------
     # 「立牌显示宽度」= 立牌在页面上的实际显示宽度（px）。
     # 图片档位（_m / _1x / 2×）与 avif/webp 由 tools/mkboard.py 生成，
     # srcset 直接从 {name}_variants.json 读真实像素宽度拼出来。
@@ -4011,26 +4078,45 @@ def build_digital_employee_page(data):
     except Exception:
         BW = 560
     BW_SM = int(round(BW * 4 / 7))         # 窄屏（≤768px）显示宽度，约等于大屏的 4/7
-    _bname = os.path.splitext(os.path.basename(board_img))[0]
-    # 「放大查看」弹层用含人物的图（_lb_*）：页面上那张是无人版底图（防动作重影），
-    # 弹层是静态看图，缺了人物会让人觉得"人没了"。mkboard.py 没出 _lb_ 就退回底图。
-    _lbname = _bname + '_lb' if os.path.exists(media_path(_bname + '_lb_zoom.webp')) else _bname
-    board_src, board_preload, _bw_real, _bh_real = board_picture(
-        _bname, '营销AI小秘 场景能力立牌',
-        f'(max-width:768px) {BW_SM}px, {BW}px', priority=True)
-    # 模糊占位图（LQIP）：主图到达前先显示轮廓，避免白板期。
-    # content.md 写「无」可关闭；写 data:image/... 或图片路径可替换；留空用 mkboard.py 产物。
-    _lq = (meta.get('立牌占位图', '') or '').strip()
-    if _lq in ('无', '关闭', 'none', 'None', 'off', 'OFF'):
-        lqip_html = ''
-    else:
-        _lqip_file = media_path(_bname + '_lqip.txt')
-        lqip_src = (_lq if _lq.startswith('data:')
-                    else (media_path(_lq) if _lq else (_read_text_asset(_lqip_file) or DE_BOARD_LQIP)))
-        lqip_html = f'<img class="de-lqip" src="{lqip_src}" alt="" aria-hidden="true">'
-    layers = ''
-    for nm in ('body', 'tab', 'arm', 'head'):
-        layers += f'<img class="de-l de-l-{nm}" src="{media_path(prefix + nm + ".png", ver=True)}" alt="" decoding="async">'
+
+    def face_assets(img_key, prefix_key, alt, priority=False, lazy=False, low=False, lq_raw=''):
+        """一块立牌（一个面）要用的全部素材：底图 picture + 模糊占位图 + 人物分层。
+
+        底图是「无人版」（防动作重影）；「放大查看」弹层用含人物的 _lb_ 高清图
+        （mkboard.py 没出 _lb_ 就退回底图）。正反两面走同一套逻辑，只是文件前缀不同。
+        「low」≠「lazy」:low 加 fetchpriority="low" 让浏览器立即下载但压低优先级(避免与正面 HDR 图
+        抢占带宽);lazy 是「滚到视口附近才下」。背面那张图必须立即下载，翻过去才现拉会先看到一片模糊。
+        """
+        img = media_path(meta.get(img_key) or 'media/de_board_front.webp')
+        pre = meta.get(prefix_key) or 'media/de_char_'
+        name = os.path.splitext(os.path.basename(img))[0]
+        lb_name = name + '_lb' if os.path.exists(media_path(name + '_lb_zoom.webp')) else name
+        src, preload_html, _, _ = board_picture(name, alt, f'(max-width:768px) {BW_SM}px, {BW}px',
+                                                priority=priority, lazy=lazy, low=low)
+        # 模糊占位图（LQIP）：主图到达前先显示轮廓，避免白板期。
+        # content.md 写「无」可关闭；写 data:image/... 或图片路径可替换；留空用 mkboard.py 产物。
+        if lq_raw in ('无', '关闭', 'none', 'None', 'off', 'OFF'):
+            lqip = ''
+        else:
+            _lqip_file = media_path(name + '_lqip.txt')
+            lq_src = (lq_raw if lq_raw.startswith('data:')
+                      else (media_path(lq_raw) if lq_raw
+                            else (_read_text_asset(_lqip_file) or DE_BOARD_LQIP)))
+            lqip = f'<img class="de-lqip" src="{lq_src}" alt="" aria-hidden="true">'
+        ly = ''
+        for nm in ('body', 'tab', 'arm', 'head'):
+            ly += (f'<img class="de-l de-l-{nm}" '
+                   f'src="{media_path(pre + nm + ".png", ver=True)}" alt="" decoding="async">')
+        return dict(name=name, lb=lb_name, src=src, preload=preload_html,
+                    lqip=lqip, layers=ly, prefix=pre)
+
+    front = face_assets('立牌正面图', '人物层前缀', '营销AI小秘 场景能力立牌',
+                        priority=True, lq_raw=(meta.get('立牌占位图', '') or '').strip())
+    # 背面那张图必须立即加载(翻过去才现拉的话会先看到一片模糊/LQIP),
+    # 但用 fetchpriority="low" 压低它跟正面那张的抢占,不 lazy.
+    backb = face_assets('背面立牌正面图', '背面人物层前缀', '营销AI小秘 场景能力立牌 背面', low=True)
+    board_src, board_preload = front['src'], front['preload']
+    lqip_html, layers, _lbname, prefix = front['lqip'], front['layers'], front['lb'], front['prefix']
 
     kpi_meta = de.get('kpi_meta', {})
     kpi = ''
@@ -4078,24 +4164,15 @@ def build_digital_employee_page(data):
     else:
         h2_main = h2_t
 
-    back_panel = f'''<div class="de-bi">
-  <div class="de-bi-top"><i></i>{back.get('背面眉标','')}<span class="de-bi-back-btn" data-de-front>{back.get('背面入口文字','查看正面能力全景 →')}</span></div>
-  <div class="de-bi-mid">
-    <div class="n">{back.get('背面主标题','')}</div>
-    <div class="s">{back.get('背面副标题','')}</div>
-    <div class="de-bi-sep"></div>
-    <div class="t">{back.get('背面标语','')}</div>
-    <div class="d">{back.get('背面说明','')}</div>
-    <div class="de-bi-spec">
-      <span><b>面板</b> 5mm 复合板</span><span><b>支架</b> 铝合金背撑</span>
-      <span><b>工艺</b> 高清微喷</span><span><b>尺寸</b> 420 × 536 mm</span>
-    </div>
-  </div>
-  <div class="de-bi-foot">
-    <span class="code">DAS-SECURITY · MARKETING AI · 2026</span>
-    <span class="mat">背面视图 · BACK</span>
-  </div>
-</div>'''
+    # 背面 = 另一块真立牌（content.md 的「背面立牌源图」，默认「现有版女」）
+    # 也是「无人版底图 + 人物分层」，翻过去点「打招呼」才会动。
+    # 两个按钮放在 .de-face.de-back 里 → 跟着 180° 一起翻，位置与正面的「放大查看」对齐。
+    back_tools = (f'<div class="de-back-tools">'
+                  f'<button class="de-lb-btn" type="button" data-de-front>'
+                  f'<span class="ic">↩</span>{back.get("背面入口文字") or "查看正面能力全景 →"}</button>'
+                  f'<button class="de-lb-btn" type="button" data-lb-open="deLbBack">'
+                  f'<span class="ic">🔍</span>{lb_label}</button>'
+                  f'</div>')
 
     board_html = f'''<div class="de-board-sec" id="de-board">
   <div class="de-wrap">
@@ -4106,7 +4183,13 @@ def build_digital_employee_page(data):
           <div class="de-board" id="deBoard">
             <div class="de-edge l"></div>
             <div class="de-edge r"></div>
-            <div class="de-face de-back">{back_panel}</div>
+            <div class="de-face de-back">
+              {backb['lqip']}
+              {backb['src']}
+              <div class="de-char" id="deCharBack" title="点我切换动作">{backb['layers']}</div>
+              <div class="de-sheen"></div>
+              {back_tools}
+            </div>
             <div class="de-strut">
               <div class="hinge"></div>
               <div class="rail l"></div>
@@ -4141,7 +4224,8 @@ def build_digital_employee_page(data):
       </div>
     </div>
   </div>
-  {board_lightbox('deLb', _lbname, '营销AI小秘 场景能力立牌 放大图', lb_label, lqip_html)}
+  {board_lightbox('deLb', front['lb'], '营销AI小秘 场景能力立牌 放大图', lb_label)}
+  {board_lightbox('deLbBack', backb['lb'], '营销AI小秘 场景能力立牌 背面 放大图', lb_label)}
 </div>'''
 
     # ---------- 2. 业务流 ----------
@@ -4505,7 +4589,7 @@ def build_digital_employee_page(data):
         _sv = 0.72
     _ss = f'{_sv:g}'
     h2_sub = (_ss[1:] if _ss.startswith('0.') else _ss) + 'em'
-    de_css = DE_CSS.replace('__H2_SUB__', h2_sub)
+    de_css = _apply_char_layout(DE_CSS.replace('__H2_SUB__', h2_sub))
     # 能力集主卡列数 / 容器宽度 / 顶部间距（content.md 同名三个字段）
     _cols = re.sub(r'\D', '', meta.get('能力集列数', '') or '') or '2'
     _cw = re.sub(r'[^\d.]', '', meta.get('能力集容器宽度', '') or '')

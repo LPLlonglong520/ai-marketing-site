@@ -2,9 +2,10 @@
 """立牌图片资产生成器 —— 从源 PNG 生成网站要用的多档位图片。
 
 用法（在项目根目录执行）：
-    python tools/mkboard.py            # 两张立牌都刷新
-    python tools/mkboard.py hero       # 只刷页头「营销AI小秘」立牌
-    python tools/mkboard.py eco        # 只刷生态板块「渠道数字员工」立牌
+    python tools/mkboard.py                # 三张立牌都刷新
+    python tools/mkboard.py hero           # 只刷页头「营销AI小秘」立牌
+    python tools/mkboard.py heroback       # 只刷页头翻过去的背面立牌
+    python tools/mkboard.py eco            # 只刷生态板块「渠道数字员工」立牌
 
 每张立牌输出 4 档 × 2 种格式（都放在媒体目录）：
 
@@ -76,6 +77,19 @@ BOARDS = {
         'default_src': (r'C:\Users\龙仔\WorkBuddy\2026-09-20-14-29-28\立牌\渠道男'
                         r'\渠道数字员工-能力立牌.png'),
     },
+    'heroback': {
+        # 页头立牌翻到背面显示的那块 —— 与页头同一尺寸、同一档位规则，
+        # 「放大查看」也出一套含人物的 _lb_ 图（背面同样是个静态看图场景）
+        'name': 'de_board_back',
+        'label': '页头背面 · 营销AI小秘立牌',
+        'm': 640,
+        'zoom': 2000,
+        'src_key': '背面立牌底图',
+        'lb_src_key': '背面立牌源图',
+        'width_anchor': None,          # 取第一处「立牌显示宽度」（与页头一致）
+        'default_src': (r'C:\Users\龙仔\WorkBuddy\2026-09-20-14-29-28\立牌\小秘现有版女'
+                        r'\营销AI小秘-场景能力立牌-无人版.png'),
+    },
 }
 
 # 档位 → (文件名后缀, 质量参数)：WebP 质量 / AVIF CRF（越小越清晰、越大越小）
@@ -128,10 +142,11 @@ def resolve_width(text, cfg):
     seg = section_of(text, anchor) if anchor else text
     v = _table_value(seg, '立牌显示宽度')
     v = re.sub(r'[^\d.]', '', v)
+    fallback = 560 if cfg['name'].startswith('de_board') else 520   # 页头正面/背面同宽
     try:
-        return int(float(v)) or (560 if cfg['name'] == 'de_board_front' else 520)
+        return int(float(v)) or fallback
     except Exception:
-        return 560 if cfg['name'] == 'de_board_front' else 520
+        return fallback
 
 
 def enc_avif(png_path, out_path, crf, preset=7):
@@ -227,14 +242,17 @@ def build(key):
 
 
 def main():
-    which = (sys.argv[1] if len(sys.argv) > 1 else 'all').lower()
-    keys = list(BOARDS) if which == 'all' else [which]
+    args = [a.lower() for a in sys.argv[1:] if not a.startswith('-')]
+    if not args or 'all' in args:
+        keys = list(BOARDS)
+    else:
+        keys = args
     if not os.path.isdir(TMP):
         os.makedirs(TMP)
     print('源图路径可写在 content.md 的「### 立牌素材源」（缺省用脚本内置默认值）')
     for k in keys:
         if k not in BOARDS:
-            print('未知目标：%s（可选 hero / eco / all）' % k)
+            print('未知目标：%s（可选 %s / all）' % (k, ' / '.join(BOARDS)))
             continue
         build(k)
     print('完成。')

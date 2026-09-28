@@ -1,1 +1,4 @@
 .workbuddy/
+_deploy/
+_qa/
+_qa_shot.py

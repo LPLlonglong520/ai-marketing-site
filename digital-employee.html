@@ -927,6 +927,11 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .de-lb-btn:hover { background:rgba(13,37,80,.94); transform:translateY(-2px); box-shadow:0 10px 26px rgba(13,37,80,.36); }
 .de-lb-btn .ic { font-size:14px; line-height:1; }
 .de-board.dragging .de-board-tools { opacity:.35; transition:opacity .2s; }
+/* 背面那块立牌的右下角按钮组：贴在 .de-face.de-back 里，位置与正面那枚「放大查看」对齐
+   （12px = 正面 right 公式在 560px 宽立牌下的实际内缩量）。放在翻面里 → 跟着 180° 一起翻，不用 JS 显隐。 */
+.de-back-tools { position:absolute; right:12px; bottom:7%; z-index:9;
+  display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
+.de-board.dragging .de-back-tools { opacity:.35; transition:opacity .2s; }
 .de-board { position:relative; width:min(560px,90%); aspect-ratio:4200/5360; transform-style:preserve-3d;
   transform:rotateX(var(--de-tilt,0deg)) rotateY(var(--de-rot,-15deg)); transition:transform .1s linear;
   cursor:grab; touch-action:pan-y; will-change:transform; }
@@ -940,9 +945,12 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .de-img { position:absolute; inset:0; width:100%; height:100%; object-fit:fill; display:block; user-select:none; -webkit-user-drag:none; }
 /* <picture> 只做格式分支，不要产生盒子，否则 .de-img 的绝对定位父级会错位 */
 .de-face picture, .de-front picture, .de-eco-front picture { display:contents; }
-/* 内联占位图：主图未到时先铺一层模糊海报轮廓（主图为不透明整图，加载完成后自然完全遮盖） */
+/* 内联占位图：主图未到时先铺一层模糊海报轮廓（主图为不透明整图，加载完成后自然完全遮盖）
+   ⚠️ 这里**不能**用 filter:blur() —— 见下方 .de-char 的说明：face 内任何 filter 都会让整个
+   face 逃出 backface-visibility:hidden。好在 22px 的小图被 object-fit:fill 拉伸 25 倍时，
+   浏览器默认就走平滑插值，本身就是糊的，不需要再叠加 blur。 */
 .de-lqip { position:absolute; inset:0; width:100%; height:100%; object-fit:fill; display:block;
-  filter:blur(6px) saturate(1.04); transform:scale(1.035); pointer-events:none; user-select:none; }
+  transform:scale(1.035); pointer-events:none; user-select:none; }
 
 /* 底板边缘：模拟板材厚度 */
 .de-edge { position:absolute; top:0; bottom:0; width:18px; pointer-events:none;
@@ -951,20 +959,32 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 .de-edge.r { right:0; transform:translateX(9px) rotateY(90deg); transform-origin:left center; }
 
 /* 人物分层
-   ⚠️ 底图是「无人版」（tools/mkplate.py 出的），人物全靠这 5 层拼出来 —— 底图里要是
+   ⚠️ 底图是「无人版」（tools/mkplate.py 出的），人物全靠这几层拼出来 —— 底图里要是
       也烘焙了人物，做动作时底图那个人不跟着动，就会和分层叠成重影。
-   落地阴影原本烘焙在底图里，改无人版后用 filter 补回来（尺寸按海报 28px/52px × 显示缩放）。 */
-.de-char { position:absolute; left:33.0952%; top:17.3507%; width:33.5714%; height:60.8209%; transform-origin:50% 100%;
+   ⚠️⚠️ 这块人物层**绝对不能用 CSS filter**（哪怕只有 1px 的 drop-shadow）—— Chrome 实测：
+      face 内的子元素一旦带 filter，整个 face 就逃出 backface-visibility:hidden，
+      结果是「正面那张立牌图盖在背面之上」，而且看背面时人物会被渲染成一整块白色剪影。
+      落地感改用 ::before 的 radial-gradient 软阴影（纯背景色，不产生 filter）。
+   ⚠️ 盒子的 left/top/width/height 与两个转动轴心由 tools/mkchar.py 算出，
+      写在 media/de_char_layout.json，构建时注入下面这些占位符 —— 换立牌别再手抄数字。 */
+.de-char { position:absolute;
+  left:32.5686%; top:17.3858%; width:34.8152%; height:57.7586%;
+  transform-origin:50% 100%;
   animation:deIdle 5.2s ease-in-out infinite;
-  filter:drop-shadow(0 7px 13px rgba(12,40,84,.28));
   opacity:0; transition:opacity .42s ease; }
-/* 5 个分层全部 load 完成后由 JS 加 .ready 整体淡入，避免"身体→头→手"逐块弹出的拼装感 */
+/* 贴脚的软阴影（替代原来的 drop-shadow）：压在人物几层之下（伪元素先绘制） */
+.de-char::before { content:''; position:absolute; left:9%; right:9%; bottom:.6%; height:4.6%;
+  border-radius:50%; pointer-events:none;
+  background:radial-gradient(ellipse at center, rgba(12,40,84,.32) 0%, rgba(12,40,84,.17) 44%, rgba(12,40,84,0) 72%); }
+/* 背面是另一块立牌（不同版式、人物大小不同），单独一套盒尺寸 */
+.de-back .de-char { left:31.6762%; top:17.3582%; width:36.6476%; height:60.7985%; }
+/* 各层全部 load 完成后由 JS 加 .ready 整体淡入，避免"身体→头→手"逐块弹出的拼装感 */
 .de-char.ready { opacity:1; }
 .de-l { position:absolute; inset:0; width:100%; height:100%; display:block; pointer-events:none; }
-/* ⚠️ 人物分层的转动轴心必须与 media/de_char_*.webp 对应：
-   换立牌人物（男/女）后跑 tools/mkchar.py，把它打印的两个百分比抄到这里 */
-.de-l-head { transform-origin:49.36% 22.30%; }
-.de-l-arm  { transform-origin:38.16% 38.61%; }
+/* ⚠️ 转动轴心必须与 media/de_char*_*.webp 对应（两块立牌同画布，轴心通用）：
+   换立牌人物（男/女）后跑 tools/mkchar.py，它会顺手刷新 de_char_layout.json */
+.de-l-head { transform-origin:48.91% 22.32%; }
+.de-l-arm  { transform-origin:38.81% 38.63%; }
 .de-l-tab  { transform-origin:84.75% 41.87%; }
 @keyframes deIdle { 0%,100%{ transform:translateY(0) rotate(0deg);} 50%{ transform:translateY(-5px) rotate(.3deg);} }
 /* 动作：打招呼（整身轻快点头）/ 转身（原地侧身）/ 转到背面 / 复位
@@ -1023,10 +1043,14 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   padding:4px 10px; border-radius:14px; cursor:pointer; transition:all .25s; white-space:nowrap; }
 .de-bi-back-btn:hover { background:#e2e9f8; }
 
-/* 背撑支架 */
+/* 背撑支架
+   ⚠️ 同样不能用 filter（见 .de-char 处的说明）：它自身也带 backface-visibility:hidden +
+   rotateY(180deg)，挂 drop-shadow 会把它从隐藏状态里拽出来、并可能污染整个 board 的合成。 */
 .de-strut { position:absolute; left:7.5%; right:7.5%; top:11%; bottom:11%; transform:translateZ(-30px) rotateY(180deg);
-  backface-visibility:hidden; -webkit-backface-visibility:hidden; pointer-events:none;
-  filter:drop-shadow(0 14px 24px rgba(15,30,60,.2)); }
+  backface-visibility:hidden; -webkit-backface-visibility:hidden; pointer-events:none; }
+/* 立牌转到背面(rot>90)时把支架淡出——strut 在 board-local z=-30,翻 180° 之后世界 z 变 +28.98,
+   比 back face(+8.69)更靠观察者,会盖在背面图上. 实物立牌照片里反面也不会出现挡在画面前的支架。*/
+.de-board.is-back .de-strut { opacity:0; transition:opacity .35s ease; }
 .de-strut .rail { position:absolute; top:0; bottom:0; width:6.2%; border-radius:3px;
   background:linear-gradient(90deg,#98a2b2 0%,#e3e8f0 22%,#c3cbd8 46%,#f4f7fb 58%,#a8b1c0 80%,#838d9d 100%); }
 .de-strut .rail.l { left:0; }
@@ -1763,24 +1787,13 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
           <div class="de-board" id="deBoard">
             <div class="de-edge l"></div>
             <div class="de-edge r"></div>
-            <div class="de-face de-back"><div class="de-bi">
-  <div class="de-bi-top"><i></i>安恒信息 · 营销中心<span class="de-bi-back-btn" data-de-front>查看正面能力全景 →</span></div>
-  <div class="de-bi-mid">
-    <div class="n">营销AI小秘</div>
-    <div class="s">超级数字员工</div>
-    <div class="de-bi-sep"></div>
-    <div class="t">从市场洞察，到成单交付</div>
-    <div class="d">一块立牌，装下营销全流程的 AI 能力。正面是能力全景，背面是它每天在做的事。</div>
-    <div class="de-bi-spec">
-      <span><b>面板</b> 5mm 复合板</span><span><b>支架</b> 铝合金背撑</span>
-      <span><b>工艺</b> 高清微喷</span><span><b>尺寸</b> 420 × 536 mm</span>
-    </div>
-  </div>
-  <div class="de-bi-foot">
-    <span class="code">DAS-SECURITY · MARKETING AI · 2026</span>
-    <span class="mat">背面视图 · BACK</span>
-  </div>
-</div></div>
+            <div class="de-face de-back">
+              <img class="de-lqip" src="data:image/webp;base64,UklGRhQBAABXRUJQVlA4IAgBAACwBwCdASoWABwAPrFIn0snJCKhsBgIAOAWCWMArDLshZUf+qk9nz/93SUiWRAjwAuUXJi8zq1gJUDHfocbHf2PCq2pCPYAAM4zN8UamejQ2t05wMbMH7gwi9ra75LXZEgh/absUGWJW9UyPTRA8/Ai9E4lfsR2pNGdDtYlhxLgnDLdOpImVWC/+QFgw3m99bJPGW4skfC2MjAhUTqmosohkZz+CHBtdI5lEO39kBTXehfYYSgECAxLzMGUkl8ew75YXOUQ3OdD/LfmTKiHXWRoQ0Y0YuRP23QGlrVWvhTwBLS08M2qQaXzBBCPz4MyBWQbUhTjqIjbML3yEUUT4p/cMxIRFa0eYAA=" alt="" aria-hidden="true">
+              <picture><source type="image/avif" srcset="media/de_board_back_m.avif 640w, media/de_board_back_1x.avif 560w, media/de_board_back.avif 1120w" sizes="(max-width:768px) 320px, 560px"><img class="de-img" src="media/de_board_back_1x.webp" srcset="media/de_board_back_m.webp 640w, media/de_board_back_1x.webp 560w, media/de_board_back.webp 1120w" sizes="(max-width:768px) 320px, 560px" width="560" height="715" alt="营销AI小秘 场景能力立牌 背面" decoding="async" fetchpriority="low"></picture>
+              <div class="de-char" id="deCharBack" title="点我切换动作"><img class="de-l de-l-body" src="media/de_char_b_body.webp?v=1790562927" alt="" decoding="async"><img class="de-l de-l-tab" src="media/de_char_b_tab.webp?v=1790562931" alt="" decoding="async"><img class="de-l de-l-arm" src="media/de_char_b_arm.webp?v=1790562934" alt="" decoding="async"><img class="de-l de-l-head" src="media/de_char_b_head.webp?v=1790562929" alt="" decoding="async"></div>
+              <div class="de-sheen"></div>
+              <div class="de-back-tools"><button class="de-lb-btn" type="button" data-de-front><span class="ic">↩</span>查看正面能力全景 →</button><button class="de-lb-btn" type="button" data-lb-open="deLbBack"><span class="ic">🔍</span>放大查看</button></div>
+            </div>
             <div class="de-strut">
               <div class="hinge"></div>
               <div class="rail l"></div>
@@ -1791,9 +1804,9 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
               <div class="tagline">铝合金背撑 · 稳固落地</div>
             </div>
             <div class="de-face de-front">
-              <img class="de-lqip" src="data:image/webp;base64,UklGRhIBAABXRUJQVlA4IAYBAADwBQCdASoWABwAPrFKoEsnJCMhsBgIAOAWCWMAqRS5Os+f/APYeI67ZJ3ItaTpp9WEMqe2XYwWAADOMzfFGppG2hq31PxRd8Iudd/SrneZUCPQCbSPcoa2MS264jjtBf3PmWx7EgTRwx6YKXXCahPFVXV2hlDf9ybieM5UaTGnVnlyzFayf3PhCGVPRWVCOM1Hd/tN8lrCZmtHOCJkMlFUg1gstQt2noGUt+lzDZhWKW456ildO2cqX4zAXW0aFPXkOkPgf0dG9Cqr4G1U9mO4cVu+pAlsJTJ9qDLnC60SlW2G2eQBT3YRQuvtLp0iDYWzylv1FyNLkiFDo35sbY8ApvnUAAAA" alt="" aria-hidden="true">
+              <img class="de-lqip" src="data:image/webp;base64,UklGRjQBAABXRUJQVlA4ICgBAABwBgCdASoWABwAPrFMokunJCMhqAqo4BYJYgCdMoM6LKTz7YtlQ4yHvAj5Yme928ARQAeDFuVrk3r6XgAAzjNktoN59Oz43+e1wxbIqOZfmsHznv2JcAOs+npGZzIBuEgj4Woilv4xtL7KCXuNYrL/gZbwtQyqppXXJC3pP/YOn1HoiH/6wMZ8PuTb7T9oQD9QW7JjH44nu+ePhaj8Zi1pzrmDrgDBGfI2Il9SM/A3xXT060sNnNoghviIrvUbRH19iY/l8cAG1kwYJKf0cKehKY0knYwvSiFvGFEzXfuSw7H+2Bcoek6r6CBs5NF6N51nAtU/sy57LLy90w1Yq/ypPwaiNv6w6sjzB8l9zqAR+XP9kbzLXDscUnhabGLqfcqp+qtHVAygAA==" alt="" aria-hidden="true">
               <picture><source type="image/avif" srcset="media/de_board_front_m.avif 640w, media/de_board_front_1x.avif 560w, media/de_board_front.avif 1120w" sizes="(max-width:768px) 320px, 560px"><img class="de-img" src="media/de_board_front_1x.webp" srcset="media/de_board_front_m.webp 640w, media/de_board_front_1x.webp 560w, media/de_board_front.webp 1120w" sizes="(max-width:768px) 320px, 560px" width="560" height="715" alt="营销AI小秘 场景能力立牌" decoding="async" fetchpriority="high"></picture>
-              <div class="de-char" id="deChar" title="点我切换动作"><img class="de-l de-l-body" src="media/de_char_body.webp?v=1790254652" alt="" decoding="async"><img class="de-l de-l-tab" src="media/de_char_tab.webp?v=1790254658" alt="" decoding="async"><img class="de-l de-l-arm" src="media/de_char_arm.webp?v=1790254660" alt="" decoding="async"><img class="de-l de-l-head" src="media/de_char_head.webp?v=1790254655" alt="" decoding="async"></div>
+              <div class="de-char" id="deChar" title="点我切换动作"><img class="de-l de-l-body" src="media/de_char_body.webp?v=1790562914" alt="" decoding="async"><img class="de-l de-l-tab" src="media/de_char_tab.webp?v=1790562919" alt="" decoding="async"><img class="de-l de-l-arm" src="media/de_char_arm.webp?v=1790562921" alt="" decoding="async"><img class="de-l de-l-head" src="media/de_char_head.webp?v=1790562916" alt="" decoding="async"></div>
               <div class="de-sheen"></div>
             </div>
           </div>
@@ -1820,6 +1833,14 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
   <div class="de-lb-stage">
     <img class="de-lb-base" alt="" aria-hidden="true">
     <img class="de-lb-hi" alt="营销AI小秘 场景能力立牌 放大图" decoding="async">
+  </div>
+  <div class="de-lb-tip"><span class="ic">🔍</span> 点图片 1× / 2× 切换 · 点空白处或按 Esc 关闭</div>
+</div>
+  <div class="de-lb" id="deLbBack" data-lb data-base="media/de_board_back_lb_1x.webp" data-avif="media/de_board_back_lb_zoom.avif" data-webp="media/de_board_back_lb_zoom.webp">
+  <span class="cl" title="关闭">✕</span>
+  <div class="de-lb-stage">
+    <img class="de-lb-base" alt="" aria-hidden="true">
+    <img class="de-lb-hi" alt="营销AI小秘 场景能力立牌 背面 放大图" decoding="async">
   </div>
   <div class="de-lb-tip"><span class="ic">🔍</span> 点图片 1× / 2× 切换 · 点空白处或按 Esc 关闭</div>
 </div>
@@ -2229,6 +2250,7 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
   function apply(){
     board.style.setProperty('--de-rot', rot + 'deg');
     board.style.setProperty('--de-tilt', tilt + 'deg');
+    board.classList.toggle('is-back', rot > 90);
   }
   apply();
 
@@ -2355,14 +2377,18 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
     kpiCards.forEach(function(o){ o.classList.remove('open'); });
   });
 
-  /* ---------- 人物动作：打招呼 / 转身 / 转到背面 / 复位 ---------- */
-  var charEl = document.getElementById('deChar');
-  /* 5 个分层图全部就绪后整体淡入，避免逐块弹出；2.5s 兜底强制显示，防止图片异常时人物消失 */
-  (function(){
-    if(!charEl) return;
-    var imgs = Array.prototype.slice.call(charEl.querySelectorAll('img'));
+  /* ---------- 人物动作：打招呼 / 转身 / 转到背面 / 复位 ----------
+     正反两面各有一块立牌、各有一个 .de-char（#deChar / #deCharBack）。
+     两面的人物都是同一套 4 层素材切出来的，所以动作类直接同时加到两块上，
+     转到哪一面看到的人都在动 —— 「两面的打招呼 / 转身表现一致」。 */
+  var charEls = Array.prototype.slice.call(document.querySelectorAll('.de-char'));
+  var charEl = charEls[0] || null;
+  /* 每块立牌的分层图全部就绪后各自整体淡入，避免逐块弹出；
+     2.5s 兜底强制显示，防止图片异常时人物消失 */
+  charEls.forEach(function(el){
+    var imgs = Array.prototype.slice.call(el.querySelectorAll('img'));
     var left = imgs.length, shown = false;
-    function ready(){ if(shown) return; shown = true; charEl.classList.add('ready'); }
+    function ready(){ if(shown) return; shown = true; el.classList.add('ready'); }
     imgs.forEach(function(im){
       function one(){ if(--left <= 0) ready(); }
       if(im.complete && im.naturalWidth){ one(); }
@@ -2370,7 +2396,7 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
     });
     if(left <= 0) ready();
     setTimeout(ready, 2500);
-  })();
+  });
   var sayEl = document.getElementById('deSay');  var btns = Array.prototype.slice.call(document.querySelectorAll('.de-act'));
   var CLS = ['act-hello', 'act-turn'];
   var CYCLE = ['hello', 'turn', 'back', 'reset'];
@@ -2378,10 +2404,11 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   function play(a){
-    if(!charEl) return;
-    CLS.forEach(function(c){ charEl.classList.remove(c); });
-    void charEl.offsetWidth;
-    if(a === 'hello' || a === 'turn') charEl.classList.add('act-' + a);
+    charEls.forEach(function(el){
+      CLS.forEach(function(c){ el.classList.remove(c); });
+      void el.offsetWidth;
+      if(a === 'hello' || a === 'turn') el.classList.add('act-' + a);
+    });
     btns.forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-act') === a); });
     if(a === 'back') flipBoard(true);
     else if(a === 'reset') flipBoard(false);
@@ -2403,16 +2430,16 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
   });
 
   /* 点击人物：按 打招呼 → 转身 → 转到背面 → 复位 循环 */
-  if(charEl){
-    charEl.addEventListener('click', function(e){
+  charEls.forEach(function(el){
+    el.addEventListener('click', function(e){
       e.stopPropagation();
       ci = (ci + 1) % CYCLE.length;
       play(CYCLE[ci]);
     });
-  }
+  });
 
   /* 入场时自动打一次招呼 */
-  if(!reduce && charEl){
+  if(!reduce && charEls.length){
     setTimeout(function(){ play('hello'); ci = 0; }, 2400);
   }
 })();
