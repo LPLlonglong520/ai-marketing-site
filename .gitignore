@@ -1,4 +1,6 @@
 .workbuddy/
 _deploy/
 _qa/
-_qa_shot.py
+_qa*.py
+_qa*.html
+_qa*.js
