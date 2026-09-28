@@ -2092,20 +2092,36 @@ DE_CSS = '''<style>
 /* 入口标签：没配链接的走「纯文字」，不做按钮外观，避免误导点击 */
 .ent-chip { display:inline-flex; align-items:center; gap:4px; border-radius:9px; }
 .ent-n { line-height:1.42; }
-/* ── 可点击入口（配了链接的）：文字链接，主题色渐变 + 虚线底 + ↗ ──
-   ⚠️ 渐变文字用 background-image（不能用 background 简写，否则 clip 会被重置） */
-a.ent-a { display:inline-flex; align-items:center; gap:4px; padding:0 0 1px; text-decoration:none;
-  border-bottom:1px dashed color-mix(in srgb, var(--cc,#1e6fd9) 48%, #fff);
-  transition:border-color .2s, border-bottom-style .2s; }
-a.ent-a .ent-n {
-  background-image:linear-gradient(94deg, var(--cc,#1e6fd9) 0%,
-    color-mix(in srgb, var(--cc,#1e6fd9) 46%, #6fb0ff) 100%);
-  -webkit-background-clip:text; background-clip:text;
-  color:transparent; -webkit-text-fill-color:transparent; }
+/* ── 可点击入口（配了链接的）：实心胶囊按钮 ──
+   设计：主题色渐变填充 + 白色粗体文字 + 右侧圆形 ↗ 徽标；hover 上浮发光、按下回弹。
+   ⚠️ .ent-n 历史上是「渐变文字」（background-clip:text + 透明色），
+      做成实心按钮后必须显式重置回白实色，否则文字会完全看不见。
+   ⚠️ 渐变用 background-image（不能用 background 简写，会重置 background-clip）。 */
 .ent-arw { font-style:normal; font-size:10px; line-height:1; flex:none;
   color:color-mix(in srgb, var(--cc,#1e6fd9) 78%, #6b7a9b); transition:transform .2s; }
-a.ent-a:hover, a.ent-a:focus-visible { outline:none;
-  border-bottom-style:solid; border-bottom-color:var(--cc,#1e6fd9); }
+a.ent-a { display:inline-flex; align-items:center; gap:7px; vertical-align:middle;
+  max-width:100%; padding:4px 10px 4px 11px; border-radius:999px; text-decoration:none;
+  background-image:linear-gradient(135deg,
+    var(--cc,#1e6fd9) 0%,
+    color-mix(in srgb, var(--cc,#1e6fd9) 56%, #4d9bff) 100%);
+  border:1px solid color-mix(in srgb, var(--cc,#1e6fd9) 62%, #dbe9ff);
+  box-shadow:0 3px 10px color-mix(in srgb, var(--cc,#1e6fd9) 30%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.3);
+  transition:transform .18s ease, box-shadow .22s ease, filter .2s ease; }
+a.ent-a .ent-n { background-image:none;
+  -webkit-background-clip:border-box; background-clip:border-box;
+  color:#fff; -webkit-text-fill-color:#fff; font-weight:700; }
+a.ent-a .ent-arw { display:inline-flex; align-items:center; justify-content:center;
+  width:15px; height:15px; border-radius:50%; font-size:9px;
+  background:rgba(255,255,255,.24); color:#fff; }
+a.ent-a:hover, a.ent-a:focus-visible { outline:none; transform:translateY(-1.5px);
+  filter:brightness(1.07);
+  box-shadow:0 7px 18px color-mix(in srgb, var(--cc,#1e6fd9) 42%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.36); }
+a.ent-a:active { transform:translateY(0); filter:brightness(.96);
+  box-shadow:0 2px 6px color-mix(in srgb, var(--cc,#1e6fd9) 26%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.24); }
+a.ent-a:focus-visible { outline:2px solid color-mix(in srgb, var(--cc,#1e6fd9) 42%, #cfe4ff); outline-offset:2px; }
 a.ent-a:hover .ent-arw, a.ent-a:focus-visible .ent-arw { transform:translate(1.5px,-1.5px); }
 /* 入口列提示条（content.md 里「入口提示」留空即不显示） */
 .cap-ent-hint { display:flex; align-items:center; gap:7px; margin:0 24px 12px; padding:8px 12px; border-radius:9px;
@@ -2445,16 +2461,45 @@ a.pth-a .ent-arw { margin-left:3px; font-size:9px; }
 .plan-tag { color:#ff7583; }
 .cap-tbl td.ent { color:rgba(214,230,255,.62); }
 .cap-tbl td.ent-span, .cap-tbl td.dt-span { background:rgba(255,255,255,.035); }
-/* 可点击入口（深色底）：亮白 → 浅蓝渐变文字 + 亮色虚线下划，和不可点的灰字拉开对比 */
-a.ent-a { color:#fff;
-  border-bottom-color:rgba(150,185,255,.6); }
-a.ent-a .ent-n {
-  background-image:linear-gradient(94deg, #ffffff 0%,
-    color-mix(in srgb, var(--cc,#1e6fd9) 36%, #cfe4ff) 100%);
-  -webkit-background-clip:text; background-clip:text;
-  color:transparent; -webkit-text-fill-color:transparent; }
-a.ent-a .ent-arw { color:#7fb2ff; }
-a.ent-a:hover, a.ent-a:focus-visible { border-bottom-color:#9dc4ff; }
+/* 可点击入口（深色底）：实心胶囊按钮的深色调校 —— 填充更「自发光」，
+   描边压一档避免白字周围出现硬边；hover 外发光加强，和不可点的灰字彻底拉开层级。 */
+a.ent-a {
+  background-image:linear-gradient(135deg,
+    color-mix(in srgb, var(--cc,#1e6fd9) 84%, #14418f) 0%,
+    color-mix(in srgb, var(--cc,#1e6fd9) 44%, #6cb6ff) 100%);
+  border-color:color-mix(in srgb, var(--cc,#1e6fd9) 62%, #9dc4ff);
+  box-shadow:0 4px 14px color-mix(in srgb, var(--cc,#1e6fd9) 44%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.26); }
+a.ent-a .ent-n { color:#fff; -webkit-text-fill-color:#fff; }
+a.ent-a .ent-arw { background:rgba(255,255,255,.2); color:#fff; }
+a.ent-a:hover, a.ent-a:focus-visible {
+  box-shadow:0 8px 22px color-mix(in srgb, var(--cc,#1e6fd9) 54%, transparent),
+    inset 0 1px 0 rgba(255,255,255,.32); }
+a.ent-a:focus-visible { outline-color:color-mix(in srgb, var(--cc,#1e6fd9) 38%, #d8e8ff); }
+
+/* ── 入口胶囊按钮 · 响应式分档（放在样式表最后，确保覆盖前面两套主题） ──
+   实测（2026-09-28）：整尺寸胶囊比原来的文字链接宽约 32px，会把「入口/链接」列的
+   最小内容宽度顶上去，导致 1000~1150px 区间表格出现 16~41px 横向滚动；≤768px 还会
+   折成多行糊成一团。所以按宽度分四档：
+     ≥1181  完整胶囊（上一条）
+     ≤1180  收一档字号/内边距，宽度回到接近原来文字链接，消除表格横滚
+     ≤768   四列仍并排但每列很窄 → 允许折行，改「圆角标签」形态，折行也不像糊块
+     ≤640   表格已变堆叠卡，横向宽敞 → 回到单行胶囊，和桌面观感一致 */
+@media (max-width:1180px) {
+  a.ent-a { padding:2px 7px; gap:3px; }
+  a.ent-a .ent-n { font-size:10.5px; }
+  a.ent-a .ent-arw { width:11px; height:11px; font-size:6.5px; }
+}
+@media (max-width:768px) {
+  a.ent-a { border-radius:10px; padding:2px 7px; gap:3px; align-items:flex-start; max-width:100%; }
+  a.ent-a .ent-n { font-size:10.5px; line-height:1.32; word-break:keep-all; }
+  a.ent-a .ent-arw { width:11px; height:11px; font-size:6.5px; margin-top:2px; }
+}
+@media (max-width:640px) {
+  a.ent-a { border-radius:999px; padding:4px 10px; gap:6px; align-items:center; }
+  a.ent-a .ent-n { font-size:11.5px; line-height:1.42; }
+  a.ent-a .ent-arw { width:14px; height:14px; font-size:8px; margin-top:0; }
+}
 .cap-ent-hint { color:rgba(228,240,255,.92); background:rgba(255,255,255,.055);
   border-color:color-mix(in srgb, var(--cc,#1e6fd9) 44%, transparent); }
 
