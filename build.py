@@ -2040,7 +2040,7 @@ DE_CSS = '''<style>
    样式，让每张卡窄到 ~470px 时 4 列表格依然读得下去 */
 .cap-grid { display:grid; grid-template-columns:repeat(__CAP_COLS__,minmax(0,1fr)); gap:20px; }
 @media (max-width:__CAP_BP__px) { .cap-grid { grid-template-columns:1fr; } }
-/* 两列但还不够宽的区间（1025 ~ 1560）：压缩留白 + 允许表头换行，防止挤压换行 */
+/* 两列但还不够宽的区间（1025 ~ 1560）：压缩卡片头部留白 */
 @media (min-width:__CAP_BP_NEXT__px) and (max-width:1560px) {
   .de-cap-sec .de-wrap { padding:0 24px; }
   .cap-top { padding:20px 18px 13px; gap:11px; }
@@ -2048,17 +2048,11 @@ DE_CSS = '''<style>
   .cap-desc { padding:0 18px 12px; }
   .cap-loop { margin:0 18px 12px; padding:11px 13px 12px; }
   .cap-loop-chain .cp { font-size:11px; padding:3px 8px; }
-  .cap-tbl-wrap { padding:0 10px 12px; }
-  .cap-tbl { font-size:12px; }
-  .cap-tbl th { white-space:normal; padding:9px 9px; font-size:11px; }
-  .cap-tbl td { padding:9px 9px; }
-  .cap-tbl td.sk { min-width:76px; }
-  .cap-tbl td.ent { white-space:normal; }
-  .cap-tbl th, .cap-tbl td { overflow-wrap:anywhere; }
-  .cap-tbl th:nth-child(1), .cap-tbl td.sk { width:20%; }
-  .cap-tbl th:nth-child(3), .cap-tbl td.dt { width:15%; }
-  .cap-tbl th:nth-child(4), .cap-tbl td.ent, .cap-tbl td.ent-m { width:17%; }
   .cap-row-side { max-width:60%; }
+  /* ⚠️ 这里原先还写了一套 `.cap-tbl th/td` 的紧凑表格样式（padding 9px、字号 12px、
+      列宽 20/15/17…），**全是死代码**：本块位于基础 `.cap-tbl td { padding:12px }` 等规则之前，
+      特异性相同、后者在后，直接把它们覆盖了 —— 实测 1366px 下 computed style 全是基础值。
+      表格的中屏适配已挪到样式表末尾的独立媒体查询（搜「两列但卡片不够宽」）。 */
 }
 .cap-card { position:relative; background:var(--white); border:1px solid rgba(15,35,80,.07); border-radius:20px; overflow:hidden;
   box-shadow:var(--shadow); transition:transform .34s cubic-bezier(.4,0,.2,1), box-shadow .34s; display:flex; flex-direction:column; }
@@ -2102,25 +2096,54 @@ DE_CSS = '''<style>
 .cap-desc { padding:0 24px 18px; font-size:13.5px; color:var(--muted); line-height:1.78; }
 /* 表格撑满卡片剩余高度：并排两卡行数不同时，行数少的一侧自动加大行距，使两表底部对齐 */
 .cap-tbl-wrap { padding:0 14px 14px; overflow-x:auto; flex:1 1 auto; display:flex; flex-direction:column; }
-.cap-tbl { width:100%; flex:1 1 auto; min-height:0; border-collapse:separate; border-spacing:0; font-size:12.5px; table-layout:auto; }
-.cap-tbl th:nth-child(1), .cap-tbl td.sk { width:17%; }
-.cap-tbl th:nth-child(3), .cap-tbl td.dt { width:14%; }
-.cap-tbl th:nth-child(4), .cap-tbl td.ent, .cap-tbl td.ent-m { width:16%; }
-/* 表头：底色带主题色 + 2px 主题色底线 —— 让「表头」真正立起来，不再像第一行普通数据 */
+/* 固定列宽网格：8 张卡共用同一套列宽，并排两卡的表格竖线严格对齐。
+   ⚠️ 原来是 table-layout:auto —— 浏览器按每张卡自身内容长度分配宽度，实测四张表分别是
+      「功能/介绍/数据来源/入口 = 110/234/90/211」「110/274/90/171」「110/314/90/131」…
+      同一行两张卡的竖线完全对不上；且「数据来源」被压到 90px（只放得下 5 个字），
+      「客户管理系统」「市场情报分析平台」「内外部数据集成」全部被迫折成两行。
+   → 改成 fixed + 百分比：宽度只由表头决定，跨卡恒定。列宽按「实测单行需求」分配：
+      · 功能 18%（「经营指标全景推送」这类 8 字名可放，更长的折行，符合名词习惯）
+      · 介绍 35%（最长的一列，越宽折行越少 —— 折行数直接决定行高）
+      · 数据来源 20%（**必须 ≥124px**：「市场情报分析平台」「内外部数据集成」都是 8 个全角字
+        ≈ 100px + 左右 padding 24px，低于这个值就被迫折行 —— 原 90px 就是这么坏的）
+      · 入口 27%（**必须 ≥171px**：CTA 胶囊实测 106 / 147 / 187px 三档，
+        171px 才能让 147px 那三个「营销AI小秘-练话术」不折；187px 那个最长，
+        折成两行 —— 但断点落在「（PC）」前，读起来仍然完整）
+      实测：8 张表全部 116/226/129/174，并排两卡竖线严格同一条。 */
+.cap-tbl { width:100%; flex:1 1 auto; min-height:0; border-collapse:separate; border-spacing:0; font-size:12.5px; table-layout:fixed; }
+.cap-tbl th:nth-child(1), .cap-tbl td.sk { width:18%; min-width:0; }
+.cap-tbl th:nth-child(2) { width:35%; }
+.cap-tbl th:nth-child(3), .cap-tbl td.dt { width:20%; }
+.cap-tbl th:nth-child(4), .cap-tbl td.ent, .cap-tbl td.ent-m { width:27%; }
+/* 表头：底色带主题色 + 2px 主题色底线 —— 让「表头」真正立起来，不再像第一行普通数据。
+   ⚠️ white-space 用 normal 而非 nowrap：固定布局下表头若强行不折行会顶出单元格。
+   一律垂直居中，与数据格同一条中轴 */
 .cap-tbl th { background:color-mix(in srgb, var(--cc,#1e6fd9) 13%, #fff); color:#33415e; font-weight:800; font-size:11.5px; text-align:left;
-  padding:10px 12px; border-bottom:2px solid color-mix(in srgb, var(--cc,#1e6fd9) 46%, #fff); white-space:nowrap; }
+  padding:10px 12px; border-bottom:2px solid color-mix(in srgb, var(--cc,#1e6fd9) 46%, #fff);
+  white-space:normal; vertical-align:middle; overflow-wrap:break-word; }
 .cap-tbl th:first-child { border-radius:10px 0 0 0; }
 .cap-tbl th:last-child { border-radius:0 10px 0 0; }
-/* 数据行：行距放宽 1px、分隔线提一档 —— 长文案多行时不再糊成一片 */
-.cap-tbl td { padding:12px 12px; border-bottom:1px solid rgba(15,35,80,.08); color:#4a5670; line-height:1.62; vertical-align:top; }
+/* 数据行：垂直居中对齐 —— 两表底边对齐靠 .cap-tbl 的 flex 拉伸，行高会被撑开，
+   若用 top 对齐，文字会贴在这条「被撑高」的行的顶部、下方留一大块空，看起来像没对齐。
+   居中对齐后内容落在行的中轴上，与相邻列天然齐平。
+   overflow-wrap:break-word 兜底长串（如「AH22-P08-0502」），固定布局下不再可能撑破卡片 */
+.cap-tbl td { padding:12px 12px; border-bottom:1px solid rgba(15,35,80,.08); color:#4a5670; line-height:1.62;
+  vertical-align:middle; overflow-wrap:break-word; }
 .cap-tbl tr:last-child td { border-bottom:none; }
-.cap-tbl td.sk { font-weight:700; color:#1f2c48; min-width:104px; }
+/* ⚠️ 这里不能再写 min-width —— 固定列宽由表头一次性决定，
+   数据格上的 min-width 会把该列重新顶宽、跨卡对齐立刻失效 */
+.cap-tbl td.sk { font-weight:700; color:#1f2c48; min-width:0; }
+/* 「示例 / 频次 / 操作提示」这类补充段：降一档色，正文先被读到 */
+.cap-tbl td .dm-x { color:#6f7b8f; }
 .cap-tbl td.sk .plan-tag, .plan-tag { display:block; font-style:normal; font-weight:700; font-size:10px; line-height:1.4;
   color:#e02b3c; margin-top:3px; letter-spacing:.1px; }
-.cap-tbl td.ent { white-space:nowrap; font-size:12px; font-weight:700; color:var(--cc,#1e6fd9); }
+/* 入口列：**不再 nowrap** —— 固定列宽下，超长胶囊（实测「营销AI小秘-挖商机（PC）」187px）
+   会顶出单元格、被 .cap-card 的 overflow:hidden 裁掉半截。改为允许胶囊内部折行，
+   配合 a.ent-a 的 max-width:100% + .ent-n 的 min-width:0，长胶囊折成两行而不是溢出。 */
+.cap-tbl td.ent { font-size:12px; font-weight:700; color:var(--cc,#1e6fd9); }
 /* 入口标签：没配链接的走「纯文字」，不做按钮外观，避免误导点击 */
 .ent-chip { display:inline-flex; align-items:center; gap:4px; border-radius:9px; }
-.ent-n { line-height:1.42; }
+.ent-n { line-height:1.42; min-width:0; }
 /* ── 可点击入口（配了链接的）：实心胶囊按钮 ──
    设计：主题色渐变填充 + 白色粗体文字 + 右侧圆形 ↗ 徽标；hover 上浮发光、按下回弹。
    ⚠️ .ent-n 历史上是「渐变文字」（background-clip:text + 透明色），
@@ -2128,8 +2151,13 @@ DE_CSS = '''<style>
    ⚠️ 渐变用 background-image（不能用 background 简写，会重置 background-clip）。 */
 .ent-arw { font-style:normal; font-size:10px; line-height:1; flex:none;
   color:color-mix(in srgb, var(--cc,#1e6fd9) 78%, #6b7a9b); transition:transform .2s; }
-a.ent-a { display:inline-flex; align-items:center; gap:7px; vertical-align:middle;
-  max-width:100%; padding:4px 10px 4px 11px; border-radius:999px; text-decoration:none;
+a.ent-a { display:inline-flex; align-items:center; gap:5px; vertical-align:middle;
+  max-width:100%; padding:3px 9px; border-radius:999px; text-decoration:none;
+  /* 字号 11px（比正文 12.5px 小一档）—— 胶囊是「标签式 CTA」，略小更精致；
+     更实际的原因：固定列宽下「营销AI小秘-练话术」这类 9 字胶囊在 12px 时实测 147px，
+     1440 两列布局里入口列只有 150px 可用，差 3px 就被硬断成两行。
+     缩到 11px + 收紧内边距后 125px，全站 11 个胶囊里只剩最长那个（14 字）会折行。 */
+  font-size:11px;
   background-image:linear-gradient(135deg,
     var(--cc,#1e6fd9) 0%,
     color-mix(in srgb, var(--cc,#1e6fd9) 56%, #4d9bff) 100%);
@@ -2141,7 +2169,7 @@ a.ent-a .ent-n { background-image:none;
   -webkit-background-clip:border-box; background-clip:border-box;
   color:#fff; -webkit-text-fill-color:#fff; font-weight:700; }
 a.ent-a .ent-arw { display:inline-flex; align-items:center; justify-content:center;
-  width:15px; height:15px; border-radius:50%; font-size:9px;
+  width:13px; height:13px; border-radius:50%; font-size:8px;
   background:rgba(255,255,255,.24); color:#fff; }
 a.ent-a:hover, a.ent-a:focus-visible { outline:none; transform:translateY(-1.5px);
   filter:brightness(1.07);
@@ -2341,7 +2369,8 @@ a.pth-a .ent-arw { margin-left:3px; font-size:9px; }
   .cap-tbl { font-size:12px; }
   .cap-tbl th { white-space:normal; padding:9px 9px; font-size:11px; }
   .cap-tbl td { padding:9px 9px; }
-  .cap-tbl td.sk { min-width:72px; }
+  /* 固定布局下 td 上的 min-width 会与表头的百分比列宽打架，回到 0 交给表头决定 */
+  .cap-tbl td.sk { min-width:0; }
   .cap-tbl td.ent { white-space:normal; }
   .cap-tbl th, .cap-tbl td { overflow-wrap:anywhere; }
   .cap-stage { font-size:11px; }
@@ -2495,6 +2524,8 @@ a.pth-a .ent-arw { margin-left:3px; font-size:9px; }
 .cap-tbl th { background:color-mix(in srgb, var(--cc,#1e6fd9) 22%, transparent); color:#dbe7ff;
   border-bottom-color:color-mix(in srgb, var(--cc,#1e6fd9) 58%, transparent); }
 .cap-tbl td { color:rgba(203,219,248,.82); border-bottom-color:rgba(255,255,255,.085); }
+/* 补充段（示例/频次）深色下降一档，与正文分层 */
+.cap-tbl td .dm-x { color:rgba(188,206,238,.62); }
 .cap-tbl td.sk { color:#fff; }
 .cap-tbl tbody tr:hover { background:color-mix(in srgb, var(--cc,#1e6fd9) 11%, rgba(255,255,255,.02)); }
 .plan-tag { color:#ff7583; }
@@ -2633,6 +2664,390 @@ a.pth-a:hover { background:rgba(255,255,255,.13); }
   .de-eco-stage { min-height:0; padding-bottom:32px; }
   .de-eco-sec { padding:62px 0 70px; }
 }
+
+/* ============ 场景能力集表格：两列但卡片不够宽时的列宽再分配 ============
+   ⚠️ 必须放在样式表**最末尾**。文件中部那条 1025~1560 的同名媒体查询写在基础规则之前，
+      被后面的 `.cap-tbl td { padding:12px }` 等覆盖，一直是死代码（实测 1366 下全是基础值）。
+   两列布局下卡片内容宽 = (视口 − 150) / 2 − 28：1440 → 645px，1366 → 608px，1280 → 578px，1100 → 475px。
+   同一套「功能 / 介绍 / 数据来源 / 入口」，数据来源要 100px、入口胶囊要 126px 才能各占一行；
+   卡片一窄就装不下 —— 把宽度从「介绍」列（本来就长、折行代价最小）挪给这两列，
+   让「数据来源」和 CTA 胶囊始终保持整行，只有最长的那个胶囊会折。 */
+@media (min-width:__CAP_BP_NEXT__px) and (max-width:1560px) {
+  .cap-tbl th:nth-child(1), .cap-tbl td.sk { width:17%; }
+  .cap-tbl th:nth-child(2) { width:33%; }
+  .cap-tbl th:nth-child(3), .cap-tbl td.dt { width:20%; }
+  .cap-tbl th:nth-child(4), .cap-tbl td.ent, .cap-tbl td.ent-m { width:30%; }
+}
+/* 更窄的 1025~1200（卡片内容宽只有 475~515px）：优先保 CTA 胶囊不折行
+   —— 按钮一旦折成两行就不像按钮了；「数据来源」是短标签，折成两行代价最小。
+   所以继续把宽度往入口列压，介绍列随之变窄（长文案多几行，仍可读）。 */
+@media (min-width:__CAP_BP_NEXT__px) and (max-width:1200px) {
+  .cap-tbl th:nth-child(1), .cap-tbl td.sk { width:15%; }
+  .cap-tbl th:nth-child(2) { width:29%; }
+  .cap-tbl th:nth-child(3), .cap-tbl td.dt { width:24%; }
+  .cap-tbl th:nth-child(4), .cap-tbl td.ent, .cap-tbl td.ent-m { width:32%; }
+}
+
+/* ============================================================================
+   第 4 波 · 深色主题「设计令牌统一」(Design Token Consolidation)   2026-09-29
+   ----------------------------------------------------------------------------
+   审计（静态扫 DE_CSS，见 _qa_audit4.py）：
+     · 字号 32 种 —— 10/10.5/11/11.5/12/12.5/13/13.5/14/14.5/15/15.5 十二档全挤在 10~16px
+     · 圆角 21 种 —— 1~16px 几乎每个整数值各被用一次
+     · 阴影 22 种 —— 深色下全是"参数微调过"的纯黑投影，层级几乎看不出差别
+     · 深色底 12+ 种近似海军蓝（#050b1c/#060f25/#0a1735/#0a1a3d/#0b1e46/#0d1f52…）
+     · 灰蓝文字 12+ 种"差不多但不一样"（#8e9cb8/#7f93bb/#9fb6e8/rgba(184,204,242)/…）
+   根因：页面是长期逐次迭代堆出来的，每次只加新值、从不收敛 → 视觉"不整齐"但说不出哪儿不对。
+   本层只做「收敛 + 统一」，不改任何文字 / 数据 / 图标 / 素材 / DOM 结构 / class 名。
+   位置：样式表**最末尾**（优先级最高），整块可回滚。
+   ============================================================================ */
+
+.de-body {
+  /* ── 表面 4 级：深色 UI 的分层靠"表面亮度"，不靠黑投影 ── */
+  --w4-s0:#060f25;   /* 页面底 */
+  --w4-s1:#0a1735;   /* 板块底 */
+  --w4-s2:#0f2551;   /* 卡片面 */
+  --w4-s3:#16366c;   /* 抬升面（hover / 浮层） */
+  /* ── 文本 4 级 ── */
+  --w4-t1:#ffffff;                 /* 标题 */
+  --w4-t2:rgba(216,229,255,.88);   /* 正文 */
+  --w4-t3:rgba(174,196,234,.68);   /* 次要 */
+  --w4-t4:rgba(148,172,212,.48);   /* 最弱（脚注/单位） */
+  /* ── 描边 2 级 ── */
+  --w4-ln:rgba(255,255,255,.075);
+  --w4-ln2:rgba(255,255,255,.135);
+  /* ── 圆角 5 档（+ 胶囊） ── */
+  --w4-r1:9px; --w4-r2:13px; --w4-r3:17px; --w4-r4:22px; --w4-r5:46px; --w4-rp:999px;
+  /* ── 高度 3 档：顶部 1px 高光 + 外扩柔影 ──
+     ⚠️ 纯黑投影压在深蓝底上几乎不可见 —— 深色界面里"看起来抬起来"主要靠**上缘高光边**，
+        黑投影只负责把板块从背景里"垫"开一点点。旧版 22 种阴影都只有黑投影，所以卡片都"平"。 */
+  --w4-e1:inset 0 1px 0 rgba(255,255,255,.055), 0 4px 14px rgba(0,0,0,.24);
+  --w4-e2:inset 0 1px 0 rgba(255,255,255,.085), 0 16px 36px rgba(0,0,0,.38);
+  --w4-e3:inset 0 1px 0 rgba(255,255,255,.10), 0 28px 64px rgba(0,0,0,.54);
+  /* ── 动效 1 条曲线 + 1 档时长（旧版 .18/.2/.22/.25/.26/.28/.3/.32/.34s 混用） ── */
+  --w4-dur:.26s; --w4-ease:cubic-bezier(.4,0,.2,1);
+  /* 页面底统一到令牌（原来 #060f25 与板块底 #0a1735 交界生硬） */
+  background:var(--w4-s0);
+}
+
+/* ── 1. 板块底：统一为「s1 + 顶部主题光晕 + 极弱网格」三层结构 ─────────────────
+      旧版每个板块各写一套径向渐变+网格（flow 有网格线、cap 没有、eco 有绿光、inc 有橙光），
+      层数/强度/网格步长都不一样 → 滚动时"一屏一个风格"。这里统一成同一套构造。 */
+.de-body > .de-cap-sec,
+.de-body > .de-eco-sec {
+  background:
+    radial-gradient(ellipse 64% 34% at 50% 0%, color-mix(in srgb, var(--cc,#3b82f6) 13%, transparent) 0%, transparent 70%),
+    linear-gradient(180deg, var(--w4-s1) 0%, #0a1b41 52%, #081430 100%);
+}
+/* 场景能力集板块补上与业务流一致的极弱网格（遮罩径向淡出），让两块深色底同源 */
+.de-body > .de-cap-sec::before {
+  content:''; position:absolute; inset:0; pointer-events:none; opacity:.30;
+  background-image:linear-gradient(rgba(120,170,255,.075) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(120,170,255,.075) 1px,transparent 1px);
+  background-size:56px 56px;
+  -webkit-mask-image:radial-gradient(ellipse 78% 22% at 50% 0%,#000,transparent 78%);
+  mask-image:radial-gradient(ellipse 78% 22% at 50% 0%,#000,transparent 78%);
+}
+.de-body > .inc-section {
+  background:linear-gradient(180deg,var(--w4-s1) 0%,#0a1738 50%,#0b1c45 100%);
+}
+.de-body > .future-home-section {
+  background:linear-gradient(180deg,var(--w4-s1) 0%,#081530 44%,#050b18 100%);
+}
+/* 板块接缝：统一顶部 1px 冷光，压过原来"深浅底直切"的硬边 */
+.de-body > .de-cap-sec,
+.de-body > .de-eco-sec,
+.de-body > .inc-section,
+.de-body > .future-home-section { box-shadow:inset 0 1px 0 rgba(150,190,255,.10); }
+
+/* ── 2. 区块头统一：eyebrow 胶囊 / H2 / 副标题 三件套同规格 ── */
+.de-body .de-pill,
+.de-body .de-sec-head .de-pill,
+.de-body .de-flow-head .de-pill {
+  border-radius:var(--w4-rp); padding:5px 15px; font-size:12.5px; font-weight:700; letter-spacing:.3px;
+  color:#bccdff; background:rgba(120,160,255,.13); border:1px solid rgba(130,170,255,.26);
+}
+.de-body .de-sec-head { margin-bottom:44px; }
+.de-body .de-flow-head { margin-bottom:30px; }
+.de-body .de-h2,
+.de-body .de-flow-head h2 { font-size:38px; font-weight:800; letter-spacing:-1.15px; line-height:1.24; }
+.de-body .de-lead,
+.de-body .de-flow-head p { color:var(--w4-t3); }
+.de-body .de-lead-sub { color:var(--w4-t4); }
+/* 板块标题（激励 / 未来规划）：与 H2 同族，只是字号小一档 */
+.de-body .inc-title,
+.de-body .future-home-title,
+.de-body .arch-title { letter-spacing:-.9px; color:var(--w4-t1); }
+.de-body .inc-sub,
+.de-body .arch-sub,
+.de-body .future-home-card-desc { color:var(--w4-t3); }
+/* 小节头（跨阶段 · 通用能力 / 生态 · 采购赋能） */
+.de-body .de-sub-head { margin:46px 0 20px; }
+.de-body .de-sub-head span { color:var(--w4-t1); letter-spacing:-.3px; }
+.de-body .de-sub-head::after { background:linear-gradient(90deg,rgba(255,255,255,.16),transparent); }
+.de-body .de-eco-lead { color:var(--w4-t3); font-size:13.5px; line-height:1.85; }
+
+/* ── 3. 卡片：统一「s2 面 + 顶部玻璃高光 + 主题色上缘」三层 ─────────────────
+      旧版 .cap-card 只有一层 145deg 深蓝渐变（且每卡按 --cc 混色），其余卡片又是别的公式，
+      同屏不同卡片"材质"不一致。这里统一：顶光让卡片像玻璃抬起来，主题色只落在上缘条上。 */
+.de-body .cap-card {
+  border-radius:var(--w4-r4); border:1px solid var(--w4-ln2);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0) 30%),
+    linear-gradient(160deg,
+      color-mix(in srgb, var(--cc,#1e6fd9) 12%, var(--w4-s2)),
+      color-mix(in srgb, var(--cc,#1e6fd9) 4%, var(--w4-s1)));
+  box-shadow:var(--w4-e2); overflow:hidden;
+  transition:transform var(--w4-dur) var(--w4-ease), box-shadow var(--w4-dur) var(--w4-ease),
+             border-color var(--w4-dur) var(--w4-ease);
+}
+.de-body .cap-card:hover {
+  transform:translateY(-5px);
+  border-color:color-mix(in srgb, var(--cc,#1e6fd9) 46%, transparent);
+  box-shadow:var(--w4-e3), 0 0 0 1px color-mix(in srgb, var(--cc,#1e6fd9) 30%, transparent);
+}
+/* 上缘主题色条：由"平涂 4px"改为"中间实、两端渐隐"，并把光晕打在条下 —— 更精致 */
+.de-body .cap-card::before {
+  height:3px; border-radius:0;
+  background:linear-gradient(90deg,
+    color-mix(in srgb, var(--cc,#1e6fd9) 55%, transparent) 0%,
+    var(--cc,#1e6fd9) 18%, var(--cc,#1e6fd9) 82%,
+    color-mix(in srgb, var(--cc,#1e6fd9) 55%, transparent) 100%);
+  box-shadow:0 7px 20px color-mix(in srgb, var(--cc,#1e6fd9) 42%, transparent);
+}
+/* 其余"面"类元素统一到同一表面 + 高度语汇 */
+.de-body .de-kpi,
+.de-body .de-bubble,
+.de-body .de-kpi-pop,
+.de-body .cap-row,
+.de-body .inc-card,
+.de-body .arch-card,
+.de-body .future-home-card {
+  border:1px solid var(--w4-ln2);
+  background:linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,0) 32%),
+             linear-gradient(160deg, var(--w4-s2), color-mix(in srgb, var(--w4-s1) 86%, #000));
+  box-shadow:var(--w4-e2);
+  transition:transform var(--w4-dur) var(--w4-ease), box-shadow var(--w4-dur) var(--w4-ease),
+             border-color var(--w4-dur) var(--w4-ease);
+}
+.de-body .de-kpi,
+.de-body .de-bubble { border-radius:var(--w4-r3); }
+.de-body .de-kpi:hover,
+.de-body .de-kpi:focus-visible,
+.de-body .de-kpi.open { transform:translateY(-3px); border-color:rgba(140,120,255,.5);
+  box-shadow:var(--w4-e3), 0 0 0 1px rgba(140,120,255,.22); }
+.de-body .cap-row { border-radius:var(--w4-r2); border-left:3px solid var(--cc,#1e6fd9); }
+.de-body .cap-row:hover { background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0) 30%),
+  color-mix(in srgb, var(--cc,#1e6fd9) 15%, var(--w4-s2)); box-shadow:var(--w4-e2); }
+.de-body .de-kpi-pop { background:var(--w4-s3); border-radius:var(--w4-r3); box-shadow:var(--w4-e3); }
+.de-body .de-kpi-pop::before { background:var(--w4-s3); }
+.de-body .inc-card { border-radius:var(--w4-r4); }
+.de-body .inc-card:hover { border-color:rgba(99,162,255,.34); box-shadow:var(--w4-e3); }
+.de-body .arch-card { border-radius:var(--w4-r4); }
+.de-body .future-home-card { border-radius:var(--w4-r4); box-shadow:var(--w4-e3); }
+/* 卡片内小图标底座：统一圆角与高度 */
+.de-body .cap-ico { border-radius:var(--w4-r3); box-shadow:var(--w4-e1); }
+.de-body .inc-card-icon { border-radius:var(--w4-r3); }
+.de-body .future-home-icon { border-radius:var(--w4-r4); }
+
+/* ── 4. 能力表（深色）：把"表头/正文/分隔/悬停"四件事一次说清 ── */
+.de-body .cap-tbl th {
+  color:#dbe7ff; font-weight:800; font-size:11.5px; padding:10px 12px;
+  background:linear-gradient(180deg,
+    color-mix(in srgb, var(--cc,#1e6fd9) 28%, rgba(9,22,52,.86)),
+    color-mix(in srgb, var(--cc,#1e6fd9) 18%, rgba(9,22,52,.86)));
+  border-bottom:2px solid color-mix(in srgb, var(--cc,#1e6fd9) 62%, transparent);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10);
+}
+.de-body .cap-tbl th:first-child { border-radius:var(--w4-r1) 0 0 0; }
+.de-body .cap-tbl th:last-child  { border-radius:0 var(--w4-r1) 0 0; }
+.de-body .cap-tbl td { color:var(--w4-t2); border-bottom-color:rgba(255,255,255,.075); }
+.de-body .cap-tbl td.sk { color:var(--w4-t1); }
+.de-body .cap-tbl td.dm-x { color:var(--w4-t4); }
+.de-body .cap-tbl tbody tr:hover { background:color-mix(in srgb, var(--cc,#1e6fd9) 10%, rgba(255,255,255,.03)); }
+
+/* ── 5. 胶囊 / 按钮：统一圆角、高度语汇、焦点环 ── */
+.de-body .cap-loop-chain .cp,
+.de-body .cap-jump { border-radius:var(--w4-r1); }
+.de-body .cap-loop { border-radius:var(--w4-r2); }
+.de-body .de-bubble,
+.de-body .cap-ent-hint { border-radius:var(--w4-r2); }
+.de-body .ent-chip { border-radius:var(--w4-rp); }
+.de-body .de-act { border-radius:var(--w4-r2); }
+.de-body .de-lb-btn { border-radius:var(--w4-r2); }
+.de-body .de-cta-a { border-radius:var(--w4-r2); }
+.de-body .de-h2-go { border-radius:var(--w4-rp); }
+/* 键盘焦点：全站同一枚环（旧版各按钮各自一套） */
+.de-body :focus-visible { outline:2px solid rgba(127,178,255,.9); outline-offset:2px; }
+
+/* ── 6. 细节统一：选中色 / 滚动条 / 数字与标题渐变 ── */
+.de-body ::selection { background:rgba(110,160,255,.32); color:#fff; }
+.de-body * { scrollbar-color:rgba(150,190,255,.32) transparent; scrollbar-width:thin; }
+.de-body ::-webkit-scrollbar { width:10px; height:10px; }
+.de-body ::-webkit-scrollbar-thumb { background:rgba(150,190,255,.26); border-radius:var(--w4-rp);
+  border:2px solid transparent; background-clip:content-box; }
+.de-body ::-webkit-scrollbar-thumb:hover { background:rgba(150,190,255,.42); background-clip:content-box; }
+/* 数字/强调渐变：全站收敛到同一条双色渐变（旧版 4 处各写一套） */
+.de-body .de-kpi b,
+.de-body .de-flow-stat .seg b { background-image:linear-gradient(120deg,#6ea8ff,#b79bff); }
+.de-body .de-h2 em,
+.de-body .de-flow-head h2 em { background-image:linear-gradient(100deg,#6ea8ff,#b79bff 58%,#f0a6ff); }
+
+/* ── 7. 响应式：令牌随断点收一档（板块圆角、卡片圆角） ── */
+@media (max-width:768px) {
+  .de-body { --w4-r4:18px; --w4-r3:14px; --w4-r5:26px; }
+}
+
+/* ── 8. 业务流（8 阶段列 / 日常带 / 底部说明带）：并入同一套表面与圆角语汇 ──
+      这一块原先是一套完全独立的设计语言（14px 圆角 + 平涂蓝头 + 虚线日常带），
+      和下面的能力卡（22px 圆角 + 主题色上缘）同屏相邻，视觉上像两个网站。 */
+.de-body .flow-grid { gap:12px; }
+.de-body .flow-col { border-radius:var(--w4-r3); }
+.de-body .flow-col:hover { box-shadow:var(--w4-e3); }
+.de-body .flow-head { border-radius:var(--w4-r3) var(--w4-r3) 0 0; padding:15px 6px 13px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16); }
+.de-body .flow-body { border-radius:0 0 var(--w4-r3) var(--w4-r3);
+  background:linear-gradient(180deg, color-mix(in srgb, #3a7bd5 9%, var(--w4-s2)), color-mix(in srgb, #3a7bd5 4%, var(--w4-s1)));
+  border-color:var(--w4-ln2); }
+.de-body .flow-col.plan .flow-body { background:color-mix(in srgb, var(--w4-s1) 82%, #000);
+  border-color:rgba(120,145,200,.26); }
+.de-body .flow-item { border-radius:var(--w4-r1); background:rgba(255,255,255,.055); border-color:var(--w4-ln);
+  transition:background var(--w4-dur) var(--w4-ease), border-color var(--w4-dur) var(--w4-ease),
+             transform var(--w4-dur) var(--w4-ease); }
+.de-body .flow-item:hover { background:color-mix(in srgb, #6ea8ff 20%, transparent);
+  border-color:rgba(150,195,255,.5); }
+.de-body .de-daily { border-radius:var(--w4-r2); border-color:rgba(120,170,255,.34);
+  background:linear-gradient(100deg, rgba(56,110,220,.20), rgba(56,110,220,.05)); }
+.de-body .de-daily .lb { border-radius:var(--w4-r1); }
+.de-body .flow-foot { border-radius:var(--w4-r3); background:color-mix(in srgb, var(--w4-s1) 78%, transparent);
+  border-color:var(--w4-ln2); box-shadow:inset 0 1px 0 rgba(255,255,255,.05); }
+
+/* ── 9. 页尾 CTA + 页脚：同一套表面/圆角/按钮 ── */
+.de-body .de-cta { background:linear-gradient(170deg,#050c1e 0%,#0a1c41 44%,#081430 74%,#04091a 100%); }
+.de-body .de-cta-a { border-radius:var(--w4-r2); }
+.de-body .de-cta-a.pri { background:linear-gradient(118deg,#2f6fe0,#7c5ce7); box-shadow:var(--w4-e2); }
+.de-body .de-cta-a.pri:hover { box-shadow:var(--w4-e3); transform:translateY(-2px); }
+.de-body .de-cta-a.sec { color:var(--w4-t2); background:rgba(255,255,255,.07); border-color:var(--w4-ln2); }
+.de-body footer { border-top:1px solid var(--w4-ln); color:var(--w4-t4); }
+
+/* ── 10. 顶部导航：统一描边与胶囊圆角 ── */
+.de-body nav { border-bottom:1px solid var(--w4-ln); }
+.de-body nav.scrolled { border-bottom-color:var(--w4-ln2); box-shadow:0 1px 18px rgba(0,0,0,.46); }
+.de-body .nav-right,
+.de-body .nav-back-btn,
+.de-body .nav-de-btn { border-radius:var(--w4-rp); }
+.de-body .nav-right { color:var(--w4-t3); background:rgba(255,255,255,.07); border-color:var(--w4-ln2); }
+.de-body .nav-back-btn { color:#d3e0ff; background:rgba(255,255,255,.08); border-color:var(--w4-ln2); }
+
+/* ── 11. 卡片内小字 / 标签：并到 4 级文本令牌 ── */
+.de-body .cap-stage { color:var(--w4-t3); }
+.de-body .cap-count span { color:var(--w4-t4); }
+.de-body .cap-desc { color:var(--w4-t3); }
+.de-body .cap-tbl td.ent { color:var(--w4-t3); }
+.de-body .cap-row-d { color:var(--w4-t2); }
+.de-body .cap-row-m,
+.de-body .cap-row-h .ent,
+.de-body .cap-row-side .ent,
+.de-body .cap-row-path .pth { color:var(--w4-t4); }
+.de-body .cap-row-path .pth-sep { color:rgba(166,188,224,.36); }
+.de-body .cap-empty b { color:var(--w4-t2); }
+.de-body .cap-empty span { color:var(--w4-t4); }
+.de-body .cap-name::after { border-radius:var(--w4-rp); }
+.de-body .de-bhint { border-radius:var(--w4-rp); }
+.de-body .cap-count.plan b { color:var(--w4-t4); -webkit-text-fill-color:var(--w4-t4); }
+
+/* ── 12. L2 加强：让"主题色归属"和"板块层次"一眼可读 ─────────────────────── */
+
+/* 能力卡边框带主题色 —— 每张卡一眼看出属于哪个场景色（原来所有卡边框都是同一种白 9%，
+   同屏 4 张卡只能靠顶部 3px 细条区分，太弱） */
+.de-body .cap-card { border-color:color-mix(in srgb, var(--cc,#1e6fd9) 26%, var(--w4-ln2)); }
+
+/* 卡片标题下划线：「固定 34px 短横」→「左实右渐隐」的长条，更像有意的设计元素 */
+.de-body .cap-name::after { width:auto; right:52%; height:2.5px;
+  background:linear-gradient(90deg, var(--cc,#1e6fd9) 0%,
+    color-mix(in srgb, var(--cc,#1e6fd9) 30%, transparent) 100%); }
+
+/* 表头：字号回到 12px + 字距，行更高一点 —— 深色底上 11.5px 的表头偏小、顶不住表格 */
+.de-body .cap-tbl th { font-size:12px; letter-spacing:.35px; padding:11px 12px; }
+
+/* 场景序号徽章：外圈一圈主题色柔光，把"序号"从小圆片变成有归属的标记 */
+.de-body .cap-num { box-shadow:0 0 0 3px color-mix(in srgb, var(--cc,#1e6fd9) 13%, transparent), var(--w4-e1); }
+
+/* 场景图标底座：主题色内发光，与徽章同语汇 */
+.de-body .cap-ico { background:linear-gradient(160deg,
+    color-mix(in srgb, var(--cc,#1e6fd9) 26%, rgba(255,255,255,.05)),
+    color-mix(in srgb, var(--cc,#1e6fd9) 12%, rgba(255,255,255,.02)));
+  border-color:color-mix(in srgb, var(--cc,#1e6fd9) 40%, transparent); }
+
+/* 闭环链：胶囊统一为"主题色描边 + 极淡主题色底"，和表头呼应（原来是纯白 7.5% 底） */
+.de-body .cap-loop-chain .cp { background:color-mix(in srgb, var(--cc,#1e6fd9) 12%, rgba(255,255,255,.04));
+  border-color:color-mix(in srgb, var(--cc,#1e6fd9) 34%, transparent); }
+
+/* 板块接缝的冷光弧线加强一档 —— 46px 圆角叠压处原来几乎看不见分界 */
+.de-body > .de-flow-sec,
+.de-body > .de-cap-sec,
+.de-body > .de-eco-sec,
+.de-body > .inc-section,
+.de-body > .future-home-section { box-shadow:inset 0 1px 0 rgba(150,190,255,.17); }
+
+/* 卡片内分隔（闭环链 ↔ 表格）：用一条渐隐细线代替"什么都没有" */
+.de-body .cap-tbl-wrap { position:relative; }
+.de-body .cap-loop { margin-bottom:18px; }
+
+/* 页脚：与顶栏对称的一条极弱冷光 */
+.de-body footer { background:linear-gradient(180deg, rgba(255,255,255,.012), transparent 40%); }
+
+/* ── 13. Hero 补强：KPI 卡 / 动作按钮 / 舞台光 ─────────────────────────────
+      首屏是"第一印象"，但原版 4 张 KPI 卡与背景深蓝几乎融成一片（差异仅 10%）。 */
+
+/* KPI 卡：三层结构 —— 主题色顶光 + 白顶高光 + 表面渐变；边框带紫，从背景里"跳"出来 */
+.de-body .de-kpi {
+  border-color:color-mix(in srgb, #7c5ce7 26%, var(--w4-ln2));
+  background:
+    radial-gradient(ellipse 72% 62% at 50% 24%, rgba(120,150,255,.17), transparent 72%),
+    linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,0) 42%),
+    linear-gradient(160deg, color-mix(in srgb, #7c5ce7 17%, var(--w4-s2)),
+                              color-mix(in srgb, #7c5ce7 6%, var(--w4-s1)));
+  box-shadow:var(--w4-e2);
+}
+.de-body .de-kpi:hover,
+.de-body .de-kpi:focus-visible,
+.de-body .de-kpi.open {
+  border-color:color-mix(in srgb, #9a7af0 58%, transparent);
+  box-shadow:var(--w4-e3), 0 0 0 1px rgba(140,120,255,.30);
+}
+/* KPI 数字：渐变 + 冷光提亮（深色上数字偏"沉"，提一档更醒目） */
+.de-body .de-kpi b {
+  background-image:linear-gradient(120deg,#7fb6ff,#c0a8ff 92%);
+  filter:drop-shadow(0 2px 14px rgba(110,150,255,.42));
+}
+.de-body .de-kpi span { color:var(--w4-t3); }
+.de-body .de-kpi .kp-dot { background:rgba(124,92,231,.24); border-color:rgba(160,140,255,.40);
+  box-shadow:0 0 0 3px rgba(124,92,231,.10); }
+
+/* 动作按钮组：加一道顶部内高光 + 更深外影，让"4 颗按钮"从气泡下方立起来 */
+.de-body .de-act { box-shadow:0 6px 16px rgba(0,0,0,.34), 0 0 0 1px rgba(255,255,255,.06),
+  inset 0 1px 0 rgba(255,255,255,.26); }
+.de-body .de-act:hover { box-shadow:0 10px 24px rgba(0,0,0,.42), 0 0 0 1px rgba(255,255,255,.10),
+  inset 0 1px 0 rgba(255,255,255,.32); }
+
+/* 立牌舞台：脚下一圈冷色舞台光（原来只有一层黑影，白底立牌像"贴"在深底上） */
+.de-body .de-board-sec .de-stage::before {
+  content:''; position:absolute; left:50%; bottom:6%; width:min(680px,86%); height:150px;
+  transform:translateX(-50%); pointer-events:none; z-index:0;
+  background:radial-gradient(ellipse at center, rgba(90,140,255,.20) 0%, rgba(90,140,255,.07) 46%, transparent 74%);
+}
+
+/* 业务流：阶段列头底部补一条冷光，和"能力卡上缘条"形成呼应 */
+.de-body .flow-head::before {
+  content:''; position:absolute; left:0; right:0; bottom:0; height:1px;
+  background:linear-gradient(90deg, transparent, rgba(160,200,255,.48), transparent); z-index:3;
+}
+.de-body .flow-col.plan .flow-head::before { background:linear-gradient(90deg, transparent, rgba(150,170,210,.34), transparent); }
+/* 日常带：从"虚线框"升为"胶囊条"，与整页表面语汇一致（虚线保留以表达"跨场景"语义） */
+.de-body .de-daily { border-width:1px; }
+.de-body .de-daily .it::before { box-shadow:0 0 8px #6ea8ff; }
+
 </style>'''
 
 
@@ -4431,13 +4846,23 @@ def build_digital_employee_page(data):
 
     def demo_html(s):
         """「介绍 / 输入示例」列：介绍在上、输入示例在下，换行展示。
-        content.md 里用 `；` 分隔两段（原 PPT 就是两行），这里转成 <br>。"""
+        content.md 里用 `；` 分隔两段（原 PPT 就是两行），这里转成 <br>。
+
+        补充段（示例 / 频次 / 操作提示）包一层 .dm-x 降一档色：
+        表格里每行都是「一句介绍 + 一段示例」，整列同色时读者会被示例牵着走、
+        很难快速扫出「这个能力到底做什么」。分级后正文一眼可扫，示例按需再看。
+        ⚠️ 只降级「明确是补充信息」的段（示例/例/频次/点击…）——像「①②」这种并列列表项
+        保持与正文同色，否则并列关系会被视觉拆散。"""
         if not s:
             return ''
-        t = _esc(s)
-        for sep in ('；', ';'):
-            t = t.replace(sep, '<br>')
-        return t
+        parts = [p.strip() for p in _esc(s).replace(';', '；').split('；') if p.strip()]
+        if not parts:
+            return ''
+        SECONDARY = ('示例', '例：', '举例', '频次', '点击', '输入示例')
+        out = [parts[0]]
+        for p in parts[1:]:
+            out.append(f'<span class="dm-x">{p}</span>' if p.startswith(SECONDARY) else p)
+        return '<br>'.join(out)
 
     def path_tag(name):
         """操作路径里的一段：配了链接 → 可点标签；没配 → 纯文字标签。"""
