@@ -9,10 +9,10 @@
  *   - 视频(mp4)：不接管 —— 交给浏览器原生 HTTP 缓存，避免 Range(206) 与 SW 缓存冲突
  *   - 跨域请求：不接管（钉钉/金山/内网链接等）
  *
- * 版本：由 build.py 注入 __V__。版本变化 → 新 SW 安装 → 删除同名前缀的旧缓存 → 通知页面刷新一次。
+ * 版本：由 build.py 注入 ebaf62370f08。版本变化 → 新 SW 安装 → 删除同名前缀的旧缓存 → 通知页面刷新一次。
  */
-const V = 'd5b2a3345c53';
-const PREFIX = 'ams-';
+const V = 'ebaf62370f08';
+const PREFIX = 'ams-a-';
 const CACHE = PREFIX + V;
 
 /* 首访预缓存的核心页面：体积小、跳转必经。
@@ -27,7 +27,16 @@ const PRECACHE = [
   './scene-4.html',
   './scene-5.html',
   './scene-6.html',
-  './scene-7.html'
+  './scene-7.html',
+  './ued-theme-a.css',
+  './ued-theme-b.css',
+  './ued-theme-c.css',
+  './ued-theme-d.css',
+  './ued-switch.css',
+  './ued-page-de-a.css',
+  './ued-page-de-b.css',
+  './ued-page-de-c.css',
+  './ued-page-de-d.css'
 ];
 
 /* 首页空闲时预热的高频图片（立牌 + 人物件），延后加载，不抢首屏带宽 */
