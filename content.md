@@ -130,7 +130,7 @@
 | 字段 | 值 |
 |------|-----|
 | 标题 | 标讯运营 |
-| 截图1 | media/bid_analysis_board.png |
+| 截图1 | media/bid_analysis_board.webp |
 | 截图1说明 | 📌 标讯运营分析 |
 | 截图2 | media/bid_increment_top5.png |
 | 截图2说明 | 📌 一线增量情况 |
@@ -256,9 +256,9 @@
 | 截图2说明 | 📱 移动端-与AI客户进行交流                 |
 | 截图3   | media/image22.png         |
 | 截图3说明 | 📱 移动端-查看学习报告分析与建议               |
-| 截图4   | media/ai_train_pc_chat.png |
+| 截图4   | media/ai_train_pc_chat.webp |
 | 截图4说明 | 💻 PC端演练界面 |
-| 截图5   | media/ai_train_pc_report.png |
+| 截图5   | media/ai_train_pc_report.webp |
 | 截图5说明 | 💻 PC端演练分析与建议 |
 
 
@@ -364,7 +364,7 @@
 | 标题 | 行销数字员工 |
 | 副标题 | 专属智能售前专家 · 7×24小时在线 · 全流程问题闭环 |
 | 演示视频 | proj_digital.mp4 |
-| 能力集截图 | media/cap_digital.png |
+| 能力集截图 | media/cap_digital.webp |
 
 ### 应用能力集
 
@@ -476,7 +476,7 @@
 | 标题 | 安小渠 |
 | 副标题 | 专为渠道打造，可解答产品知识、行业打法、挖掘商机、渠道政策以及下载资料！7×24小时值守，减少重复答疑，提升渠道服务响应速度 |
 | 演示视频 | channel_xiaoqu.mp4 |
-| 能力集截图 | media/cap_anxiaoqu.png |
+| 能力集截图 | media/cap_anxiaoqu.webp |
 
 **😩 用户痛点**
 
@@ -542,9 +542,9 @@
 |------|-----|
 | 标题 | Skill共享平台 |
 | 副标题 | 基础Skill + 业务专属Skill · 上传优秀Skill赢大奖 |
-| 截图1 | skill_main.png |
+| 截图1 | skill_main.webp |
 | 截图1说明 | 📌 Skill共享平台主界面 |
-| 运营报告 | skill_report.jpg |
+| 运营报告 | skill_report.webp |
 | 运营报告标签 | 运营报告 |
 
 ### 应用数据
@@ -596,7 +596,7 @@
 |------|----------------------|
 | 标题 | 知识AI助手               |
 | 副标题 | AI让知识获取更快更准          |
-| 截图1 | media/zs_screen1.png |
+| 截图1 | media/zs_screen1.webp |
 | 截图1说明 | 📌 用户端1：知识中心主搜索框智能问答 |
 | 截图2 | media/zs_screen2.png |
 | 截图2说明 | 📌 用户端2：知识中心主界面智能问答  |

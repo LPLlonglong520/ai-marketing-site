@@ -861,6 +861,25 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   .nav-de-btn { padding:6px 11px; font-size:12px; gap:5px; }
   .nav-de-btn .nde-dot { width:6px; height:6px; }
 }
+
+/* ===== 第 5 波 · 移动端可读性 =====
+   真机上 8~10.5px 的辅助文字几乎无法辨认。这里只在移动端把它们抬到 11px，
+   桌面端排版完全不受影响（该规则位于 CSS 末尾，同特异性下优先级最高）。 */
+@media (max-width: 768px) {
+  .tagline, .mat, .pbeta, .plan-foot, .plan-tag,
+  .app-stats-label, .app-stats-note-inline,
+  .de-bi-top, .de-bi-back-btn { font-size: 11px !important; line-height: 1.45 !important; }
+  .ent-arw, .code { font-size: 11px !important; }
+}
+/* 触屏：视频控件与进度条加大热区，避免误触 */
+@media (hover: none) and (pointer: coarse) {
+  .video-placeholder .vp-icon { min-width: 72px; min-height: 72px; }
+  .video-wrapper video::-webkit-media-controls-enclosure { height: 44px; }
+}
+/* 零特异性响应式兜底：带 width 属性的图片不得撑破窄屏，也不得被压扁宽高比。
+   :where() 特异性为 0，绝不覆盖任何既有 CSS 规则（含内联 style），只在设计未约束时生效。
+   width/height 置 auto 后，属性仍作为「加载前预留空间」的宽高比提示。 */
+:where(img[width]) { max-width: 100%; height: auto; width: auto; }
 </style>
 </head>
 <body>
@@ -929,11 +948,11 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
     </div>
     <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot" style="background:#38bdf8;"></span>应用演示截图</div>
-      <div class="img-gallery col1"><figure class=""><img src="media/skill_main.png" alt=""><figcaption>📌 Skill共享平台主界面</figcaption></figure></div>
+      <div class="img-gallery col1"><figure class=""><img src="media/skill_main.webp" alt="" loading="lazy" decoding="async" width="1031" height="863"><figcaption>📌 Skill共享平台主界面</figcaption></figure></div>
     </div>
         <div class="report-preview">
       <div class="report-preview-label"><span class="pdot"></span>运营报告 <span class="pbeta">REPORT</span> — 下滑查看完整报告</div>
-      <div class="report-preview-frame"><img src="media/skill_report.jpg" alt="运营报告" loading="lazy"></div>
+      <div class="report-preview-frame"><img src="media/skill_report.webp" alt="运营报告" loading="lazy" decoding="async" width="813" height="1920"></div>
     </div>
       </div>
   </div>
@@ -943,7 +962,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 </div>
 
 <footer style="border-top:1px solid rgba(0,0,0,.05);">
-  <div class="ft-logo"><img src="media/image2.png" alt="安恒信息" style="height:32px;vertical-align:middle;margin-right:6px;">AI赋能营销</div>
+  <div class="ft-logo"><img src="media/image2.png" alt="安恒信息" style="height:32px;vertical-align:middle;margin-right:6px;" fetchpriority="high" decoding="async" width="445" height="273">AI赋能营销</div>
   <p>安恒信息· 营销中心 · 综合管理部 · 2026年</p>
 </footer>
 
@@ -1152,7 +1171,7 @@ function submitReply(cid){
 (function(){
   var overlay=document.createElement('div');
   overlay.className='lightbox-overlay';
-  overlay.innerHTML='<button class="lb-close" type="button">&times;</button><img src="" alt=""><div class="lb-caption"></div>';
+  overlay.innerHTML='<button class="lb-close" type="button">&times;</button><img alt=""><div class="lb-caption"></div>';
   document.body.appendChild(overlay);
   var lbImg=overlay.querySelector('img');
   var lbCap=overlay.querySelector('.lb-caption');
@@ -1176,6 +1195,29 @@ function submitReply(cid){
     if(!img) return;
     var cap=fig.querySelector('figcaption');
     open(img.src, cap?cap.textContent:'');
+  });
+})();
+</script>
+<script id="__perf_reg">
+(function () {
+  if (!('serviceWorker' in navigator)) return;
+  if (location.protocol === 'file:') return;
+  function warm(t) { if (t && t.postMessage) { try { t.postMessage({ type: 'warm' }); } catch (e) {} } }
+  function idle(fn) { if ('requestIdleCallback' in window) requestIdleCallback(fn, { timeout: 5000 }); else setTimeout(fn, 3000); }
+  navigator.serviceWorker.addEventListener('controllerchange', function () {
+    setTimeout(function () { warm(navigator.serviceWorker.controller); }, 3500);
+  });
+  navigator.serviceWorker.register('sw.js', { scope: './' }).then(function (reg) {
+    idle(function () { warm(navigator.serviceWorker.controller || reg.active || reg.waiting); });
+  }).catch(function () {});
+  navigator.serviceWorker.addEventListener('message', function (e) {
+    var d = e.data || {};
+    if (d.type !== 'updated') return;
+    try {
+      if (sessionStorage.getItem('__ams_v') === d.v) return;
+      sessionStorage.setItem('__ams_v', d.v);
+    } catch (err) { return; }
+    location.reload();
   });
 })();
 </script>

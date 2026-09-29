@@ -861,6 +861,25 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   .nav-de-btn { padding:6px 11px; font-size:12px; gap:5px; }
   .nav-de-btn .nde-dot { width:6px; height:6px; }
 }
+
+/* ===== 第 5 波 · 移动端可读性 =====
+   真机上 8~10.5px 的辅助文字几乎无法辨认。这里只在移动端把它们抬到 11px，
+   桌面端排版完全不受影响（该规则位于 CSS 末尾，同特异性下优先级最高）。 */
+@media (max-width: 768px) {
+  .tagline, .mat, .pbeta, .plan-foot, .plan-tag,
+  .app-stats-label, .app-stats-note-inline,
+  .de-bi-top, .de-bi-back-btn { font-size: 11px !important; line-height: 1.45 !important; }
+  .ent-arw, .code { font-size: 11px !important; }
+}
+/* 触屏：视频控件与进度条加大热区，避免误触 */
+@media (hover: none) and (pointer: coarse) {
+  .video-placeholder .vp-icon { min-width: 72px; min-height: 72px; }
+  .video-wrapper video::-webkit-media-controls-enclosure { height: 44px; }
+}
+/* 零特异性响应式兜底：带 width 属性的图片不得撑破窄屏，也不得被压扁宽高比。
+   :where() 特异性为 0，绝不覆盖任何既有 CSS 规则（含内联 style），只在设计未约束时生效。
+   width/height 置 auto 后，属性仍作为「加载前预留空间」的宽高比提示。 */
+:where(img[width]) { max-width: 100%; height: auto; width: auto; }
 </style>
 </head>
 <body>
@@ -926,7 +945,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
     </div>
     <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot"></span>应用演示视频</div>
-      <div class="video-wrapper" data-video-src="media/media1.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'><rect fill='%230a0d14' width='16' height='9'/></svg>"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
+      <div class="video-wrapper" data-video-src="media/media1.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="media/poster_media1.webp"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
     </div>
     
       </div>
@@ -952,11 +971,11 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
     <div class="bid-flow-platform">
       <div class="app-video-panel">
         <div class="app-video-label"><span class="vdot" style="background:#38bdf8;"></span>业务流</div>
-        <div class="img-gallery img-gallery-single"><figure><img src="media/image18.webp" alt=""><figcaption>📌 标讯筛选与处理流程</figcaption></figure></div>
+        <div class="img-gallery img-gallery-single"><figure><img src="media/image18.webp" alt="" loading="lazy" decoding="async" width="1200" height="1206"><figcaption>📌 标讯筛选与处理流程</figcaption></figure></div>
       </div>
       <div class="app-video-panel">
         <div class="app-video-label"><span class="vdot" style="background:#f59e0b;"></span>平台</div>
-        <div class="img-gallery img-gallery-single"><figure><img src="media/image19.webp" alt=""><figcaption>📌 标讯运营功能主界面</figcaption></figure></div>
+        <div class="img-gallery img-gallery-single"><figure><img src="media/image19.webp" alt="" loading="lazy" decoding="async" width="1200" height="689"><figcaption>📌 标讯运营功能主界面</figcaption></figure></div>
       </div>
     </div>
       <div class="bid-compare">
@@ -974,7 +993,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
       </div>
       <div class="increment-board">
         <div class="increment-title"><span class="ai-dot"></span>标讯运营</div>
-        <div class="img-gallery col2" style="grid-template-columns:repeat(2, 1fr);"><figure><img src="media/bid_analysis_board.png" alt=""><figcaption>📌 标讯运营分析</figcaption></figure><figure><img src="media/bid_increment_top5.png" alt=""><figcaption>📌 一线增量情况</figcaption></figure></div>
+        <div class="img-gallery col2" style="grid-template-columns:repeat(2, 1fr);"><figure><img src="media/bid_analysis_board.webp" alt="" loading="lazy" decoding="async" width="1916" height="1050"><figcaption>📌 标讯运营分析</figcaption></figure><figure><img src="media/bid_increment_top5.png" alt="" loading="lazy" decoding="async" width="483" height="263"><figcaption>📌 一线增量情况</figcaption></figure></div>
       </div>
   <div class="app-block" id="app-s1-3">
     <div class="app-block-header">
@@ -998,7 +1017,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
     </div>
     <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot"></span>应用演示视频</div>
-      <div class="video-wrapper" data-video-src="media/media2.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'><rect fill='%230a0d14' width='16' height='9'/></svg>"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
+      <div class="video-wrapper" data-video-src="media/media2.mp4"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="media/poster_media2.webp"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
     </div>
     
       </div>
@@ -1021,8 +1040,8 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
     </div>
     <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot" style="background:#38bdf8;"></span>应用演示截图</div>
-      <div class="img-gallery col2"><figure class=""><img src="media/bid_ai_data_import.webp" alt=""><figcaption>📌 数据导入界面</figcaption></figure>
-<figure class=""><img src="media/bid_ai_smart_analysis.webp" alt=""><figcaption>📌 AI智能分析界面</figcaption></figure></div>
+      <div class="img-gallery col2"><figure class=""><img src="media/bid_ai_data_import.webp" alt="" loading="lazy" decoding="async" width="1200" height="548"><figcaption>📌 数据导入界面</figcaption></figure>
+<figure class=""><img src="media/bid_ai_smart_analysis.webp" alt="" loading="lazy" decoding="async" width="1200" height="711"><figcaption>📌 AI智能分析界面</figcaption></figure></div>
     </div>
     
       </div>
@@ -1033,7 +1052,7 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
 </div>
 
 <footer style="border-top:1px solid rgba(0,0,0,.05);">
-  <div class="ft-logo"><img src="media/image2.png" alt="安恒信息" style="height:32px;vertical-align:middle;margin-right:6px;">AI赋能营销</div>
+  <div class="ft-logo"><img src="media/image2.png" alt="安恒信息" style="height:32px;vertical-align:middle;margin-right:6px;" fetchpriority="high" decoding="async" width="445" height="273">AI赋能营销</div>
   <p>安恒信息· 营销中心 · 综合管理部 · 2026年</p>
 </footer>
 
@@ -1242,7 +1261,7 @@ function submitReply(cid){
 (function(){
   var overlay=document.createElement('div');
   overlay.className='lightbox-overlay';
-  overlay.innerHTML='<button class="lb-close" type="button">&times;</button><img src="" alt=""><div class="lb-caption"></div>';
+  overlay.innerHTML='<button class="lb-close" type="button">&times;</button><img alt=""><div class="lb-caption"></div>';
   document.body.appendChild(overlay);
   var lbImg=overlay.querySelector('img');
   var lbCap=overlay.querySelector('.lb-caption');
@@ -1266,6 +1285,29 @@ function submitReply(cid){
     if(!img) return;
     var cap=fig.querySelector('figcaption');
     open(img.src, cap?cap.textContent:'');
+  });
+})();
+</script>
+<script id="__perf_reg">
+(function () {
+  if (!('serviceWorker' in navigator)) return;
+  if (location.protocol === 'file:') return;
+  function warm(t) { if (t && t.postMessage) { try { t.postMessage({ type: 'warm' }); } catch (e) {} } }
+  function idle(fn) { if ('requestIdleCallback' in window) requestIdleCallback(fn, { timeout: 5000 }); else setTimeout(fn, 3000); }
+  navigator.serviceWorker.addEventListener('controllerchange', function () {
+    setTimeout(function () { warm(navigator.serviceWorker.controller); }, 3500);
+  });
+  navigator.serviceWorker.register('sw.js', { scope: './' }).then(function (reg) {
+    idle(function () { warm(navigator.serviceWorker.controller || reg.active || reg.waiting); });
+  }).catch(function () {});
+  navigator.serviceWorker.addEventListener('message', function (e) {
+    var d = e.data || {};
+    if (d.type !== 'updated') return;
+    try {
+      if (sessionStorage.getItem('__ams_v') === d.v) return;
+      sessionStorage.setItem('__ams_v', d.v);
+    } catch (err) { return; }
+    location.reload();
   });
 })();
 </script>

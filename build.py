@@ -1634,6 +1634,25 @@ footer .ft-logo { font-size:18px; font-weight:900; color:var(--brand-teal); marg
   .nav-de-btn { padding:6px 11px; font-size:12px; gap:5px; }
   .nav-de-btn .nde-dot { width:6px; height:6px; }
 }
+
+/* ===== 第 5 波 · 移动端可读性 =====
+   真机上 8~10.5px 的辅助文字几乎无法辨认。这里只在移动端把它们抬到 11px，
+   桌面端排版完全不受影响（该规则位于 CSS 末尾，同特异性下优先级最高）。 */
+@media (max-width: 768px) {
+  .tagline, .mat, .pbeta, .plan-foot, .plan-tag,
+  .app-stats-label, .app-stats-note-inline,
+  .de-bi-top, .de-bi-back-btn { font-size: 11px !important; line-height: 1.45 !important; }
+  .ent-arw, .code { font-size: 11px !important; }
+}
+/* 触屏：视频控件与进度条加大热区，避免误触 */
+@media (hover: none) and (pointer: coarse) {
+  .video-placeholder .vp-icon { min-width: 72px; min-height: 72px; }
+  .video-wrapper video::-webkit-media-controls-enclosure { height: 44px; }
+}
+/* 零特异性响应式兜底：带 width 属性的图片不得撑破窄屏，也不得被压扁宽高比。
+   :where() 特异性为 0，绝不覆盖任何既有 CSS 规则（含内联 style），只在设计未约束时生效。
+   width/height 置 auto 后，属性仍作为「加载前预留空间」的宽高比提示。 */
+:where(img[width]) { max-width: 100%; height: auto; width: auto; }
 </style>'''
 
 
@@ -3616,7 +3635,7 @@ function submitReply(cid){
 (function(){
   var overlay=document.createElement('div');
   overlay.className='lightbox-overlay';
-  overlay.innerHTML='<button class="lb-close" type="button">&times;</button><img src="" alt=""><div class="lb-caption"></div>';
+  overlay.innerHTML='<button class="lb-close" type="button">&times;</button><img alt=""><div class="lb-caption"></div>';
   document.body.appendChild(overlay);
   var lbImg=overlay.querySelector('img');
   var lbCap=overlay.querySelector('.lb-caption');
@@ -3781,6 +3800,23 @@ def build_capability_table(capability_data):
       </div>'''
 
 
+SVG_POSTER = ("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' "
+              "viewBox='0 0 16 9'><rect fill='%230a0d14' width='16' height='9'/></svg>")
+
+
+def _video_poster(name):
+    """视频首帧 poster。已生成则用真实首帧（更直观、点击前就能看到内容），
+    未生成（如缺片）则退回纯色 SVG，避免出现破图。"""
+    if not name:
+        return SVG_POSTER
+    stem = name.rsplit('.', 1)[0].split('/')[-1]
+    for ext in ('.webp', '.jpg'):
+        p = os.path.join('media', 'poster_' + stem + ext)
+        if os.path.exists(p):
+            return p.replace(os.sep, '/')
+    return SVG_POSTER
+
+
 def render_scene(data, scene):
     """渲染单个场景为 HTML 字符串（详情页用）"""
     scene_id_map = {1:'scene-opp',2:'scene-visit',3:'scene-proj',4:'scene-bid',5:'scene-channel',6:'scene-skill',7:'scene-knowledge'}
@@ -3901,7 +3937,7 @@ def render_scene(data, scene):
             vlabel = app.get('video_label', '应用演示视频')
             video_panel += f'''    <div class="app-video-panel">
       <div class="app-video-label"><span class="vdot"></span>{vlabel}</div>
-      <div class="video-wrapper" data-video-src="media/{app['video']}"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'><rect fill='%230a0d14' width='16' height='9'/></svg>"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
+      <div class="video-wrapper" data-video-src="media/{app['video']}"><video controls playsinline webkit-playsinline x5-playsinline preload="none" controlslist="nodownload" style="position:relative;z-index:1" poster="{_video_poster(app['video'])}"></video><div class="video-placeholder"><div class="vp-icon-wrap" style="display:flex;flex-direction:column;align-items:center;gap:14px"><span class="vp-icon">▶</span></div><div class="vp-loading"><span class="vp-spinner"></span><span class="vp-progress">视频加载中...</span></div><div class="vp-error"><span>⚠️ 加载失败</span><button class="vp-retry" type="button">重新加载</button></div></div></div>
     </div>'''
         
         # 渲染截图（如果有）——可与视频同时存在
@@ -5131,6 +5167,119 @@ def build_digital_employee_page(data):
             + cta + '\n\n' + footer + '\n\n' + DE_JS + '\n' + JUMP_JS + '\n</body>\n</html>')
 
 
+# ============================================================================
+#  性能层（第 5 波）· Service Worker 客户端缓存
+#
+#  GitHub Pages 的响应头固定为 Cache-Control: max-age=600，站点侧无法自定义。
+#  这里用 Cache API 在客户端补齐更长、更聪明的缓存：
+#    · HTML 导航 -> stale-while-revalidate，二次访问与页面跳转近乎零等待
+#    · 图片/JSON -> 同上，换图能自动跟上
+#    · 视频     -> 不接管，交给浏览器原生缓存（避免 Range 与 SW 缓存冲突）
+#  sw.js 的版本号由部署脚本按「全部页面内容哈希」注入：内容变则缓存自动失效，
+#  内容不变则重复部署不打扰用户。
+# ============================================================================
+
+PERF_REG_JS = '''<script id="__perf_reg">
+(function () {
+  if (!('serviceWorker' in navigator)) return;
+  if (location.protocol === 'file:') return;
+  function warm(t) { if (t && t.postMessage) { try { t.postMessage({ type: 'warm' }); } catch (e) {} } }
+  function idle(fn) { if ('requestIdleCallback' in window) requestIdleCallback(fn, { timeout: 5000 }); else setTimeout(fn, 3000); }
+  navigator.serviceWorker.addEventListener('controllerchange', function () {
+    setTimeout(function () { warm(navigator.serviceWorker.controller); }, 3500);
+  });
+  navigator.serviceWorker.register('sw.js', { scope: './' }).then(function (reg) {
+    idle(function () { warm(navigator.serviceWorker.controller || reg.active || reg.waiting); });
+  }).catch(function () {});
+  navigator.serviceWorker.addEventListener('message', function (e) {
+    var d = e.data || {};
+    if (d.type !== 'updated') return;
+    try {
+      if (sessionStorage.getItem('__ams_v') === d.v) return;
+      sessionStorage.setItem('__ams_v', d.v);
+    } catch (err) { return; }
+    location.reload();
+  });
+})();
+</script>'''
+
+
+def _perf_img(html):
+    """给「内容图片」补齐 loading / decoding / 宽高。
+
+    跳过：立牌人物分层与光球（CSS 精确缩放定位）、空 src 的 lightbox 模板、内联 data URI。
+    首屏图（logo / 数字员工头像）不 lazy，改 fetchpriority=high，避免首屏出现空窗。
+    宽高只在 <img> 没有内联属性时补；页面里用固定 height 的 CSS 规则会覆盖它，故安全。
+    """
+    import re as _re
+
+    def one(m):
+        tag = m.group(0)
+        if 'data-keep' in tag:
+            return tag
+        sm = _re.search(r'src="([^"]*)"', tag)
+        src = sm.group(1) if sm else ''
+        if not src or src.startswith('data:'):
+            return tag
+        cls = _re.search(r'class="([^"]*)"', tag)
+        c = cls.group(1) if cls else ''
+        if c.startswith('de-l') or 'de-l ' in c or 'de-img' in c or 'orb-' in c:
+            return tag
+
+        first_screen = ('image2.png' in src) or ('orb_face' in src)
+        add = ''
+        if first_screen:
+            if 'fetchpriority' not in tag:
+                add += ' fetchpriority="high"'
+        elif 'loading=' not in tag and 'fetchpriority="high"' not in tag:
+            add += ' loading="lazy"'
+        if 'decoding=' not in tag:
+            add += ' decoding="async"'
+        if 'width=' not in tag:
+            wh = _img_size(src)
+            if wh:
+                add += ' width="%d" height="%d"' % wh
+        if not add:
+            return tag
+        body = tag.rstrip()
+        if body.endswith('/>'):
+            body = body[:-2]
+        elif body.endswith('>'):
+            body = body[:-1]
+        return body + add + '>'
+
+    return _re.sub(r'<img\b[^>]*>', one, html)
+
+
+def perf_inject(html):
+    """页面落盘前的统一后处理：图片加载属性 + Service Worker 注册脚本（幂等）。"""
+    html = _perf_img(html)
+    if 'id="__perf_reg"' in html:
+        return html
+    if '</body>' in html:
+        return html.replace('</body>', PERF_REG_JS + '\n</body>', 1)
+    return html + PERF_REG_JS
+
+def _stamp_sw(pages):
+    """按全部页面内容哈希给 sw.js 打版本号：内容变则缓存失效，不变则不动。"""
+    import hashlib as _h
+    import re as _re
+    d = _h.md5()
+    for k in sorted(pages):
+        d.update(k.encode('utf-8'))
+        d.update(pages[k].encode('utf-8'))
+    ver = d.hexdigest()[:12]
+    p = 'sw.js'
+    if os.path.exists(p):
+        s = open(p, encoding='utf-8', newline='').read()
+        s2 = _re.sub(r"const V = '[^']*';", "const V = '%s';" % ver, s, count=1)
+        if s2 != s:
+            with open(p, 'w', encoding='utf-8', newline='') as f:
+                f.write(s2)
+            print(f'  · sw.js 版本号 -> {ver}')
+    return ver
+
+
 def build(data):
     """保留旧版单页生成（兼容用）"""
     return build_home(data)
@@ -5146,8 +5295,10 @@ def main():
 
     # 1. 首页
     home_html = build_home(data)
+    _pages = {}
+    _pages['index.html'] = home_html
     with open('index.html', 'w', encoding='utf-8') as f:
-        f.write(home_html)
+        f.write(perf_inject(home_html))
     print(f'\n✅ 首页生成成功！index.html ({len(home_html):,} 字节)')
 
     # 2. 场景详情页
@@ -5156,27 +5307,34 @@ def main():
         prev = scenes[i-1] if i > 0 else None
         next_s = scenes[i+1] if i < len(scenes)-1 else None
         scene_html = build_scene_page(data, s, prev, next_s)
+        _pages[f'scene-{s["num"]}.html'] = scene_html
         fname = f'scene-{s["num"]}.html'
         with open(fname, 'w', encoding='utf-8') as f:
-            f.write(scene_html)
+            f.write(perf_inject(scene_html))
         print(f'  ✅ {fname} ({len(scene_html):,} 字节) — {s.get("title","?")}')
 
     # 3. 未来规划页
     future_html = build_future_page(data)
+    _pages['future.html'] = future_html
     with open('future.html', 'w', encoding='utf-8') as f:
-        f.write(future_html)
+        f.write(perf_inject(future_html))
     print(f'  ✅ future.html ({len(future_html):,} 字节) — 未来规划')
 
     # 4. 超级数字员工专页
     if data.get('de_page'):
         de_html = build_digital_employee_page(data)
+        _pages['digital-employee.html'] = de_html
         with open('digital-employee.html', 'w', encoding='utf-8') as f:
-            f.write(de_html)
+            f.write(perf_inject(de_html))
         de = data['de_page']
         print(f'  ✅ digital-employee.html ({len(de_html):,} 字节) — 超级数字员工'
               f'（{len(de.get("stages", []))} 阶段 / {len(de.get("caps", []))} 场景能力集）')
     else:
         print('  ⚠️  未在 content.md 中找到「## 数字员工页」，跳过 digital-employee.html')
+
+    # 5. Service Worker 版本号（= 全部页面内容哈希）
+    _ver = _stamp_sw(_pages)
+    print(f'  ✅ sw.js — Service Worker 缓存层，版本 {_ver}')
 
     print(f'\n总计：{1 + len(scenes) + 1 + (1 if data.get("de_page") else 0)} 个文件')
     for s in data['scenes']:
